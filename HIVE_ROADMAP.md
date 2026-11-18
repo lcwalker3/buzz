@@ -29,7 +29,7 @@ until it is merged; then branch new work from `main`.
 - [x] Build and run `buzz-relay` from source; migrations applied
 - [x] Relay kept running (launchd agent `com.thehive.relay`, restart on
       failure, 15 s throttle); bound to 127.0.0.1:3000 only
-- [x] Web client served by the relay (`BUZZ_WEB_DIR`, `BUZZ_SERVE_GIT_WEB_GUI`)
+- [x] Web client served by the relay (`HIVE_WEB_DIR`, `HIVE_SERVE_GIT_WEB_GUI`)
 - [ ] Phone reaches the relay via Tailscale (owner's choice): real HTTPS at
       `<mac>.<tailnet>.ts.net` through `tailscale serve`, home and away. The
       app requires wss:// with a valid cert and rejects LAN IPs, by design.
@@ -37,7 +37,7 @@ until it is merged; then branch new work from `main`.
       127.0.0.1:9000, data in ~/Library/Application Support/TheHive/s3).
       MinIO rejected: upstream archived, Homebrew disables it Feb 2027.
       Relay's git conformance probe passes against it.
-- [ ] Turn media on (`BUZZ_MEDIA_READ_MODE`) and verify an image upload
+- [ ] Turn media on (`HIVE_MEDIA_READ_MODE`) and verify an image upload
       from the app round-trips through versitygw
 
 ## Phase 2 — Independence from hosted services
@@ -74,7 +74,7 @@ Scope at start: ~45k occurrences in 3,324 files, 30 crates, ~1,400 paths.
 One step per PR; build + tests green before ticking. Never rename the
 iOS keychain access group / app group VALUES (that would lose the identity
 stored on the phone) — only names in code.
-- [ ] R1 Settings: `BUZZ_*` env vars → `HIVE_*` (relay, admin, scripts,
+- [ ] R1 Settings: `HIVE_*` env vars → `HIVE_*` (relay, admin, scripts,
       launchd scripts, .env.example, docs). Update the owner's local .env in
       the same step and restart the relay.
 - [ ] R2 Rust: crates `buzz-*` → `hive-*` (package names, dirs, `buzz_*` →
@@ -96,8 +96,10 @@ stored on the phone) — only names in code.
 - [ ] R8 Final sweep: `git grep -i buzz` only in attribution lines.
 
 ## Phase 7 — Every app flow works end to end on the Mac server
-- [ ] Owner bootstrap: `RELAY_OWNER_PUBKEY` = owner's npub (NEEDS OWNER: npub
-      from the phone, Settings → Connection → Copy public key)
+- [ ] Owner bootstrap: `RELAY_OWNER_PUBKEY` = owner's key as 64-char HEX (an
+      npub crashes the relay at startup). Get it from the relay log line
+      "auth denied: not a relay member" (pubkey=…) after the owner tries to
+      join, or convert the npub shown in the app (Settings → Connection).
 - [ ] Invites: create an invite as owner, join from a second identity/device
 - [ ] Channels, DMs, threads, reactions, edits, deletes, search
 - [ ] Media: turn on `*_MEDIA_READ_MODE`, upload/view photos, files, voice
@@ -107,6 +109,22 @@ stored on the phone) — only names in code.
 - [ ] Push notifications: self-host the push gateway crate; NEEDS OWNER:
       APNs key (.p8) from developer.apple.com
 - [ ] Repo hosting: push a git repo to the relay and browse it on the web
+
+## Phase 7b — Operations (from the CTO review, 2026-11-18)
+- [ ] Nightly backup (launchd, 03:00): `pg_dump -Fc` + rsync of
+      ~/Library/Application Support/TheHive, keep 14 days; keep a copy of
+      .env (relay signing key is irreplaceable) in an encrypted disk image;
+      test one restore.
+- [ ] Log rotation for ~/Library/Logs/TheHive (10 MB × 5).
+- [ ] Run an installed copy of the relay (~/Library/Application
+      Support/TheHive/bin) instead of the working checkout, so edits and
+      renames can't break the running service mid-change.
+- [ ] Services start only at login: decide auto-login or accept downtime
+      after a reboot until login (owner decision).
+- [ ] Phase 6 R3 hazards: never rename storage bucket NAMES (`buzz-media`
+      holds data; pin it in .env); stored events carry `buzz-*` tags (migrate
+      or read both); flush or dual-read Redis `buzz:` keys; keep accepting
+      `buzz://` links as an alias; update `RUST_LOG` targets with R2.
 
 ## Phase 8 — CI on the fork
 - [ ] Replace Block's 31 workflows (their releases, images, signing) with
