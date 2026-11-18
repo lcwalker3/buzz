@@ -53,7 +53,7 @@ class _OnboardingWordmarkState extends State<OnboardingWordmark>
       final program = await ui.FragmentProgram.fromAsset(
         'shaders/onboarding_wordmark.frag',
       );
-      final bytes = await rootBundle.load('assets/images/buzz-wordmark.png');
+      final bytes = await rootBundle.load('assets/images/the-hive-wordmark.png');
       final codec = await ui.instantiateImageCodec(
         bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
       );
@@ -120,7 +120,7 @@ class _OnboardingWordmarkState extends State<OnboardingWordmark>
                   ),
                 )
               : Image.asset(
-                  'assets/images/buzz-wordmark.png',
+                  'assets/images/the-hive-wordmark.png',
                   fit: BoxFit.contain,
                   color: widget.color,
                   colorBlendMode: BlendMode.srcIn,

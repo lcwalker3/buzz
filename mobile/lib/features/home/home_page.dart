@@ -428,7 +428,7 @@ class HomePage extends HookConsumerWidget {
                   emptyContent: strip == null
                       ? null
                       : Image.asset(
-                          'assets/images/buzz-icon.png',
+                          'assets/images/the-hive-mark.png',
                           width: 80,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                           colorBlendMode: BlendMode.srcIn,

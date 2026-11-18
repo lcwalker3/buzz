@@ -870,7 +870,7 @@ void main() {
         'BuzzTabler',
       )..addFont(rootBundle.load('assets/fonts/TablerIcons.ttf'))).load();
     }
-    final avatarBytes = await rootBundle.load('assets/images/buzz-icon.png');
+    final avatarBytes = await rootBundle.load('assets/images/the-hive-mark.png');
     final avatarUrl =
         'data:image/png;base64,${base64Encode(avatarBytes.buffer.asUint8List())}';
     await tester.pumpWidget(
