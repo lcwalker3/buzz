@@ -140,10 +140,10 @@ class _WeekCard extends StatelessWidget {
               const SizedBox(height: Grid.twelve),
               Text(
                 week.isEmpty
-                    ? 'A quiet week. Say hi to someone 🍯'
+                    ? 'A quiet week. Say hi to someone.'
                     : week.streakDays >= 2
                     ? '🔥 ${week.streakDays}-day streak'
-                    : 'Nice to see you this week 🍯',
+                    : 'Nice to see you this week.',
                 style: context.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),

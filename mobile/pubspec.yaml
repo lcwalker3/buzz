@@ -88,7 +88,6 @@ flutter:
     - shaders/toast_island.frag
     - shaders/onboarding_wordmark.frag
   assets:
-    - assets/images/welcome-cell.svg
     - assets/images/the-hive-mark.png
     - assets/images/shell-gradient.png
     - assets/images/the-hive-wordmark.png

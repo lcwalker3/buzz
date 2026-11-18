@@ -24,7 +24,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:buzz/shared/theme/buzz_icons.dart';
 
@@ -47,8 +46,7 @@ import '../../shared/brand.dart';
 
 part 'pairing_page/onboarding_background.dart';
 part 'pairing_page/welcome_background.dart';
-part 'pairing_page/welcome_cell_swarm.dart';
-part 'pairing_page/welcome_cell_motion.dart';
+part 'pairing_page/welcome_bee.dart';
 part 'pairing_page/onboarding_colors.dart';
 part 'pairing_page/onboarding_glass_button.dart';
 part 'pairing_page/pairing_welcome_view.dart';

@@ -683,7 +683,7 @@ void main() {
 
     expect(find.byKey(const ValueKey('inbox-unread-dot-dm-r2')), findsNothing);
     // That was the last unread row: clearing it is celebrated, once.
-    expect(find.text('🍯  All caught up!'), findsOneWidget);
+    expect(find.text('All caught up'), findsOneWidget);
   });
 
   testWidgets(

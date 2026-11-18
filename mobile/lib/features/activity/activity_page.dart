@@ -119,7 +119,7 @@ class ActivityPage extends HookConsumerWidget {
         // On the unread view the empty state celebrates; elsewhere, say it.
         if (caughtUp && !unreadOnly.value) {
           ScaffoldMessenger.maybeOf(context)?.showFeedbackSnackBar(
-            const SnackBar(content: Text('🍯  All caught up!')),
+            const SnackBar(content: Text('All caught up')),
             kind: ToastKind.success,
           );
         }

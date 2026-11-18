@@ -1,4 +1,3 @@
-import { CellField } from "./CellField";
 import hiveMark from "@/assets/invite/mark.svg";
 import "./invite-page.css";
 import { InviteCommunity } from "./InviteCommunity";
@@ -134,7 +133,7 @@ export function InvitePage({ code }: { code: string }) {
     setDocument({ title, markdown });
   return (
     <div className="invite-page">
-      <CellField count={24} sizeScale={0.75} zIndex={-1} />
+      <div className="invite-honeycomb" aria-hidden="true" />
       <img className="invite-mark" src={hiveMark} alt={APP_NAME} />
       <div className="invite-stack">
         <div className="invite-card">
