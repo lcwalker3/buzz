@@ -9,6 +9,7 @@ import { Route as reposRouteImport } from "./routes/repos";
 import { Route as indexRouteImport } from "./routes/index";
 import { Route as reposDotrepoIdRouteImport } from "./routes/repos.$repoId";
 import { Route as inviteDotcodeRouteImport } from "./routes/invite.$code";
+import { Route as reposDotrepoIdDottreeDotsplatRouteImport } from "./routes/repos.$repoId.tree.$";
 import { Route as reposDotrepoIdDotblobDotsplatRouteImport } from "./routes/repos.$repoId.blob.$";
 
 const reposRoute = reposRouteImport.update({
@@ -31,6 +32,12 @@ const inviteDotcodeRoute = inviteDotcodeRouteImport.update({
   path: "/invite/$code",
   getParentRoute: () => rootRouteImport,
 } as any);
+const reposDotrepoIdDottreeDotsplatRoute =
+  reposDotrepoIdDottreeDotsplatRouteImport.update({
+    id: "/repos/$repoId/tree/$",
+    path: "/repos/$repoId/tree/$",
+    getParentRoute: () => rootRouteImport,
+  } as any);
 const reposDotrepoIdDotblobDotsplatRoute =
   reposDotrepoIdDotblobDotsplatRouteImport.update({
     id: "/repos/$repoId/blob/$",
@@ -44,6 +51,7 @@ export interface FileRoutesByFullPath {
   "/invite/$code": typeof inviteDotcodeRoute;
   "/repos/$repoId": typeof reposDotrepoIdRoute;
   "/repos/$repoId/blob/$": typeof reposDotrepoIdDotblobDotsplatRoute;
+  "/repos/$repoId/tree/$": typeof reposDotrepoIdDottreeDotsplatRoute;
 }
 export interface FileRoutesByTo {
   "/": typeof indexRoute;
@@ -51,6 +59,7 @@ export interface FileRoutesByTo {
   "/invite/$code": typeof inviteDotcodeRoute;
   "/repos/$repoId": typeof reposDotrepoIdRoute;
   "/repos/$repoId/blob/$": typeof reposDotrepoIdDotblobDotsplatRoute;
+  "/repos/$repoId/tree/$": typeof reposDotrepoIdDottreeDotsplatRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
@@ -59,6 +68,7 @@ export interface FileRoutesById {
   "/invite/$code": typeof inviteDotcodeRoute;
   "/repos/$repoId": typeof reposDotrepoIdRoute;
   "/repos/$repoId/blob/$": typeof reposDotrepoIdDotblobDotsplatRoute;
+  "/repos/$repoId/tree/$": typeof reposDotrepoIdDottreeDotsplatRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
@@ -67,21 +77,24 @@ export interface FileRouteTypes {
     | "/repos"
     | "/invite/$code"
     | "/repos/$repoId"
-    | "/repos/$repoId/blob/$";
+    | "/repos/$repoId/blob/$"
+    | "/repos/$repoId/tree/$";
   fileRoutesByTo: FileRoutesByTo;
   to:
     | "/"
     | "/repos"
     | "/invite/$code"
     | "/repos/$repoId"
-    | "/repos/$repoId/blob/$";
+    | "/repos/$repoId/blob/$"
+    | "/repos/$repoId/tree/$";
   id:
     | "__root__"
     | "/"
     | "/repos"
     | "/invite/$code"
     | "/repos/$repoId"
-    | "/repos/$repoId/blob/$";
+    | "/repos/$repoId/blob/$"
+    | "/repos/$repoId/tree/$";
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
@@ -90,6 +103,7 @@ export interface RootRouteChildren {
   inviteDotcodeRoute: typeof inviteDotcodeRoute;
   reposDotrepoIdRoute: typeof reposDotrepoIdRoute;
   reposDotrepoIdDotblobDotsplatRoute: typeof reposDotrepoIdDotblobDotsplatRoute;
+  reposDotrepoIdDottreeDotsplatRoute: typeof reposDotrepoIdDottreeDotsplatRoute;
 }
 
 declare module "@tanstack/react-router" {
@@ -122,6 +136,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof inviteDotcodeRouteImport;
       parentRoute: typeof rootRouteImport;
     };
+    "/repos/$repoId/tree/$": {
+      id: "/repos/$repoId/tree/$";
+      path: "/repos/$repoId/tree/$";
+      fullPath: "/repos/$repoId/tree/$";
+      preLoaderRoute: typeof reposDotrepoIdDottreeDotsplatRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     "/repos/$repoId/blob/$": {
       id: "/repos/$repoId/blob/$";
       path: "/repos/$repoId/blob/$";
@@ -138,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   inviteDotcodeRoute: inviteDotcodeRoute,
   reposDotrepoIdRoute: reposDotrepoIdRoute,
   reposDotrepoIdDotblobDotsplatRoute: reposDotrepoIdDotblobDotsplatRoute,
+  reposDotrepoIdDottreeDotsplatRoute: reposDotrepoIdDottreeDotsplatRoute,
 };
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

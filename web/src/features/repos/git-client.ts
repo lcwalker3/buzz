@@ -115,6 +115,28 @@ export async function ensureClone(
   return { fs, dir };
 }
 
+/**
+ * Resolve a branch name to a commit oid in a shallow, single-branch clone.
+ *
+ * The first clone creates `refs/heads/<ref>`, but a later `fetch` for a
+ * different branch (or a re-fetch of the same one) only updates
+ * `refs/remotes/origin/<ref>`. Prefer the remote-tracking ref, which is the
+ * freshest, and fall back to the local name. This makes branch switching work
+ * on a repo already cached in IndexedDB, and stops a re-fetch from showing the
+ * stale commit the first clone checked out.
+ */
+export async function resolveBrowseOid(
+  fs: LightningFS,
+  dir: string,
+  ref: string,
+): Promise<string> {
+  try {
+    return await resolveRef({ fs, dir, ref: `refs/remotes/origin/${ref}` });
+  } catch {
+    return resolveRef({ fs, dir, ref });
+  }
+}
+
 export interface TreeEntry {
   name: string;
   type: "blob" | "tree";
@@ -412,7 +434,8 @@ export async function getCommitLog(
   ref: string,
   depth = 20,
 ): Promise<CommitInfo[]> {
-  const commits = await log({ fs, dir, ref, depth });
+  const oid = await resolveBrowseOid(fs, dir, ref);
+  const commits = await log({ fs, dir, ref: oid, depth });
   return commits.map((c) => ({
     oid: c.oid,
     message: c.commit.message,
@@ -431,21 +454,23 @@ export interface ReadmeResult {
 
 const README_PATTERNS = ["readme.md", "readme", "readme.rst", "readme.txt"];
 
-/** Find and read a README file from the root tree. */
+/** Find and read a README in `path` (the repo root when omitted). */
 export async function findReadme(
   fs: LightningFS,
   dir: string,
   ref: string,
+  path = "",
 ): Promise<ReadmeResult | null> {
-  const oid = await resolveRef({ fs, dir, ref });
-  const entries = await readTreeEntries(fs, dir, oid);
+  const oid = await resolveBrowseOid(fs, dir, ref);
+  const entries = await readTreeEntries(fs, dir, oid, path || undefined);
 
   for (const pattern of README_PATTERNS) {
     const entry = entries.find(
       (e) => e.type === "blob" && e.name.toLowerCase() === pattern,
     );
     if (entry) {
-      const file = await readFileContent(fs, dir, oid, entry.name);
+      const filepath = path ? `${path}/${entry.name}` : entry.name;
+      const file = await readFileContent(fs, dir, oid, filepath);
       if (!file.isBinary) {
         return { filename: entry.name, content: file.content };
       }
@@ -453,4 +478,45 @@ export async function findReadme(
   }
 
   return null;
+}
+
+/** Upper bound for the "Go to file" index, so huge repos stay responsive. */
+export const FILE_LIST_LIMIT = 10_000;
+
+export interface FileList {
+  paths: string[];
+  /** True when the repo has more files than `FILE_LIST_LIMIT`. */
+  truncated: boolean;
+}
+
+/**
+ * Every blob path under the commit, breadth-first, capped at
+ * `FILE_LIST_LIMIT`. Reads trees from the local clone only (no network).
+ */
+export async function listAllFiles(
+  fs: LightningFS,
+  dir: string,
+  ref: string,
+): Promise<FileList> {
+  const oid = await resolveBrowseOid(fs, dir, ref);
+  const paths: string[] = [];
+  const queue: { treeOid: string; prefix: string }[] = [];
+  const root = await readTree({ fs, dir, oid });
+  queue.push({ treeOid: root.oid, prefix: "" });
+
+  while (queue.length > 0) {
+    const next = queue.shift();
+    if (!next) break;
+    const { tree } = await readTree({ fs, dir, oid: next.treeOid });
+    for (const entry of tree) {
+      const full = next.prefix ? `${next.prefix}/${entry.path}` : entry.path;
+      if (entry.type === "tree") {
+        queue.push({ treeOid: entry.oid, prefix: full });
+      } else if (entry.type === "blob") {
+        if (paths.length >= FILE_LIST_LIMIT) return { paths, truncated: true };
+        paths.push(full);
+      }
+    }
+  }
+  return { paths, truncated: false };
 }

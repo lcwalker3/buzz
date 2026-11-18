@@ -7,18 +7,21 @@
  * Object URLs for image/binary are created in a local effect and revoked on
  * unmount or input change — they are never cached inside React Query results.
  */
-import { ArrowLeft, Check, Copy, Download, FileText, Play } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Link, useParams } from "@tanstack/react-router";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { Check, Copy, Download, Play, WrapText } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouterState } from "@tanstack/react-router";
 import { toast } from "sonner";
 
+import { cn } from "@/shared/lib/cn";
 import { Button } from "@/shared/ui/button";
+import type { BrowseState } from "../browse-search";
 import type { BlobView } from "../git-client";
 import { useGitBlob, useGitHtmlDoc } from "../use-git-browse";
-import { useRepoContext } from "../use-repo-context";
+import { tokenStyle, useHighlightedLines } from "../highlight";
 import { getMockBlob } from "../mock-repos";
+import { proseClass, RepoMarkdown } from "./RepoMarkdown";
+import { RepoFrame } from "./RepoDetailPage";
+import { useRepoBrowse } from "./RepoNav";
 
 function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`;
@@ -59,13 +62,24 @@ function useObjectUrl(
   return url;
 }
 
-function CopyTextButton({ content }: { content: string }) {
+function CopyTextButton({
+  content,
+  label = "Copy",
+  ariaLabel,
+  iconOnly = false,
+}: {
+  content: string;
+  label?: string;
+  ariaLabel?: string;
+  iconOnly?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
   return (
     <Button
       variant="outline"
       size="sm"
-      className="border-black/10 bg-white text-black hover:bg-black/5 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+      aria-label={ariaLabel}
+      className="border-line bg-panel text-ink shadow-none hover:bg-hover"
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(content);
@@ -78,8 +92,26 @@ function CopyTextButton({ content }: { content: string }) {
       }}
     >
       {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-      <span className="ml-2">Copy</span>
+      {!iconOnly && <span>{label}</span>}
     </Button>
+  );
+}
+
+/** Download for text views: encodes the decoded content back to bytes. */
+function TextDownloadButton({
+  content,
+  filename,
+}: {
+  content: string;
+  filename: string;
+}) {
+  const bytes = useMemo(() => new TextEncoder().encode(content), [content]);
+  return (
+    <DownloadButton
+      bytes={bytes}
+      contentType="text/plain;charset=utf-8"
+      filename={filename}
+    />
   );
 }
 
@@ -99,24 +131,91 @@ function DownloadButton({
       asChild
       variant="outline"
       size="sm"
-      className="border-black/10 bg-white text-black hover:bg-black/5 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+      className="border-line bg-panel text-ink shadow-none hover:bg-hover"
     >
       <a href={url} download={filename}>
         <Download className="h-4 w-4" />
-        <span className="ml-2">Download</span>
+        <span>Download</span>
       </a>
     </Button>
   );
 }
 
-function TextView({ content }: { content: string }) {
-  // Plain monospace render. Line numbers would be nice but require a list of
-  // keyed children for an immutable text dump; not worth the linter dance for
-  // v1. The browser handles wrapping/scrolling via `<pre>`.
+/**
+ * Monospace view with a line-number gutter. Each number is a link to
+ * `#L<n>`; the matching row is highlighted and scrolled into view, so a line
+ * can be shared by URL. The active line comes from the router's location (not
+ * CSS `:target`, which misses in-app pushState navigations).
+ */
+function TextView({
+  content,
+  wrap,
+  path,
+}: {
+  content: string;
+  wrap: boolean;
+  path: string;
+}) {
+  const tokens = useHighlightedLines(content, path);
+  const lines = useMemo(() => {
+    const raw = content.endsWith("\n") ? content.slice(0, -1) : content;
+    return raw.split("\n").map((text, i) => ({ n: i + 1, text }));
+  }, [content]);
+
+  const hash = useRouterState({ select: (s) => s.location.hash });
+  const activeLine = /^L\d+$/.test(hash) ? Number(hash.slice(1)) : null;
+
+  useEffect(() => {
+    if (activeLine === null) return;
+    document
+      .getElementById(`L${activeLine}`)
+      ?.scrollIntoView({ block: "center" });
+  }, [activeLine]);
+
   return (
-    <pre className="overflow-auto whitespace-pre rounded-lg border border-black/10 bg-white/50 p-4 font-mono text-sm leading-6 text-black dark:border-white/10 dark:bg-white/5 dark:text-white">
-      {content}
-    </pre>
+    <div className="overflow-x-auto bg-panel py-2 font-mono text-[13px] leading-6">
+      <table className="w-full border-collapse">
+        <tbody>
+          {lines.map((line) => (
+            <tr
+              key={line.n}
+              id={`L${line.n}`}
+              className="code-line"
+              data-active={line.n === activeLine}
+            >
+              <td className="w-px select-none pr-4 pl-4 text-right align-top">
+                <a
+                  href={`#L${line.n}`}
+                  className="text-ink-faint tabular-nums hover:text-ink focus-visible:outline-2 focus-visible:outline-honey"
+                  aria-label={`Line ${line.n}`}
+                >
+                  {line.n}
+                </a>
+              </td>
+              <td
+                className={cn(
+                  "pr-4 align-top text-ink",
+                  wrap ? "whitespace-pre-wrap break-all" : "whitespace-pre",
+                )}
+              >
+                {tokens?.[line.n - 1]
+                  ? tokens[line.n - 1].map((t) => (
+                      <span
+                        key={t.offset}
+                        className="code-token"
+                        style={tokenStyle(t)}
+                      >
+                        {t.content}
+                      </span>
+                    ))
+                  : line.text}
+                {line.text === "" && " "}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -132,11 +231,18 @@ function ImageView({
   const url = useObjectUrl(bytes, contentType);
   if (!url) return null;
   return (
-    <div className="flex justify-center rounded-lg border border-black/10 bg-white/50 p-4 dark:border-white/10 dark:bg-white/5">
+    <div
+      className="flex justify-center p-6"
+      style={{
+        backgroundImage:
+          "repeating-conic-gradient(var(--hover) 0% 25%, transparent 0% 50%)",
+        backgroundSize: "16px 16px",
+      }}
+    >
       <img
         src={url}
         alt={filename}
-        className="max-h-[80vh] max-w-full object-contain"
+        className="max-h-[75vh] max-w-full object-contain"
       />
     </div>
   );
@@ -162,27 +268,48 @@ function HtmlRunView({ doc }: { doc: string }) {
       title="Repository page (sandboxed)"
       srcDoc={doc}
       sandbox={RUN_SANDBOX}
-      className="h-[80vh] w-full rounded-lg border border-black/10 bg-white dark:border-white/10"
+      className="block h-[75vh] w-full bg-white"
     />
+  );
+}
+
+function Notice({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="px-6 py-10 text-center text-sm text-ink-muted">
+      {children}
+    </div>
   );
 }
 
 function ViewerBody({
   view,
   filename,
+  filepath,
+  repoId,
+  browse,
   htmlDoc,
+  wrap,
 }: {
   view: BlobView;
   filename: string;
+  filepath: string;
+  repoId: string;
+  browse: BrowseState;
   htmlDoc: string | null;
+  wrap: boolean;
 }) {
   switch (view.kind) {
     case "text":
-      return <TextView content={view.content} />;
+      return <TextView content={view.content} wrap={wrap} path={filename} />;
     case "markdown":
       return (
-        <div className="prose prose-sm dark:prose-invert max-w-none rounded-lg border border-black/10 bg-white/50 p-4 dark:border-white/10 dark:bg-white/5">
-          <Markdown remarkPlugins={[remarkGfm]}>{view.content}</Markdown>
+        <div className={`${proseClass} px-6 py-5`}>
+          <RepoMarkdown
+            content={view.content}
+            repoId={repoId}
+            baseDir={filepath.split("/").slice(0, -1).join("/")}
+            browse={browse}
+          />
         </div>
       );
     case "html":
@@ -191,7 +318,7 @@ function ViewerBody({
       return htmlDoc !== null ? (
         <HtmlRunView doc={htmlDoc} />
       ) : (
-        <TextView content={view.content} />
+        <TextView content={view.content} wrap={wrap} path={filename} />
       );
     case "image":
       return (
@@ -203,55 +330,51 @@ function ViewerBody({
       );
     case "binary":
       return (
-        <div className="rounded-lg border border-black/10 bg-white/50 p-6 text-sm text-black/60 dark:border-white/10 dark:bg-white/5 dark:text-white/60">
+        <Notice>
           Binary file — {formatBytes(view.sizeBytes)}. Use the Download button
           above to save it.
-        </div>
+        </Notice>
       );
     case "too-large":
       return (
-        <div className="rounded-lg border border-black/10 bg-white/50 p-6 text-sm text-black/60 dark:border-white/10 dark:bg-white/5 dark:text-white/60">
+        <Notice>
           File is {formatBytes(view.sizeBytes)}, over the{" "}
           {formatBytes(view.limitBytes)} preview limit. Use the Download button
           above to save it.
-        </div>
+        </Notice>
       );
   }
 }
 
+function lineCount(content: string): number {
+  if (!content) return 0;
+  const n = content.split("\n").length;
+  return content.endsWith("\n") ? n - 1 : n;
+}
+
 export function RepoBlobPage() {
   const { repoId, _splat } = useParams({ from: "/repos/$repoId/blob/$" });
-  const filepath = _splat ?? "";
-  const preview =
-    import.meta.env.DEV &&
-    new URLSearchParams(window.location.search).get("preview") ===
-      "repositories";
-  const mockView = preview ? getMockBlob(repoId, filepath) : undefined;
-  const showMockBlob = Boolean(mockView);
-  const {
-    owner,
-    repoName,
-    defaultRef,
-    isLoading: ctxLoading,
-    error: ctxError,
-  } = useRepoContext(repoId, { preview: showMockBlob });
-
-  const browseOwner = showMockBlob ? "" : owner;
+  const filepath = (_splat ?? "").replace(/^\/+|\/+$/g, "");
+  const ctx = useRepoBrowse(repoId);
+  const mockView = ctx.mock ? getMockBlob(repoId, filepath) : undefined;
 
   const {
     data: fetchedView,
     isLoading: isViewLoading,
     error,
-  } = useGitBlob(browseOwner, repoName, defaultRef, filepath);
-  const view = mockView ?? fetchedView;
-  const isLoading = showMockBlob ? false : isViewLoading;
+  } = useGitBlob(ctx.owner, ctx.repoName, ctx.ref, filepath);
+  const view = ctx.mock ? mockView : fetchedView;
+  const isLoading = ctx.mock ? false : isViewLoading;
 
   const [running, setRunning] = useState(false);
+  const [wrap, setWrap] = useState(false);
   const isHtml = view?.kind === "html";
+  const hasText =
+    view?.kind === "text" || view?.kind === "markdown" || view?.kind === "html";
   const { data: htmlDoc, isFetching: htmlFetching } = useGitHtmlDoc(
-    owner,
-    repoName,
-    defaultRef,
+    ctx.owner,
+    ctx.repoName,
+    ctx.ref,
     filepath,
     isHtml ? view.content : "",
     running && isHtml,
@@ -259,46 +382,57 @@ export function RepoBlobPage() {
 
   const filename = basename(filepath);
 
-  if (ctxError) {
-    return (
-      <div className="flex-1 bg-[#F3F3F3] px-4 py-8 text-black dark:bg-[#171717] dark:text-white">
-        <BackLink repoId={repoId} preview={showMockBlob} />
-        <p className="mt-4 text-sm text-destructive">
-          Failed to load repository: {ctxError.message}
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex-1 bg-[#F3F3F3] px-4 py-8 text-black dark:bg-[#171717] dark:text-white">
-      <BackLink repoId={repoId} preview={showMockBlob} />
-
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <FileText className="h-4 w-4 text-black/50 dark:text-white/50" />
-        <h1 className="min-w-0 truncate font-mono text-sm">{filepath}</h1>
-        <div className="ml-auto flex items-center gap-2">
-          {view &&
-            (view.kind === "text" ||
-              view.kind === "markdown" ||
-              view.kind === "html") && (
-              <CopyTextButton content={view.content} />
+    <RepoFrame ctx={ctx} path={filepath} wide>
+      <div className="repo-card overflow-hidden">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-panel-muted px-4 py-2.5">
+          <p className="text-xs text-ink-muted tabular-nums">
+            {view && hasText && (
+              <>
+                {lineCount(view.content)} lines
+                <span aria-hidden className="mx-1.5 text-ink-faint">
+                  ·
+                </span>
+              </>
             )}
-          {isHtml && (
-            <Button
-              variant={running ? "secondary" : "default"}
-              size="sm"
-              className="bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
-              onClick={() => setRunning((r) => !r)}
-            >
-              <Play className="h-4 w-4" />
-              <span className="ml-2">{running ? "Show source" : "Run"}</span>
-            </Button>
-          )}
-          {view &&
-            view.kind !== "text" &&
-            view.kind !== "markdown" &&
-            view.kind !== "html" && (
+            {view && formatBytes(view.sizeBytes)}
+          </p>
+          <div className="ml-auto flex items-center gap-2">
+            {view && (view.kind === "text" || (isHtml && !running)) && (
+              <Button
+                variant="outline"
+                size="sm"
+                aria-pressed={wrap}
+                onClick={() => setWrap((w) => !w)}
+                className={cn(
+                  "border-line bg-panel text-ink shadow-none hover:bg-hover",
+                  wrap && "bg-honey-soft",
+                )}
+              >
+                <WrapText className="h-4 w-4" />
+                <span>Wrap</span>
+              </Button>
+            )}
+            <CopyTextButton
+              content={filepath}
+              ariaLabel="Copy file path"
+              iconOnly
+            />
+            {view && hasText && <CopyTextButton content={view.content} />}
+            {view && hasText && (
+              <TextDownloadButton content={view.content} filename={filename} />
+            )}
+            {isHtml && (
+              <Button
+                size="sm"
+                className="bg-ink text-page shadow-none hover:bg-ink/85"
+                onClick={() => setRunning((r) => !r)}
+              >
+                <Play className="h-4 w-4" />
+                <span>{running ? "Show source" : "Run"}</span>
+              </Button>
+            )}
+            {view && !hasText && (
               <DownloadButton
                 bytes={view.bytes}
                 contentType={
@@ -309,38 +443,33 @@ export function RepoBlobPage() {
                 filename={filename}
               />
             )}
+          </div>
         </div>
-      </div>
 
-      <div className="mt-6">
-        {ctxLoading || isLoading ? (
-          <div className="h-32 animate-pulse rounded-lg bg-black/10 dark:bg-white/10" />
+        {ctx.repoLoading || isLoading ? (
+          <div className="space-y-2 p-4">
+            {["a", "b", "c", "d", "e"].map((k) => (
+              <div key={k} className="repo-skeleton h-4 w-2/3" />
+            ))}
+          </div>
         ) : error ? (
-          <p className="text-sm text-destructive">
+          <p role="alert" className="px-4 py-6 text-sm text-destructive">
             Failed to load file: {(error as Error).message}
           </p>
         ) : view ? (
           <ViewerBody
             view={view}
             filename={filename}
+            filepath={filepath}
+            repoId={repoId}
+            browse={ctx.browse}
+            wrap={wrap}
             htmlDoc={running && !htmlFetching ? (htmlDoc ?? null) : null}
           />
-        ) : null}
+        ) : (
+          <Notice>This file doesn't exist on this branch.</Notice>
+        )}
       </div>
-    </div>
-  );
-}
-
-function BackLink({ repoId, preview }: { repoId: string; preview: boolean }) {
-  return (
-    <Link
-      to="/repos/$repoId"
-      params={{ repoId }}
-      search={preview ? { preview: "repositories" } : undefined}
-      className="inline-flex items-center gap-1 text-sm text-black/60 hover:text-black dark:text-white/60 dark:hover:text-white"
-    >
-      <ArrowLeft className="h-4 w-4" />
-      Back to repository
-    </Link>
+    </RepoFrame>
   );
 }
