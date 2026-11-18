@@ -7,6 +7,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
+  deepenHistory,
   ensureClone,
   findReadme,
   getCommitLog,
@@ -60,20 +61,64 @@ export function useGitTree(
   });
 }
 
-/** Get recent commits for the given ref. */
-export function useGitLog(owner: string, repoName: string, ref: string) {
+/**
+ * Recent commits for `ref`.
+ *
+ * With `history: false` (the default) this reads whatever the depth-1 clone
+ * holds — enough for the "latest commit" bar. With `history: true` it first
+ * deepens the clone to `HISTORY_DEPTH` commits. If deepening fails the log
+ * still loads (the tip only) and `historyError` says why, with
+ * `retryHistory` as the way back — a partial log is never presented as the
+ * whole history.
+ */
+export function useGitLog(
+  owner: string,
+  repoName: string,
+  ref: string,
+  { history = false }: { history?: boolean } = {},
+) {
   const cloneQuery = useGitClone(owner, repoName, ref);
 
-  return useQuery({
-    queryKey: ["git-log", owner, repoName, ref],
+  // Keyed on the clone's refresh time: a re-fetch at depth 1 re-shallows the
+  // repo, so history must be deepened again after every clone refresh.
+  const deepen = useQuery({
+    queryKey: ["git-deepen", owner, repoName, ref, cloneQuery.dataUpdatedAt],
+    queryFn: async () => {
+      await deepenHistory(owner, repoName, ref);
+      return true;
+    },
+    enabled: history && !!cloneQuery.data,
+    staleTime: Number.POSITIVE_INFINITY,
+    retry: false,
+  });
+  const deepenSettled = !history || deepen.isSuccess || deepen.isError;
+
+  const logQuery = useQuery({
+    queryKey: [
+      "git-log",
+      owner,
+      repoName,
+      ref,
+      cloneQuery.dataUpdatedAt,
+      history && deepen.isSuccess ? deepen.dataUpdatedAt : "tip",
+    ],
     queryFn: async () => {
       if (!cloneQuery.data) throw new Error("unreachable: enabled guards data");
       const { fs, dir } = cloneQuery.data;
       return getCommitLog(fs, dir, ref);
     },
-    enabled: !!cloneQuery.data,
+    enabled: !!cloneQuery.data && deepenSettled,
     staleTime: 5 * 60_000,
   });
+
+  return {
+    data: logQuery.data,
+    error: logQuery.error,
+    isLoading:
+      logQuery.isLoading || (history && !deepenSettled && !cloneQuery.error),
+    historyError: history ? deepen.error : null,
+    retryHistory: deepen.refetch,
+  };
 }
 
 /** Find and read the README in `path` (repo root by default). */

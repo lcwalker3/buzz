@@ -137,6 +137,37 @@ export async function resolveBrowseOid(
   }
 }
 
+/** How many commits the Commits tab shows. */
+export const HISTORY_DEPTH = 20;
+
+/**
+ * Deepen the shallow clone to the last `depth` commits on `ref`.
+ *
+ * `ensureClone` keeps clones at depth 1 (cheap: browsing code only needs the
+ * tip), and isomorphic-git's `log` stops at the shallow boundary, so without
+ * this the Commits tab could only ever show one commit. Called on demand when
+ * history is actually viewed. The relay serves real `git upload-pack`, which
+ * advertises `shallow` / `deepen-relative`.
+ */
+export async function deepenHistory(
+  owner: string,
+  repoName: string,
+  ref: string,
+  depth = HISTORY_DEPTH,
+): Promise<void> {
+  await fetch({
+    fs: getFs(owner, repoName),
+    http,
+    dir: getDir(owner, repoName),
+    url: repoGitUrl(owner, repoName),
+    ref,
+    depth,
+    singleBranch: true,
+    tags: false,
+    headers: await authHeaders(owner, repoName),
+  });
+}
+
 export interface TreeEntry {
   name: string;
   type: "blob" | "tree";
@@ -432,7 +463,7 @@ export async function getCommitLog(
   fs: LightningFS,
   dir: string,
   ref: string,
-  depth = 20,
+  depth = HISTORY_DEPTH,
 ): Promise<CommitInfo[]> {
   const oid = await resolveBrowseOid(fs, dir, ref);
   const commits = await log({ fs, dir, ref: oid, depth });

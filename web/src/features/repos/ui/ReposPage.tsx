@@ -1,12 +1,23 @@
-import { ArrowDownUp, Search, SearchX, X } from "lucide-react";
+import { ArrowDownUp, History, Search, SearchX, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import buzzAppIcon from "@/assets/app-icon@3x.png";
 import { truncatePubkey } from "@/shared/lib/pubkey";
 import { useDocumentTitle } from "@/shared/lib/use-document-title";
-import { useBrowseState } from "../browse-search";
+import {
+  type BrowseState,
+  browseSearch,
+  useBrowseState,
+} from "../browse-search";
 import { mockRepos } from "../mock-repos";
+import {
+  clearRecentRepos,
+  type RecentRepo,
+  readRecentRepos,
+} from "../recent-repos";
+import type { Repo } from "../use-repos";
 import { useRepos } from "../use-repos";
 import { ConnectButton } from "./ConnectButton";
 import { OrgSidebar, usePeople } from "./OrgSidebar";
@@ -52,6 +63,53 @@ function SearchEmptyState({ onReset }: { onReset: () => void }) {
         Clear filters
       </button>
     </div>
+  );
+}
+
+/** Chips for repos this viewer opened recently (that still exist here). */
+function RecentlyViewed({
+  repos,
+  browse,
+}: {
+  repos: Repo[];
+  browse: BrowseState;
+}) {
+  const [recent, setRecent] = useState<RecentRepo[]>(readRecentRepos);
+  const byId = new Map(repos.map((r) => [r.id, r]));
+  const shown = recent.filter((r) => byId.has(r.id));
+  if (shown.length === 0) return null;
+
+  return (
+    <section aria-labelledby="recent-title" className="mb-5">
+      <div className="mb-2 flex items-center gap-2 text-xs font-medium text-ink-faint">
+        <History className="h-3.5 w-3.5" aria-hidden />
+        <h2 id="recent-title">Recently viewed</h2>
+        <button
+          type="button"
+          onClick={() => {
+            clearRecentRepos();
+            setRecent([]);
+          }}
+          className="ml-auto rounded px-1 hover:text-ink focus-visible:outline-2 focus-visible:outline-honey"
+        >
+          Clear
+        </button>
+      </div>
+      <ul className="flex flex-wrap gap-2">
+        {shown.map((r) => (
+          <li key={r.id}>
+            <Link
+              to="/repos/$repoId"
+              params={{ repoId: r.id }}
+              search={browseSearch(browse, { ref: null })}
+              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-panel px-3 py-1 text-sm font-medium shadow-xs transition-colors hover:border-honey hover:bg-honey-soft focus-visible:outline-2 focus-visible:outline-honey"
+            >
+              {byId.get(r.id)?.name ?? r.id}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -196,6 +254,8 @@ export function ReposPage() {
         </div>
         <ConnectButton className="lg:hidden" />
       </div>
+
+      {repos && !isLoading && <RecentlyViewed repos={repos} browse={browse} />}
 
       {/* Search + sort */}
       <div className="mb-4 flex flex-col gap-2 sm:flex-row">

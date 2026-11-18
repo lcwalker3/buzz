@@ -19,7 +19,7 @@ import type { BlobView } from "../git-client";
 import { useGitBlob, useGitHtmlDoc } from "../use-git-browse";
 import { tokenStyle, useHighlightedLines } from "../highlight";
 import { getMockBlob } from "../mock-repos";
-import { proseClass, RepoMarkdown } from "./RepoMarkdown";
+import { MarkdownOutline, proseClass, RepoMarkdown } from "./RepoMarkdown";
 import { RepoFrame } from "./RepoDetailPage";
 import { useRepoBrowse } from "./RepoNav";
 
@@ -384,8 +384,8 @@ export function RepoBlobPage() {
 
   return (
     <RepoFrame ctx={ctx} path={filepath} wide>
-      <div className="repo-card overflow-hidden">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-panel-muted px-4 py-2.5">
+      <div className="repo-card">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-t-[14px] border-b border-line bg-panel-muted px-4 py-2.5">
           <p className="text-xs text-ink-muted tabular-nums">
             {view && hasText && (
               <>
@@ -398,6 +398,9 @@ export function RepoBlobPage() {
             {view && formatBytes(view.sizeBytes)}
           </p>
           <div className="ml-auto flex items-center gap-2">
+            {view?.kind === "markdown" && (
+              <MarkdownOutline content={view.content} />
+            )}
             {view && (view.kind === "text" || (isHtml && !running)) && (
               <Button
                 variant="outline"
@@ -446,29 +449,31 @@ export function RepoBlobPage() {
           </div>
         </div>
 
-        {ctx.repoLoading || isLoading ? (
-          <div className="space-y-2 p-4">
-            {["a", "b", "c", "d", "e"].map((k) => (
-              <div key={k} className="repo-skeleton h-4 w-2/3" />
-            ))}
-          </div>
-        ) : error ? (
-          <p role="alert" className="px-4 py-6 text-sm text-destructive">
-            Failed to load file: {(error as Error).message}
-          </p>
-        ) : view ? (
-          <ViewerBody
-            view={view}
-            filename={filename}
-            filepath={filepath}
-            repoId={repoId}
-            browse={ctx.browse}
-            wrap={wrap}
-            htmlDoc={running && !htmlFetching ? (htmlDoc ?? null) : null}
-          />
-        ) : (
-          <Notice>This file doesn't exist on this branch.</Notice>
-        )}
+        <div className="overflow-hidden rounded-b-[14px]">
+          {ctx.repoLoading || isLoading ? (
+            <div className="space-y-2 p-4">
+              {["a", "b", "c", "d", "e"].map((k) => (
+                <div key={k} className="repo-skeleton h-4 w-2/3" />
+              ))}
+            </div>
+          ) : error ? (
+            <p role="alert" className="px-4 py-6 text-sm text-destructive">
+              Failed to load file: {(error as Error).message}
+            </p>
+          ) : view ? (
+            <ViewerBody
+              view={view}
+              filename={filename}
+              filepath={filepath}
+              repoId={repoId}
+              browse={ctx.browse}
+              wrap={wrap}
+              htmlDoc={running && !htmlFetching ? (htmlDoc ?? null) : null}
+            />
+          ) : (
+            <Notice>This file doesn't exist on this branch.</Notice>
+          )}
+        </div>
       </div>
     </RepoFrame>
   );
