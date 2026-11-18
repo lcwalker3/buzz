@@ -10,9 +10,11 @@ until it is merged; then branch new work from `main`.
 
 **Rules for whoever resumes this work**
 - Read this file first; update the checkboxes and "Log" when you finish a step.
-- Keep the Apache-2.0 `LICENSE` and upstream attribution. Rebrand what people
-  see; keep internal identifiers (`buzz-*` crates, protocol tags, `buzz://`
-  scheme, `/buzz/v1` paths) unless a step below says otherwise.
+- Keep the Apache-2.0 `LICENSE` and an attribution line ("based on Buzz by
+  Block, Inc."). Owner decision (2026-11-18): remove EVERY other "buzz" —
+  display name "The Hive"; code/settings/protocol use `hive` (Dart package
+  `the_hive`, because `hive` is an existing pub.dev package). Do it in the
+  Phase 6 order below; the app must build and pass tests after each step.
 - Never point anything at hosted Buzz / Builderlab / Block services.
 - Never commit secrets (`.env`, keys, tokens). `.env` is gitignored.
 - Work on a branch, commit with `git commit -s`, open PRs into
@@ -67,7 +69,51 @@ Homebrew services; S3 → local MinIO.
       packages have newer versions; check web/npm and Rust advisories too
       (`cargo deny`, `pnpm audit`)
 
-## Phase 5 — Upgrades (ongoing)
+## Phase 6 — Remove every "buzz" (owner decision 2026-11-18)
+Scope at start: ~45k occurrences in 3,324 files, 30 crates, ~1,400 paths.
+One step per PR; build + tests green before ticking. Never rename the
+iOS keychain access group / app group VALUES (that would lose the identity
+stored on the phone) — only names in code.
+- [ ] R1 Settings: `BUZZ_*` env vars → `HIVE_*` (relay, admin, scripts,
+      launchd scripts, .env.example, docs). Update the owner's local .env in
+      the same step and restart the relay.
+- [ ] R2 Rust: crates `buzz-*` → `hive-*` (package names, dirs, `buzz_*` →
+      `hive_*` paths), binaries `hive-relay`, `hive-admin`, `hive` CLI;
+      update scripts/hive/* and the launchd agents to the new binaries.
+- [ ] R3 Wire/protocol names: tags (`buzz-channel`, `buzz-git`, …), `/buzz/v1`
+      paths, `buzz://` → `hive://`, Redis `buzz:` prefixes, NIP docs. Relay +
+      mobile + web + sdk change together. Fresh DB is fine to reset, but ask
+      the owner before deleting any data.
+- [ ] R4 Mobile: Dart package `buzz` → `the_hive`; Swift `Buzz*` types,
+      plist key NAMES, log subsystems/queue labels; Android applicationId;
+      `BuzzIcons` → `HiveIcons`; relay User-Agent → `Hive-Mobile`.
+- [ ] R5 Web: package name, `buzz-download` module/types, storage keys
+      (migrate `buzz-web-theme` → `hive-web-theme`).
+- [ ] R6 Desktop (deprecated 0.X app, ~3k files): OWNER DECISION needed —
+      delete it, or rename it. Recommendation: delete.
+- [ ] R7 Remaining file/dir names and docs (README upstream section,
+      VISION_*.md, AGENTS.md, NIPs, CHANGELOGs).
+- [ ] R8 Final sweep: `git grep -i buzz` only in attribution lines.
+
+## Phase 7 — Every app flow works end to end on the Mac server
+- [ ] Owner bootstrap: `RELAY_OWNER_PUBKEY` = owner's npub (NEEDS OWNER: npub
+      from the phone, Settings → Connection → Copy public key)
+- [ ] Invites: create an invite as owner, join from a second identity/device
+- [ ] Channels, DMs, threads, reactions, edits, deletes, search
+- [ ] Media: turn on `*_MEDIA_READ_MODE`, upload/view photos, files, voice
+- [ ] Web invite page: replace Block GitHub-releases download button
+- [ ] Huddles (audio) over Tailscale
+- [ ] Agents: run the agent harness on the Mac against the relay
+- [ ] Push notifications: self-host the push gateway crate; NEEDS OWNER:
+      APNs key (.p8) from developer.apple.com
+- [ ] Repo hosting: push a git repo to the relay and browse it on the web
+
+## Phase 8 — CI on the fork
+- [ ] Replace Block's 31 workflows (their releases, images, signing) with
+      `hive-ci.yml`: web checks + build, mobile format/analyze/test, Rust
+      build/test. NEEDS OWNER: enable GitHub Actions on the fork if off.
+
+## Phase 9 — Upgrades (ongoing)
 - [ ] Ideas backlog lives here; pick, build, test, PR
 
 ## Next steps (in order)
