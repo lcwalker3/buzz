@@ -37,7 +37,8 @@ until it is merged; then branch new work from `main`.
       127.0.0.1:9000, data in ~/Library/Application Support/TheHive/s3).
       MinIO rejected: upstream archived, Homebrew disables it Feb 2027.
       Relay's git conformance probe passes against it.
-- [ ] Turn media on (`HIVE_MEDIA_READ_MODE`) and verify an image upload
+- [ ] Turn media on (set `HIVE_S3_*` to versitygw; note `HIVE_MEDIA_READ_MODE`
+      only controls revoked-media enforcement, not uploads) and verify an image upload
       from the app round-trips through versitygw
 
 ## Phase 2 — Independence from hosted services
@@ -56,8 +57,10 @@ until it is merged; then branch new work from `main`.
       (`web/src/shared/brand.ts`); smoke tests updated
 - [x] App icon: original honeycomb (`branding/the-hive-icon.svg`), rendered
       to all iOS sizes and the web app icon
-- [ ] Replace in-app Buzz bee art: onboarding wordmark, flying bees on the
-      welcome screen, `BuzzIcons` bee, web invite `mark.svg` and bee field
+- [x] Replace in-app Buzz bee art: onboarding wordmark, welcome screen now
+      drifts honeycomb cells, loaders and pull-to-refresh use a pulsing
+      honeycomb mark that fills with honey, 🐝 emoji replaced, web invite
+      `mark.svg` and cell field (no bees left in the apps)
 - [x] README front page (The Hive header, self-hosting table, Buzz
       attribution); keep license
 
@@ -130,6 +133,14 @@ stored on the phone) — only names in code.
       holds data; pin it in .env); stored events carry `buzz-*` tags (migrate
       or read both); flush or dual-read Redis `buzz:` keys; keep accepting
       `buzz://` links as an alias; update `RUST_LOG` targets with R2.
+
+## Communities and knowledge base
+- [x] `buzz-admin communities create` (operator-signed call to the relay's
+      existing `POST /operator/communities`) so a second community can be
+      added at another address, e.g. `<mac>.<tailnet>.ts.net:8443`
+- [x] Knowledge base for the owner in `docs/hive/` (concepts, communities,
+      server, remote access, members, agents, media, repos, backups,
+      troubleshooting)
 
 ## Phase 8 — CI on the fork
 - [ ] Replace Block's 31 workflows (their releases, images, signing) with
