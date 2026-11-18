@@ -21,9 +21,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../helpers/hosted_communities_fixture.dart';
 
 /// Runs in every build. A public build also signs out of Builderlab:
-/// `--dart-define=BUZZ_DISTRIBUTION=public`
-/// `--dart-define=BUZZ_BUILDERLAB_URL=https://app.builderlab.xyz`
-/// `--dart-define=BUZZ_BUILDERLAB_RELAYS=communities.buzz.xyz`
+/// `--dart-define=HIVE_DISTRIBUTION=public`
+/// `--dart-define=HIVE_BUILDERLAB_URL=https://app.builderlab.xyz`
+/// `--dart-define=HIVE_BUILDERLAB_RELAYS=communities.buzz.xyz`
 void main() {
   testWidgets(
     'Sign out removes every community but keeps each key on this device',

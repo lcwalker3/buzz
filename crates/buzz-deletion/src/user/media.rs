@@ -30,7 +30,7 @@ pub struct Args {
     pub delete: bool,
 }
 
-/// Invoke the handler directly against DATABASE_URL and BUZZ_S3_* storage.
+/// Invoke the handler directly against DATABASE_URL and HIVE_S3_* storage.
 pub async fn run(args: Args) -> Result<i32> {
     let db = Db::connect_cold_start(
         DbConfig {
@@ -310,12 +310,12 @@ async fn scan_storage(
 pub(super) fn configured_storage() -> Result<MediaStorage> {
     let (s3_access_key, s3_secret_key) = crate::s3_key_pair_from_env();
     Ok(MediaStorage::new(&buzz_media::MediaConfig {
-        s3_endpoint: crate::required_env("BUZZ_S3_ENDPOINT")?,
-        s3_bucket: crate::required_env("BUZZ_S3_BUCKET")?,
+        s3_endpoint: crate::required_env("HIVE_S3_ENDPOINT")?,
+        s3_bucket: crate::required_env("HIVE_S3_BUCKET")?,
         s3_access_key,
         s3_secret_key,
         s3_region: crate::s3_region_from_env(),
-        s3_addressing_style: std::env::var("BUZZ_S3_ADDRESSING_STYLE")
+        s3_addressing_style: std::env::var("HIVE_S3_ADDRESSING_STYLE")
             .unwrap_or_else(|_| "path".into())
             .parse()
             .map_err(anyhow::Error::msg)?,

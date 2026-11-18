@@ -237,15 +237,15 @@ does not require a separate package-list update.
 
 The `postgres-ci` nextest profile creates one database per test process, so
 destructive and concurrent tests must use the database URL supplied through
-`BUZZ_TEST_DATABASE_URL`, `TEST_DATABASE_URL`, or `DATABASE_URL`; do not
+`HIVE_TEST_DATABASE_URL`, `TEST_DATABASE_URL`, or `DATABASE_URL`; do not
 hard-code the shared development database. Ordinary tests receive the committed
 desired-state schema from `schema/schema.sql`. Tests under
 `migration::postgres_tests` receive an empty database and own the embedded
 migration lifecycle. A test outside that module whose behavior intentionally
 depends on migration-created triggers or seed rows uses a
 `migration_schema_` function-name prefix and also receives an empty database
-with `BUZZ_TEST_SCHEMA_MODE=migration`. Test helpers that normally call the
-migrator honor `BUZZ_TEST_SCHEMA_MODE=desired` so the desired-state contract is
+with `HIVE_TEST_SCHEMA_MODE=migration`. Test helpers that normally call the
+migrator honor `HIVE_TEST_SCHEMA_MODE=desired` so the desired-state contract is
 not re-migrated.
 
 Tests that inspect cluster-wide PostgreSQL state or open least-privilege
@@ -259,7 +259,7 @@ superuser access. The complete inventory includes privilege-boundary tests that
 create temporary roles and inspect all sessions, so grant that role
 `CREATEROLE` and membership in `pg_read_all_stats` (or use an ephemeral
 superuser, as CI does).
-Set `BUZZ_POSTGRES_ADMIN_URL` to that role's maintenance database, and set
+Set `HIVE_POSTGRES_ADMIN_URL` to that role's maintenance database, and set
 `PGHOST`, `PGPORT`, `PGUSER`, and `PGPASSWORD` for the desired-state
 schema bootstrap. PostgreSQL client tools are resolved from `PATH` unless
 `PG_BIN_DIR` is set. Tests that use Redis read `REDIS_URL`.

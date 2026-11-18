@@ -1,15 +1,15 @@
 //! The relay's feature-flag provider, chosen once at startup.
 //!
-//! `BUZZ_FEATURE_FLAGS_PROVIDER` selects exactly one evaluator for the life of
+//! `HIVE_FEATURE_FLAGS_PROVIDER` selects exactly one evaluator for the life of
 //! the process (see `crates/buzz-feature-flags/README.md`):
 //!
 //! | Value | Evaluator |
 //! |-------|-----------|
 //! | unset, `static` | every flag returns its declared default |
-//! | `environment` | `BUZZ_FEATURE_FLAG_*` values, read once at startup |
-//! | `launchdarkly` | LaunchDarkly, keyed by `BUZZ_LAUNCHDARKLY_SDK_KEY`, optionally through the Relay Proxy at `BUZZ_LAUNCHDARKLY_RELAY_PROXY_URL` |
+//! | `environment` | `HIVE_FEATURE_FLAG_*` values, read once at startup |
+//! | `launchdarkly` | LaunchDarkly, keyed by `HIVE_LAUNCHDARKLY_SDK_KEY`, optionally through the Relay Proxy at `HIVE_LAUNCHDARKLY_RELAY_PROXY_URL` |
 //!
-//! The variable is deliberately outside the `BUZZ_FEATURE_FLAG_` namespace the
+//! The variable is deliberately outside the `HIVE_FEATURE_FLAG_` namespace the
 //! environment evaluator reads, so it can never be mistaken for a flag.
 //!
 //! Local configuration errors (an unknown provider, a missing SDK key, a
@@ -27,9 +27,9 @@ use buzz_feature_flags::{EnvironmentEvaluator, FlagEvaluator, StaticEvaluator};
 use tracing::{info, warn};
 
 /// Environment variable naming the provider.
-pub const PROVIDER_ENV: &str = "BUZZ_FEATURE_FLAGS_PROVIDER";
-const SDK_KEY_ENV: &str = "BUZZ_LAUNCHDARKLY_SDK_KEY";
-const RELAY_PROXY_ENV: &str = "BUZZ_LAUNCHDARKLY_RELAY_PROXY_URL";
+pub const PROVIDER_ENV: &str = "HIVE_FEATURE_FLAGS_PROVIDER";
+const SDK_KEY_ENV: &str = "HIVE_LAUNCHDARKLY_SDK_KEY";
+const RELAY_PROXY_ENV: &str = "HIVE_LAUNCHDARKLY_RELAY_PROXY_URL";
 
 /// How long startup waits for LaunchDarkly's first flag data before serving
 /// on declared defaults.

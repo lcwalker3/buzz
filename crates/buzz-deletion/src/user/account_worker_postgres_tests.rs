@@ -18,12 +18,12 @@ struct Fixture {
 
 impl Fixture {
     async fn new() -> Self {
-        let url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap();
         let pool = PgPool::connect(&url).await.unwrap();
         let db = Db::from_pool(pool.clone());
-        if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
+        if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
             db.migrate().await.unwrap();
         }
         let community = Uuid::new_v4();

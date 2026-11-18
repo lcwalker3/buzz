@@ -8,7 +8,7 @@ void main() {
 
     expect(find.text('The Hive is for people 18 and older'), findsOneWidget);
     expect(
-      find.text("You must be 18 or older to use The Hive under its Terms."),
+      find.text('You must be 18 or older to use The Hive under its Terms.'),
       findsOneWidget,
     );
     expect(find.byType(TextButton), findsNothing);

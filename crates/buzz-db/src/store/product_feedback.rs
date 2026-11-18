@@ -160,9 +160,9 @@ mod postgres_tests {
     #[tokio::test]
     #[ignore = "requires migrated Postgres"]
     async fn duplicate_event_keeps_first_community_provenance() {
-        let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
-            .expect("BUZZ_TEST_DATABASE_URL or DATABASE_URL");
+            .expect("HIVE_TEST_DATABASE_URL or DATABASE_URL");
         let pool = PgPool::connect(&database_url)
             .await
             .expect("connect test DB");

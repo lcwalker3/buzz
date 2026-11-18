@@ -10,7 +10,7 @@ async fn fixture() -> (Db, CommunityId, Keys, String) {
     })
     .await
     .unwrap();
-    if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
+    if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
         db.migrate().await.unwrap();
     }
     let community = CommunityId::from_uuid(uuid::Uuid::new_v4());

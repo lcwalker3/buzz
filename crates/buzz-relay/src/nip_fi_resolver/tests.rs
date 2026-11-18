@@ -999,10 +999,10 @@ async fn non_suffix_reserved_and_multi_label_hosts_never_reach_the_store() {
 #[test]
 fn resolver_bounds_from_env_defaults_overrides_clamps_and_rejects() {
     const VARS: [&str; 4] = [
-        "BUZZ_NIP_FI_RESOLVER_NEGATIVE_CACHE_MAX",
-        "BUZZ_NIP_FI_RESOLVER_MAX_INFLIGHT",
-        "BUZZ_NIP_FI_SNAPSHOT_MAX_ROWS",
-        "BUZZ_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS",
+        "HIVE_NIP_FI_RESOLVER_NEGATIVE_CACHE_MAX",
+        "HIVE_NIP_FI_RESOLVER_MAX_INFLIGHT",
+        "HIVE_NIP_FI_SNAPSHOT_MAX_ROWS",
+        "HIVE_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS",
     ];
     struct Clear;
     impl Drop for Clear {
@@ -1027,23 +1027,23 @@ fn resolver_bounds_from_env_defaults_overrides_clamps_and_rejects() {
     assert_eq!(ResolverBounds::from_env(4).unwrap().max_inflight, 3);
     assert_eq!(ResolverBounds::from_env(1).unwrap().max_inflight, 1);
 
-    std::env::set_var("BUZZ_NIP_FI_SNAPSHOT_MAX_ROWS", "250");
-    std::env::set_var("BUZZ_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS", "29999");
-    std::env::set_var("BUZZ_NIP_FI_RESOLVER_MAX_INFLIGHT", " ");
+    std::env::set_var("HIVE_NIP_FI_SNAPSHOT_MAX_ROWS", "250");
+    std::env::set_var("HIVE_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS", "29999");
+    std::env::set_var("HIVE_NIP_FI_RESOLVER_MAX_INFLIGHT", " ");
     let bounds = ResolverBounds::from_env(50).unwrap();
     assert_eq!(bounds.snapshot_max_rows, 250);
     assert_eq!(bounds.refresh_timeout, Duration::from_millis(29_999));
     assert_eq!(bounds.max_inflight, ResolverBounds::default().max_inflight);
-    std::env::set_var("BUZZ_NIP_FI_RESOLVER_MAX_INFLIGHT", "40");
+    std::env::set_var("HIVE_NIP_FI_RESOLVER_MAX_INFLIGHT", "40");
     assert_eq!(ResolverBounds::from_env(50).unwrap().max_inflight, 40);
     assert_eq!(ResolverBounds::from_env(10).unwrap().max_inflight, 9);
 
     for (var, bad) in [
-        ("BUZZ_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS", "30000"),
-        ("BUZZ_NIP_FI_RESOLVER_MAX_INFLIGHT", "0"),
-        ("BUZZ_NIP_FI_SNAPSHOT_MAX_ROWS", "lots"),
-        ("BUZZ_NIP_FI_SNAPSHOT_MAX_ROWS", "10000001"),
-        ("BUZZ_NIP_FI_RESOLVER_NEGATIVE_CACHE_MAX", "1000001"),
+        ("HIVE_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS", "30000"),
+        ("HIVE_NIP_FI_RESOLVER_MAX_INFLIGHT", "0"),
+        ("HIVE_NIP_FI_SNAPSHOT_MAX_ROWS", "lots"),
+        ("HIVE_NIP_FI_SNAPSHOT_MAX_ROWS", "10000001"),
+        ("HIVE_NIP_FI_RESOLVER_NEGATIVE_CACHE_MAX", "1000001"),
     ] {
         let prior = std::env::var(var).ok();
         std::env::set_var(var, bad);

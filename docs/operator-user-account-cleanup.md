@@ -70,7 +70,7 @@ Other principals' `added_by` attribution and prior audit history remain intact.
 
 ## Saved channel lists
 
-Deletion with channel memberships requires `BUZZ_RELAY_PRIVATE_KEY`, set to the
+Deletion with channel memberships requires `HIVE_RELAY_PRIVATE_KEY`, set to the
 existing serving relay's signing key. Preview requires no key. A missing key or
 one that disagrees with current affected channel lists fails before cleanup
 starts, including before the global pass of a saved scope.

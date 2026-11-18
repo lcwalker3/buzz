@@ -16,11 +16,11 @@ use std::collections::BTreeSet;
 use buzz_core::tenant::normalize_host;
 
 /// Environment variable carrying the provisioning binding JSON.
-pub const PROVISION_BINDING_ENV: &str = "BUZZ_NIP_FI_PROVISION_BINDING";
+pub const PROVISION_BINDING_ENV: &str = "HIVE_NIP_FI_PROVISION_BINDING";
 /// Environment variable carrying the relay's issuer configs.
-pub const ISSUERS_ENV: &str = "BUZZ_NIP_FI_ISSUERS";
+pub const ISSUERS_ENV: &str = "HIVE_NIP_FI_ISSUERS";
 /// Environment variable carrying the static enterprise community map.
-pub const COMMUNITIES_ENV: &str = "BUZZ_NIP_FI_COMMUNITIES";
+pub const COMMUNITIES_ENV: &str = "HIVE_NIP_FI_COMMUNITIES";
 /// Longest issuer accepted, matching the binding table's `CHECK`.
 const MAX_ISSUER_BYTES: usize = 2_048;
 
@@ -37,7 +37,7 @@ struct BindingJson {
     authorized_issuers: Vec<String>,
 }
 
-/// The fields of one `BUZZ_NIP_FI_ISSUERS` entry this module needs.
+/// The fields of one `HIVE_NIP_FI_ISSUERS` entry this module needs.
 #[derive(serde::Deserialize)]
 struct IssuerJson {
     issuer: String,
@@ -45,7 +45,7 @@ struct IssuerJson {
     command_audiences: Vec<String>,
 }
 
-/// The field of one `BUZZ_NIP_FI_COMMUNITIES` entry this module needs.
+/// The field of one `HIVE_NIP_FI_COMMUNITIES` entry this module needs.
 #[derive(serde::Deserialize)]
 struct CommunityJson {
     canonical_uri: String,
@@ -60,8 +60,8 @@ pub enum BindRefusal {
     /// The host is not exactly one label under the provisioning suffix.
     #[error("host is not one label under the NIP-FI provisioning host suffix")]
     OutsideSuffix,
-    /// The issuer is not configured in `BUZZ_NIP_FI_ISSUERS`.
-    #[error("issuer is not configured in BUZZ_NIP_FI_ISSUERS")]
+    /// The issuer is not configured in `HIVE_NIP_FI_ISSUERS`.
+    #[error("issuer is not configured in HIVE_NIP_FI_ISSUERS")]
     UnknownIssuer,
 }
 
@@ -96,9 +96,9 @@ pub struct ProvisionBindingPolicy {
 
 impl ProvisionBindingPolicy {
     /// Read the policy from the environment. `Ok(None)` when
-    /// `BUZZ_NIP_FI_PROVISION_BINDING` is unset or empty: no community gets a
+    /// `HIVE_NIP_FI_PROVISION_BINDING` is unset or empty: no community gets a
     /// binding at creation. Whatever the NIP-FI mode, the suffix must not
-    /// cover a `BUZZ_NIP_FI_COMMUNITIES` host.
+    /// cover a `HIVE_NIP_FI_COMMUNITIES` host.
     pub fn from_env() -> Result<Option<Self>, ProvisionBindingError> {
         let binding = std::env::var(PROVISION_BINDING_ENV).unwrap_or_default();
         if binding.trim().is_empty() {
@@ -110,7 +110,7 @@ impl ProvisionBindingPolicy {
         Ok(Some(policy))
     }
 
-    /// Refuse a suffix that covers any host in the `BUZZ_NIP_FI_COMMUNITIES`
+    /// Refuse a suffix that covers any host in the `HIVE_NIP_FI_COMMUNITIES`
     /// JSON, so the static enterprise map and database-bound communities
     /// never overlap. Only each entry's `canonical_uri` is read; an unreadable
     /// declaration fails closed because the check could not be trusted.
@@ -247,7 +247,7 @@ impl ProvisionBindingPolicy {
     }
 
     /// The stored `issuers` of `host` that may authorize: none unless the host
-    /// is bindable, and only issuers configured in `BUZZ_NIP_FI_ISSUERS`.
+    /// is bindable, and only issuers configured in `HIVE_NIP_FI_ISSUERS`.
     pub fn effective_issuers(&self, host: &str, mut issuers: Vec<String>) -> Vec<String> {
         if !self.is_bindable(host) {
             return Vec::new();

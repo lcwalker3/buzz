@@ -47,7 +47,7 @@ pub(super) async fn run(args: Args) -> Result<i32> {
     .await?;
     // Never parse, require or print a private key during preview.
     let secret = if args.delete {
-        std::env::var("BUZZ_RELAY_PRIVATE_KEY").ok()
+        std::env::var("HIVE_RELAY_PRIVATE_KEY").ok()
     } else {
         None
     };

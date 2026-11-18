@@ -27,16 +27,16 @@ and inherited values would change the inputs those tests exercise. Running the
 package serially also avoids scheduling flakes in existing short-deadline tests.
 
 ```sh
-env -u BUZZ_ACP_ALLOWED_RESPOND_TO \
-  -u BUZZ_ACP_LAZY_POOL \
-  -u BUZZ_ACP_IDLE_POOL_SLEEP \
+env -u HIVE_ACP_ALLOWED_RESPOND_TO \
+  -u HIVE_ACP_LAZY_POOL \
+  -u HIVE_ACP_IDLE_POOL_SLEEP \
   cargo test -p buzz-acp -- --test-threads=1
 ```
 
 Run the ignored real-adapter test with a built fork checkout:
 
 ```sh
-BUZZ_TEST_PI_ACP=/absolute/buzz-pi-acp/dist/index.js \
+HIVE_TEST_PI_ACP=/absolute/buzz-pi-acp/dist/index.js \
   cargo test -p buzz-acp real_pi_preserves -- --ignored
 ```
 
@@ -60,7 +60,7 @@ cargo test --release -p buzz-acp --lib observer::tests::retention_probe -- \
   --exact --ignored --nocapture
 
 # Small-event throughput control, including ordinary count-based eviction:
-BUZZ_OBSERVER_PROBE_EVENTS=10000 BUZZ_OBSERVER_PROBE_BYTES=1024 \
+HIVE_OBSERVER_PROBE_EVENTS=10000 HIVE_OBSERVER_PROBE_BYTES=1024 \
   cargo test --release -p buzz-acp --lib observer::tests::retention_probe -- \
   --exact --ignored --nocapture
 ```
@@ -96,7 +96,7 @@ To exercise the real runtime boundaries on Unix:
 
 ```sh
 cargo build -p buzz-acp -p buzz-agent -p buzz-dev-mcp
-BUZZ_TEST_BIN_DIR="$PWD/target/debug" cargo test -p buzz-acp git_runtime_tests -- --ignored --nocapture
+HIVE_TEST_BIN_DIR="$PWD/target/debug" cargo test -p buzz-acp git_runtime_tests -- --ignored --nocapture
 ```
 
 The Buzz Agent test uses a deterministic local OpenAI-compatible response to
@@ -118,8 +118,8 @@ cargo test --release -p buzz-acp --lib observer::perf_tests::publish_queue_probe
   --exact --ignored --nocapture
 
 # Under-budget control:
-BUZZ_OBSERVER_PROBE_EVENTS=10000 BUZZ_OBSERVER_PROBE_BYTES=1024 \
-  BUZZ_OBSERVER_PROBE_FIELDS=1 \
+HIVE_OBSERVER_PROBE_EVENTS=10000 HIVE_OBSERVER_PROBE_BYTES=1024 \
+  HIVE_OBSERVER_PROBE_FIELDS=1 \
   cargo test --release -p buzz-acp --lib observer::perf_tests::publish_queue_probe -- \
   --exact --ignored --nocapture
 ```
@@ -134,7 +134,7 @@ when comparing revisions. Queue bytes are serialized JSON, not heap or RSS.
 To isolate frame packing, the drain probe queues 10,000 small events before
 starting its clock, then packs every event into frames. It checks complete FIFO
 delivery, frame byte limits and empty byte accounting, and reports elapsed
-milliseconds and frame count. `BUZZ_OBSERVER_PROBE_EVENTS` changes the count;
+milliseconds and frame count. `HIVE_OBSERVER_PROBE_EVENTS` changes the count;
 the workload must fit the existing queue budget.
 
 ```sh

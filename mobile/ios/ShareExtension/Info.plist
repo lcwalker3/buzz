@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>BuzzAppGroupIdentifier</key>
-	<string>$(BUZZ_APP_GROUP_IDENTIFIER)</string>
+	<string>$(HIVE_APP_GROUP_IDENTIFIER)</string>
 	<key>BuzzShareURLScheme</key>
 	<string>$(BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleDevelopmentRegion</key>

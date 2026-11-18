@@ -89,8 +89,8 @@ class HostedJourneyFixture {
   String subject = 'journey-owner';
   String? accountEmail = 'owner@example.com';
 
-  /// An organization realm, as an internal build's BUZZ_BUILDERLAB_URL and
-  /// BUZZ_BUILDERLAB_RELAYS configure. Enable before [mount].
+  /// An organization realm, as an internal build's HIVE_BUILDERLAB_URL and
+  /// HIVE_BUILDERLAB_RELAYS configure. Enable before [mount].
   static final organizationOrigin = Uri.parse('https://block.example.com');
   static const organizationRelayHost = 'buzz.block.example.com';
   bool organizationEnabled = false;

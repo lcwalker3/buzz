@@ -118,7 +118,7 @@ pub struct AdminActionDto {
     pub status: String,
     /// Principal who cancelled the action (hex pubkey); null unless `status` is
     /// `"cancelled"`. Attributes the one mutation that would otherwise carry no
-    /// actor trail while `BUZZ_AUDIT_ENABLED=false`.
+    /// actor trail while `HIVE_AUDIT_ENABLED=false`.
     pub cancelled_by: Option<String>,
     /// Operator reason, if provided.
     pub reason: Option<String>,
@@ -676,7 +676,7 @@ mod postgres_tests {
     const TEST_DB_URL: &str = "postgres://buzz:buzz_dev@localhost:5432/buzz"; // sadscan:disable np.postgres.1
 
     async fn setup_pool() -> PgPool {
-        let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| TEST_DB_URL.to_owned());
         PgPool::connect(&database_url)

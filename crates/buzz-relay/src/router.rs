@@ -556,8 +556,8 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         )
         // Webhook trigger (secret-authenticated, no NIP-98)
         .route("/hooks/{id}", post(api::bridge::workflow_webhook))
-        // Mesh demo echo probe — testbed-only; 404 unless BUZZ_MESH=on and
-        // BUZZ_MESH_DEMO_ECHO=on (see api::mesh_demo).
+        // Mesh demo echo probe — testbed-only; 404 unless HIVE_MESH=on and
+        // HIVE_MESH_DEMO_ECHO=on (see api::mesh_demo).
         .route("/_mesh/demo/echo", post(api::mesh_demo::demo_echo))
         // Huddle audio WebSocket route
         .route(
@@ -1275,7 +1275,7 @@ fn build_cors_layer(cors_origins: &[String]) -> CorsLayer {
 
     if origins.is_empty() {
         tracing::error!(
-            "BUZZ_CORS_ORIGINS set but no valid origins could be parsed — \
+            "HIVE_CORS_ORIGINS set but no valid origins could be parsed — \
              refusing to fall back to permissive CORS. Fix the origins or unset \
              the variable for development mode."
         );
@@ -3518,7 +3518,7 @@ mod tests {
 
             let state = real_db_state()
                 .await
-                .expect("F6: PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres");
+                .expect("F6: PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres");
             let pool = state.db.pool().clone();
 
             // Seed a community with a unique host.
@@ -3598,7 +3598,7 @@ mod tests {
 
             let base = real_db_state()
                 .await
-                .expect("PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL");
+                .expect("PostgreSQL must be available — set HIVE_TEST_DATABASE_URL");
             let pool = base.db.pool().clone();
             let community_id = Uuid::new_v4();
             let host = format!("reverify-{}.example", community_id.simple());

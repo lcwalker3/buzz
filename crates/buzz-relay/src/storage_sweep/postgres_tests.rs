@@ -35,7 +35,7 @@ fn observe_tick(
 async fn worker_publication_activates_reader_without_restart_or_mode_change() {
     // The PostgreSQL lane supplies a separate desired-state database per test.
     // Local callers must likewise supply an explicitly isolated database.
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL").expect("isolated BUZZ_TEST_DATABASE_URL");
+    let url = std::env::var("HIVE_TEST_DATABASE_URL").expect("isolated HIVE_TEST_DATABASE_URL");
     let pool = sqlx::postgres::PgPoolOptions::new()
         .max_connections(4)
         .connect(&url)

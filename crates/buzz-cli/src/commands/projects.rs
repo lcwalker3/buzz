@@ -43,7 +43,7 @@ async fn cmd_add_channel_draft(
 ) -> Result<(), CliError> {
     let owner_hex = client
         .auth_tag_owner_hex()
-        .ok_or_else(|| CliError::Auth("project channel requests require BUZZ_AUTH_TAG".into()))?;
+        .ok_or_else(|| CliError::Auth("project channel requests require HIVE_AUTH_TAG".into()))?;
     let owner = PublicKey::parse(&owner_hex)
         .map_err(|error| CliError::Auth(format!("invalid owner attestation: {error}")))?;
     let built = build_project_channel(

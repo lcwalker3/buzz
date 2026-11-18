@@ -70,13 +70,13 @@ class RelayConfig {
 /// Compile-time environment config via --dart-define.
 ///
 /// Run with:
-///   flutter run --dart-define=BUZZ_RELAY_URL=http://localhost:3000 \
-///     --dart-define=BUZZ_PUSH_GATEWAY_URL=http://localhost:8080
+///   flutter run --dart-define=HIVE_RELAY_URL=http://localhost:3000 \
+///     --dart-define=HIVE_PUSH_GATEWAY_URL=http://localhost:8080
 ///
 /// Or create a `.env.json` and use --dart-define-from-file=.env.json
 class Env {
   static const relayUrl = String.fromEnvironment(
-    'BUZZ_RELAY_URL',
+    'HIVE_RELAY_URL',
     defaultValue: 'http://localhost:3000',
   );
 
@@ -85,7 +85,7 @@ class Env {
       debugPushGatewayUrlOverride ?? _compiledPushGatewayUrl;
 
   static const _compiledPushGatewayUrl = String.fromEnvironment(
-    'BUZZ_PUSH_GATEWAY_URL',
+    'HIVE_PUSH_GATEWAY_URL',
   );
 
   /// Replaces the compiled gateway origin in tests, so a plain `flutter test`

@@ -13,8 +13,8 @@
 //! ```
 //!
 //! The test creates and removes its own bucket. The MinIO container name is
-//! overridable with `BUZZ_MINIO_CONTAINER`; credentials/endpoint/region/addressing
-//! use the same `BUZZ_S3_*` env vars as `static_creds_minio`.
+//! overridable with `HIVE_MINIO_CONTAINER`; credentials/endpoint/region/addressing
+//! use the same `HIVE_S3_*` env vars as `static_creds_minio`.
 
 use std::process::Command;
 
@@ -27,14 +27,14 @@ fn env_or(name: &str, default: &str) -> String {
 
 fn minio_config(bucket: String) -> MediaConfig {
     MediaConfig {
-        s3_endpoint: env_or("BUZZ_S3_ENDPOINT", "http://localhost:9000"),
-        s3_access_key: env_or("BUZZ_S3_ACCESS_KEY", "buzz_dev"),
-        s3_secret_key: env_or("BUZZ_S3_SECRET_KEY", "buzz_dev_secret"),
+        s3_endpoint: env_or("HIVE_S3_ENDPOINT", "http://localhost:9000"),
+        s3_access_key: env_or("HIVE_S3_ACCESS_KEY", "buzz_dev"),
+        s3_secret_key: env_or("HIVE_S3_SECRET_KEY", "buzz_dev_secret"),
         s3_bucket: bucket,
-        s3_region: env_or("BUZZ_S3_REGION", "us-east-1"),
-        s3_addressing_style: env_or("BUZZ_S3_ADDRESSING_STYLE", "path")
+        s3_region: env_or("HIVE_S3_REGION", "us-east-1"),
+        s3_addressing_style: env_or("HIVE_S3_ADDRESSING_STYLE", "path")
             .parse()
-            .expect("BUZZ_S3_ADDRESSING_STYLE must be path or virtual"),
+            .expect("HIVE_S3_ADDRESSING_STYLE must be path or virtual"),
         max_image_bytes: 50 * 1024 * 1024,
         max_gif_bytes: 10 * 1024 * 1024,
         max_video_bytes: 524_288_000,
@@ -47,7 +47,7 @@ fn minio_config(bucket: String) -> MediaConfig {
 }
 
 fn run_mc(args: &[String]) -> Result<(), String> {
-    let container = env_or("BUZZ_MINIO_CONTAINER", "buzz-minio");
+    let container = env_or("HIVE_MINIO_CONTAINER", "buzz-minio");
     let output = Command::new("docker")
         .arg("exec")
         .arg(container)

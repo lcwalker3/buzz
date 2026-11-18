@@ -1404,7 +1404,7 @@ mod probe {
     //! Empirical probe of rust-s3 + `fail-on-err` + MinIO surfacing of 412.
     //!
     //! Run manually:
-    //!   BUZZ_GIT_S3_PROBE=1 cargo test -p buzz-relay --lib \
+    //!   HIVE_GIT_S3_PROBE=1 cargo test -p buzz-relay --lib \
     //!     api::git::store::probe -- --nocapture --test-threads=1
     //!
     //! Pre-req: `docker compose up minio` and the `buzz-git` bucket exists.
@@ -1412,7 +1412,7 @@ mod probe {
     use super::*;
 
     fn probe_enabled() -> bool {
-        std::env::var("BUZZ_GIT_S3_PROBE").as_deref() == Ok("1")
+        std::env::var("HIVE_GIT_S3_PROBE").as_deref() == Ok("1")
     }
 
     fn store() -> GitStore {
@@ -1420,16 +1420,16 @@ mod probe {
         // signing inputs are overridable for a real provider such as Railway.
         // The hydrate/CAS live tests use explicit local MinIO fixtures instead.
         let endpoint =
-            std::env::var("BUZZ_S3_ENDPOINT").unwrap_or_else(|_| "http://localhost:9000".into());
-        let access_key = std::env::var("BUZZ_S3_ACCESS_KEY").unwrap_or_else(|_| "buzz_dev".into());
+            std::env::var("HIVE_S3_ENDPOINT").unwrap_or_else(|_| "http://localhost:9000".into());
+        let access_key = std::env::var("HIVE_S3_ACCESS_KEY").unwrap_or_else(|_| "buzz_dev".into());
         let secret_key =
-            std::env::var("BUZZ_S3_SECRET_KEY").unwrap_or_else(|_| "buzz_dev_secret".into());
-        let bucket = std::env::var("BUZZ_S3_BUCKET").unwrap_or_else(|_| "buzz-git".into());
-        let region = std::env::var("BUZZ_S3_REGION").unwrap_or_else(|_| "us-east-1".into());
-        let addressing_style = std::env::var("BUZZ_S3_ADDRESSING_STYLE")
+            std::env::var("HIVE_S3_SECRET_KEY").unwrap_or_else(|_| "buzz_dev_secret".into());
+        let bucket = std::env::var("HIVE_S3_BUCKET").unwrap_or_else(|_| "buzz-git".into());
+        let region = std::env::var("HIVE_S3_REGION").unwrap_or_else(|_| "us-east-1".into());
+        let addressing_style = std::env::var("HIVE_S3_ADDRESSING_STYLE")
             .unwrap_or_else(|_| "path".into())
             .parse()
-            .expect("BUZZ_S3_ADDRESSING_STYLE must be path or virtual");
+            .expect("HIVE_S3_ADDRESSING_STYLE must be path or virtual");
         GitStore::new(
             &endpoint,
             &access_key,
@@ -1450,7 +1450,7 @@ mod probe {
     #[tokio::test]
     async fn probe_412_surfacing() {
         if !probe_enabled() {
-            eprintln!("skipping: set BUZZ_GIT_S3_PROBE=1 to run against live MinIO");
+            eprintln!("skipping: set HIVE_GIT_S3_PROBE=1 to run against live MinIO");
             return;
         }
         let st = store();

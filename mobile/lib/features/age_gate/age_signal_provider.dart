@@ -81,7 +81,7 @@ class AgeSignalNotifier extends Notifier<AgeSignalState> {
 }
 
 /// Explicit pre-release testing opt-in. Production builds keep enforcement disabled.
-const ageGatingEnabled = bool.fromEnvironment('BUZZ_AGE_GATING_ENABLED');
+const ageGatingEnabled = bool.fromEnvironment('HIVE_AGE_GATING_ENABLED');
 
 final ageSignalProvider = NotifierProvider<AgeSignalNotifier, AgeSignalState>(
   ageGatingEnabled ? AgeSignalNotifier.new : _DisabledAgeSignalNotifier.new,

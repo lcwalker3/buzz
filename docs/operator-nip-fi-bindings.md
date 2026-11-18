@@ -12,7 +12,7 @@ An issuer binding alone does not change that community's required policy.
 A host may hold a binding only when it is exactly one DNS label under the
 suffix, has no port, and is not *reserved*. A host is reserved when
 `https://<host>` is a `command_audiences` entry of any issuer in
-`BUZZ_NIP_FI_ISSUERS`, so a command audience can never become a community
+`HIVE_NIP_FI_ISSUERS`, so a command audience can never become a community
 assertion audience. The relay refuses to start while a reserved host holds a
 binding, and the operator lookup route reports no issuers for a host that is not
 bindable or for an issuer that is not configured.
@@ -25,7 +25,7 @@ report still counts them as unbound. Repair those bindings with an explicit bind
 
 ## Configuration
 
-`BUZZ_NIP_FI_PROVISION_BINDING` is read in every NIP-FI mode. Unset or empty
+`HIVE_NIP_FI_PROVISION_BINDING` is read in every NIP-FI mode. Unset or empty
 binds nothing.
 
 ```json
@@ -37,29 +37,29 @@ binds nothing.
 
 - `host_suffix` is a lowercase domain name without a port or trailing dot.
 - `authorized_issuers` is non-empty, and every entry must be an `issuer` in
-  `BUZZ_NIP_FI_ISSUERS`. Each issuer is 1 to 2048 bytes.
-- The suffix must not cover any `BUZZ_NIP_FI_COMMUNITIES` host, and every
+  `HIVE_NIP_FI_ISSUERS`. Each issuer is 1 to 2048 bytes.
+- The suffix must not cover any `HIVE_NIP_FI_COMMUNITIES` host, and every
   `canonical_uri` there must be readable. The relay and `buzz-admin` both
   refuse to start otherwise.
 
 `buzz-admin` parses the same variables with the relay's parser. Run it with the
-relay's environment: `BUZZ_NIP_FI_PROVISION_BINDING`, `BUZZ_NIP_FI_ISSUERS`,
-`BUZZ_NIP_FI_COMMUNITIES`, and `DATABASE_URL`.
+relay's environment: `HIVE_NIP_FI_PROVISION_BINDING`, `HIVE_NIP_FI_ISSUERS`,
+`HIVE_NIP_FI_COMMUNITIES`, and `DATABASE_URL`.
 
 ### Database community source
 
-`BUZZ_NIP_FI_COMMUNITY_SOURCE=database` resolves communities from these
-bindings instead of `BUZZ_NIP_FI_COMMUNITIES`. The relay refuses to start if
-`BUZZ_NIP_FI_PROVISION_BINDING` is unset or `BUZZ_NIP_FI_COMMUNITIES` is set.
+`HIVE_NIP_FI_COMMUNITY_SOURCE=database` resolves communities from these
+bindings instead of `HIVE_NIP_FI_COMMUNITIES`. The relay refuses to start if
+`HIVE_NIP_FI_PROVISION_BINDING` is unset or `HIVE_NIP_FI_COMMUNITIES` is set.
 In `off` mode no snapshot is loaded.
 
 | Variable | Default | Bound |
 |----------|---------|-------|
-| `BUZZ_NIP_FI_COMMUNITY_SOURCE` | `env` | `env` or `database` |
-| `BUZZ_NIP_FI_SNAPSHOT_MAX_ROWS` | 1,000,000 | 1 to 10,000,000 community-issuer rows; a larger load fails |
-| `BUZZ_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS` | 10,000 | under the 30s refresh interval |
-| `BUZZ_NIP_FI_RESOLVER_NEGATIVE_CACHE_MAX` | 100,000 | 1 to 1,000,000 hosts |
-| `BUZZ_NIP_FI_RESOLVER_MAX_INFLIGHT` | 8 | at least 1, clamped below the database pool size |
+| `HIVE_NIP_FI_COMMUNITY_SOURCE` | `env` | `env` or `database` |
+| `HIVE_NIP_FI_SNAPSHOT_MAX_ROWS` | 1,000,000 | 1 to 10,000,000 community-issuer rows; a larger load fails |
+| `HIVE_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS` | 10,000 | under the 30s refresh interval |
+| `HIVE_NIP_FI_RESOLVER_NEGATIVE_CACHE_MAX` | 100,000 | 1 to 1,000,000 hosts |
+| `HIVE_NIP_FI_RESOLVER_MAX_INFLIGHT` | 8 | at least 1, clamped below the database pool size |
 
 Each pod loads a snapshot before it binds any listener, and refreshes it
 every 30s. A removed binding stops admitting new connections within 30s plus
@@ -87,7 +87,7 @@ an operator disable or a change in issuer configuration. A different owner
 retains the existing conflict. Legacy ensure and deployment bootstrap remain
 optional and do not accept an explicit initial policy.
 
-This policy is independent of `BUZZ_NIP_FI_CHANGES`. Mode `off` stores
+This policy is independent of `HIVE_NIP_FI_CHANGES`. Mode `off` stores
 it but bypasses enforcement. The production creation paths are operator
 create-only, legacy operator ensure, and deployment bootstrap; only create-only
 accepts this choice.
@@ -121,9 +121,9 @@ any bindable community remains unbound:
 more.
 
 `bind` refuses a reserved host, a host that is not one label under the suffix,
-and an issuer not in `BUZZ_NIP_FI_ISSUERS`.
+and an issuer not in `HIVE_NIP_FI_ISSUERS`.
 
-`unbind` works without `BUZZ_NIP_FI_PROVISION_BINDING`. It refuses to remove a
+`unbind` works without `HIVE_NIP_FI_PROVISION_BINDING`. It refuses to remove a
 community's last issuer, because an empty community looks never-provisioned and
 the next `backfill` would bind it again. To swap issuers, bind the new one and
 then unbind the old one. To stop a community logging in, archive or delete it.
@@ -145,14 +145,14 @@ contract:
 - Every lifecycle state answers 200. `active` is `false` once the community is
   archived or its deletion has started quiescing, including a tombstoned
   community; it stays `true` while a deletion is only requested.
-- `issuers` is `[]` when `BUZZ_NIP_FI_PROVISION_BINDING` is unset, the host is
-  not bindable, or nothing is bound. Only issuers in `BUZZ_NIP_FI_ISSUERS` are
+- `issuers` is `[]` when `HIVE_NIP_FI_PROVISION_BINDING` is unset, the host is
+  not bindable, or nothing is bound. Only issuers in `HIVE_NIP_FI_ISSUERS` are
   reported, in byte order.
 - 404 means no community has this host; 400 means the host is malformed.
 
 ## Rollout
 
-1. Deploy the relay with `BUZZ_NIP_FI_PROVISION_BINDING` set. New communities
+1. Deploy the relay with `HIVE_NIP_FI_PROVISION_BINDING` set. New communities
    are bound at creation from then on.
 2. Run `buzz-admin nip-fi backfill` with the relay's environment. Repeat it until
    it exits 0.
@@ -161,22 +161,22 @@ contract:
 
 ## Database source runbook
 
-`BUZZ_NIP_FI_COMMUNITY_SOURCE=database` reads communities from these bindings
-instead of `BUZZ_NIP_FI_COMMUNITIES`. Move one mode at a time, and only move
+`HIVE_NIP_FI_COMMUNITY_SOURCE=database` reads communities from these bindings
+instead of `HIVE_NIP_FI_COMMUNITIES`. Move one mode at a time, and only move
 forward when the step's go signals hold.
 
 ### Off
 
-Set `BUZZ_NIP_FI_COMMUNITY_SOURCE=database` with `BUZZ_NIP_FI_MODE=off`. No
-snapshot loads in `off`, but every `BUZZ_NIP_FI_RESOLVER_*` and
-`BUZZ_NIP_FI_SNAPSHOT_*` value is validated, so a bad one fails this deploy.
+Set `HIVE_NIP_FI_COMMUNITY_SOURCE=database` with `HIVE_NIP_FI_MODE=off`. No
+snapshot loads in `off`, but every `HIVE_NIP_FI_RESOLVER_*` and
+`HIVE_NIP_FI_SNAPSHOT_*` value is validated, so a bad one fails this deploy.
 
 - Go: the rollout completes, and `buzz-admin nip-fi backfill` exits 0.
 - No-go: a pod fails config validation. Fix the named variable.
 
 ### Shadow
 
-Set `BUZZ_NIP_FI_MODE=shadow`. Each pod now loads the snapshot before any
+Set `HIVE_NIP_FI_MODE=shadow`. Each pod now loads the snapshot before any
 listener binds, refreshes it every 30 s, and records what enforce would decide
 without refusing anything. Shadow labels database-source records
 `community="bound"` or `"unmapped"`, never a host.
@@ -196,7 +196,7 @@ without refusing anything. Shadow labels database-source records
 
 ### Enforce
 
-Set `BUZZ_NIP_FI_MODE=enforce`. Watch the same signals, plus the rate of 503
+Set `HIVE_NIP_FI_MODE=enforce`. Watch the same signals, plus the rate of 503
 responses on login.
 
 - Go: the shadow signals keep holding, and 503s stay at their shadow baseline.
@@ -216,8 +216,8 @@ responses on login.
 ### When the snapshot is too big or too slow
 
 A load fails when the snapshot has more rows than
-`BUZZ_NIP_FI_SNAPSHOT_MAX_ROWS` or takes longer than
-`BUZZ_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS`. Both get worse as communities are
+`HIVE_NIP_FI_SNAPSHOT_MAX_ROWS` or takes longer than
+`HIVE_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS`. Both get worse as communities are
 added, so they usually arrive during normal growth, not at a deploy.
 
 - New pods: the startup load fails and the process exits, so new pods
@@ -226,7 +226,7 @@ added, so they usually arrive during normal growth, not at a deploy.
   also fail it.
 - Running pods: their refreshes fail but the last good snapshot keeps
   answering. Once it is 120 s old it is stale, and every login's host goes to
-  a live lookup. Live lookups share `BUZZ_NIP_FI_RESOLVER_MAX_INFLIGHT` slots
+  a live lookup. Live lookups share `HIVE_NIP_FI_RESOLVER_MAX_INFLIGHT` slots
   (8 by default). Concurrent logins for the same host share one lookup, and a
   login waits up to 50 ms for a free slot; how many are shed depends on login
   load across distinct hosts and on lookup latency. In enforce, a shed login
@@ -235,10 +235,10 @@ added, so they usually arrive during normal growth, not at a deploy.
 
 Ways out, in order:
 
-1. Raise `BUZZ_NIP_FI_SNAPSHOT_MAX_ROWS` (up to 10,000,000) or
-   `BUZZ_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS` (under 30,000), whichever the
+1. Raise `HIVE_NIP_FI_SNAPSHOT_MAX_ROWS` (up to 10,000,000) or
+   `HIVE_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS` (under 30,000), whichever the
    failure `reason` names, and roll out.
-2. If that cannot land quickly, set `BUZZ_NIP_FI_MODE=off`. `off` loads no
+2. If that cannot land quickly, set `HIVE_NIP_FI_MODE=off`. `off` loads no
    snapshot, so pods boot and admit as they did before NIP-FI.
 
 ## Assertion policy ID change

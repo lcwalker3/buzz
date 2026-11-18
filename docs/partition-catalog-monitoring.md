@@ -1,7 +1,7 @@
 # Partition catalog monitoring
 
 The relay audits the `events` and `delivery_log` partition catalogs at startup
-and every `BUZZ_PARTITION_AUDIT_INTERVAL_SECS` (default 900 seconds). Results are
+and every `HIVE_PARTITION_AUDIT_INTERVAL_SECS` (default 900 seconds). Results are
 diagnostic only. They appear in `/_status.partition_catalog` and in the metrics
 below, and they never change `/_readiness` or `/_liveness`. Alert on them; do not
 gate traffic on them.
@@ -82,7 +82,7 @@ run with a new outcome:
 - `buzz_partition_create_attempts_total{table, outcome}` counts per-month
   decisions in each maintenance pass: `created`, `error`, or `skipped_covered`
   for a month that was already covered. Maintenance runs at startup, and on
-  every periodic audit when `BUZZ_PARTITION_MANAGER_ADVANCE_ENABLED` is on (the
+  every periodic audit when `HIVE_PARTITION_MANAGER_ADVANCE_ENABLED` is on (the
   default), so `skipped_covered` then grows on every pass in steady state.
 
 ## Alerts
@@ -106,7 +106,7 @@ otherwise read as a stopped loop.
 # The last success is older than two default audit intervals. This also fires
 # for a table that has never audited successfully, whose timestamp is 0, and
 # keeps firing through sustained failures. Scale 1800 with
-# BUZZ_PARTITION_AUDIT_INTERVAL_SECS.
+# HIVE_PARTITION_AUDIT_INTERVAL_SECS.
 - alert: BuzzPartitionAuditStale
   expr: time() - buzz_partition_audit_last_success_timestamp_seconds > 1800
   for: 10m

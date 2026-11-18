@@ -6,7 +6,7 @@ use buzz_feature_flags::{
     IntegerFlag,
 };
 
-const ENV_NAMESPACE: &str = "BUZZ_FEATURE_FLAG_";
+const ENV_NAMESPACE: &str = "HIVE_FEATURE_FLAG_";
 
 fn community(id: &str) -> CommunityId {
     CommunityId::from_uuid(id.parse().expect("valid community UUID"))

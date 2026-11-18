@@ -135,7 +135,7 @@ impl AdmissionDeadline {
     }
 }
 
-/// The relay's community source (`BUZZ_NIP_FI_COMMUNITY_SOURCE`): the
+/// The relay's community source (`HIVE_NIP_FI_COMMUNITY_SOURCE`): the
 /// static `env` map, or the database resolver.
 #[derive(Clone, Copy)]
 pub(crate) enum Communities<'a> {

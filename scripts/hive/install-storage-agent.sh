@@ -2,7 +2,7 @@
 # Installs a per-user launchd agent running Versity S3 Gateway (versitygw) as
 # The Hive's local S3-compatible storage: a plain folder served over S3 on
 # 127.0.0.1 only. Credentials come from the repo's gitignored .env
-# (BUZZ_S3_ACCESS_KEY / BUZZ_S3_SECRET_KEY / BUZZ_S3_ENDPOINT / BUZZ_S3_BUCKET).
+# (HIVE_S3_ACCESS_KEY / HIVE_S3_SECRET_KEY / HIVE_S3_ENDPOINT / HIVE_S3_BUCKET).
 #
 # Replaces MinIO, whose upstream repository is archived and which Homebrew
 # deprecates. Uninstall with:
@@ -23,7 +23,7 @@ label="com.thehive.storage"
 plist="$HOME/Library/LaunchAgents/$label.plist"
 data_dir="${HIVE_DATA_DIR:-$HOME/Library/Application Support/TheHive}/s3"
 log_dir="$HOME/Library/Logs/TheHive"
-listen="${BUZZ_S3_ENDPOINT#http://}"
+listen="${HIVE_S3_ENDPOINT#http://}"
 mkdir -p "$data_dir" "$log_dir" "$(dirname "$plist")"
 
 cat > "$plist" <<PLIST
@@ -36,14 +36,14 @@ cat > "$plist" <<PLIST
   <array>
     <string>$vgw</string>
     <string>--port</string><string>$listen</string>
-    <string>--region</string><string>${BUZZ_S3_REGION:-us-east-1}</string>
+    <string>--region</string><string>${HIVE_S3_REGION:-us-east-1}</string>
     <string>posix</string>
     <string>$data_dir</string>
   </array>
   <key>EnvironmentVariables</key>
   <dict>
-    <key>ROOT_ACCESS_KEY_ID</key><string>$BUZZ_S3_ACCESS_KEY</string>
-    <key>ROOT_SECRET_ACCESS_KEY</key><string>$BUZZ_S3_SECRET_KEY</string>
+    <key>ROOT_ACCESS_KEY_ID</key><string>$HIVE_S3_ACCESS_KEY</string>
+    <key>ROOT_SECRET_ACCESS_KEY</key><string>$HIVE_S3_SECRET_KEY</string>
   </dict>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key><true/>
@@ -65,10 +65,10 @@ for _ in $(seq 1 20); do
   sleep 0.5
 done
 status=$(curl -s -o /dev/null -w '%{http_code}' -X PUT \
-  --aws-sigv4 "aws:amz:${BUZZ_S3_REGION:-us-east-1}:s3" \
-  --user "$BUZZ_S3_ACCESS_KEY:$BUZZ_S3_SECRET_KEY" \
-  "http://$listen/$BUZZ_S3_BUCKET")
+  --aws-sigv4 "aws:amz:${HIVE_S3_REGION:-us-east-1}:s3" \
+  --user "$HIVE_S3_ACCESS_KEY:$HIVE_S3_SECRET_KEY" \
+  "http://$listen/$HIVE_S3_BUCKET")
 case "$status" in
-  200|409) echo "Installed $label; bucket $BUZZ_S3_BUCKET ready (HTTP $status)" ;;
+  200|409) echo "Installed $label; bucket $HIVE_S3_BUCKET ready (HTTP $status)" ;;
   *) echo "Bucket create failed (HTTP $status); see $log_dir/storage.log" >&2; exit 1 ;;
 esac

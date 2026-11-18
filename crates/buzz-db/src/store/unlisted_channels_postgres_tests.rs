@@ -22,7 +22,7 @@ impl Fixture {
         let pool = PgPool::connect(&crate::test_support::database_url())
             .await
             .expect("connect to test DB");
-        if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
+        if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
             crate::migration::run_migrations(&pool)
                 .await
                 .expect("migrate test DB");

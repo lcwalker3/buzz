@@ -12,7 +12,7 @@
 use std::sync::Arc;
 
 use axum::extract::ws::Message as WsMessage;
-use tracing::{debug, warn};
+use tracing::{debug, info, warn};
 
 use crate::access::{AuthAttempt, AuthResult};
 use crate::connection::{AuthState, ConnectionState};
@@ -774,6 +774,11 @@ pub async fn handle_auth(event: nostr::Event, conn: Arc<ConnectionState>, state:
                 PolicyCheck::Denied => {
                     metrics::counter!("buzz_auth_failures_total", "reason" => "not_relay_member")
                         .increment(1);
+                    // Operators of a self-hosted relay need to see who is
+                    // asking to join (e.g. to make the first sign-in the
+                    // owner). Only the public key is logged.
+                    info!(conn_id = %conn_id, pubkey = %pubkey.to_hex(),
+                        "auth denied: not a relay member");
                     if !attempt.reject(&conn, AuthOutcome::NotRelayMember) {
                         return;
                     }
@@ -3594,7 +3599,7 @@ mod tests {
             // Fail hard on infrastructure errors — the postgres lane guarantees a DB.
             let pool = sqlx::PgPool::connect(&db_url)
                 .await
-                .expect("W1: PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL");
+                .expect("W1: PostgreSQL must be available — set HIVE_TEST_DATABASE_URL");
             // Fix 5: use Config::for_test() which holds NIP_FI_ENV_LOCK internally. [FI-TRACE-ENV-RACE]
             let mut config = crate::config::Config::for_test();
             config.require_relay_membership = false;

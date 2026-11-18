@@ -12,7 +12,7 @@ fn owned_pi(acp: AcpClient, protocol_version: u32) -> OwnedAgent {
         desired_model_request_id: None,
         desired_model_pending_ack: false,
         startup_effort: None,
-        agent_name: BUZZ_PI_ACP_NAME.into(),
+        agent_name: HIVE_PI_ACP_NAME.into(),
         goose_system_prompt_supported: None,
         protocol_version,
     }
@@ -25,7 +25,7 @@ fn fixture_dir() -> std::path::PathBuf {
 }
 
 fn script_at(dir: &std::path::Path, script: &str) -> std::path::PathBuf {
-    let path = dir.join(BUZZ_PI_ACP_NAME);
+    let path = dir.join(HIVE_PI_ACP_NAME);
     std::fs::write(&path, format!("#!/bin/bash\n{script}\n")).unwrap();
     std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o700)).unwrap();
     path
@@ -60,18 +60,18 @@ async fn pi_composed_prompt_uses_meta_without_capability_negotiation() {
         let mut agent = owned_pi(acp, version);
         assert!(agent.has_system_prompt_support());
         let mut ctx = tests::make_prompt_context_no_owner();
-        ctx.base_prompt = Some("BUZZ_BASE".into());
-        ctx.system_prompt = Some("BUZZ_PERSONA".into());
-        ctx.team_instructions = Some("BUZZ_TEAM".into());
+        ctx.base_prompt = Some("HIVE_BASE".into());
+        ctx.system_prompt = Some("HIVE_PERSONA".into());
+        ctx.team_instructions = Some("HIVE_TEAM".into());
         ctx.session_title = Some("Pi fixture".into());
-        let core = "<core-memory>BUZZ_CORE</core-memory>";
-        let canvas = "<channel-canvas>BUZZ_CANVAS</channel-canvas>";
+        let core = "<core-memory>HIVE_CORE</core-memory>";
+        let canvas = "<channel-canvas>HIVE_CANVAS</channel-canvas>";
         create_session_and_apply_model(
             &mut agent,
             &ctx,
             Some(core),
             NewSessionChannelContext {
-                huddle_instructions: Some("BUZZ_HUDDLE"),
+                huddle_instructions: Some("HIVE_HUDDLE"),
                 canvas: Some(canvas),
                 name: Some("channel"),
                 scope: None,
@@ -94,17 +94,17 @@ async fn pi_composed_prompt_uses_meta_without_capability_negotiation() {
             system_prompt: ctx.system_prompt.as_deref(),
             team_instructions: ctx.team_instructions.as_deref(),
             agent_core: Some(core),
-            huddle_instructions: Some("BUZZ_HUDDLE"),
+            huddle_instructions: Some("HIVE_HUDDLE"),
             agent_canvas: Some(canvas),
         };
         let user = prepend_standing_for_legacy(2, &standing, "EVENT");
         for marker in [
-            "BUZZ_BASE",
-            "BUZZ_PERSONA",
-            "BUZZ_TEAM",
-            "BUZZ_CORE",
-            "BUZZ_HUDDLE",
-            "BUZZ_CANVAS",
+            "HIVE_BASE",
+            "HIVE_PERSONA",
+            "HIVE_TEAM",
+            "HIVE_CORE",
+            "HIVE_HUDDLE",
+            "HIVE_CANVAS",
         ] {
             assert_eq!(
                 params["_meta"]["systemPrompt"]
@@ -134,9 +134,9 @@ async fn pi_composed_prompt_uses_meta_without_capability_negotiation() {
 
 #[tokio::test]
 async fn pi_launch_preserves_existing_skills_in_explicit_workspace() {
-    const FIXTURE_ENV: &str = "BUZZ_TEST_PI_LAUNCH_WORKSPACE";
+    const FIXTURE_ENV: &str = "HIVE_TEST_PI_LAUNCH_WORKSPACE";
     if let Some(dir) = std::env::var_os(FIXTURE_ENV) {
-        let path = std::path::PathBuf::from(dir).join(BUZZ_PI_ACP_NAME);
+        let path = std::path::PathBuf::from(dir).join(HIVE_PI_ACP_NAME);
         let mut client = AcpClient::spawn(
             path.to_str().unwrap(),
             &["--".into(), "--skill".into(), "/extra skills".into()],
@@ -231,10 +231,10 @@ read -r request
 }
 
 #[tokio::test]
-#[ignore = "requires BUZZ_TEST_PI_ACP pointing to a built fork and Pi on PATH"]
+#[ignore = "requires HIVE_TEST_PI_ACP pointing to a built fork and Pi on PATH"]
 async fn real_pi_preserves_buzz_prompt_and_launch_skills_on_restore() {
     use base64::Engine;
-    let adapter = std::env::var("BUZZ_TEST_PI_ACP").expect("set BUZZ_TEST_PI_ACP");
+    let adapter = std::env::var("HIVE_TEST_PI_ACP").expect("set HIVE_TEST_PI_ACP");
     let dir = fixture_dir();
     let home = dir.join("home");
     let workspace = dir.join("workspace");
@@ -244,7 +244,7 @@ async fn real_pi_preserves_buzz_prompt_and_launch_skills_on_restore() {
     }
     std::fs::write(
         skill.join("SKILL.md"),
-        "---\nname: buzz-fixture\ndescription: BUZZ_SKILL_MARKER\n---\nSynthetic instructions.\n",
+        "---\nname: buzz-fixture\ndescription: HIVE_SKILL_MARKER\n---\nSynthetic instructions.\n",
     )
     .unwrap();
     let path = script_at(&dir, &format!(
@@ -267,17 +267,17 @@ async fn real_pi_preserves_buzz_prompt_and_launch_skills_on_restore() {
     assert!(agent.has_system_prompt_support());
     let mut ctx = tests::make_prompt_context_no_owner();
     ctx.cwd = workspace.to_string_lossy().into_owned();
-    ctx.base_prompt = Some("BUZZ_BASE".into());
-    ctx.system_prompt = Some("BUZZ_PERSONA".into());
-    ctx.team_instructions = Some("BUZZ_TEAM".into());
+    ctx.base_prompt = Some("HIVE_BASE".into());
+    ctx.system_prompt = Some("HIVE_PERSONA".into());
+    ctx.team_instructions = Some("HIVE_TEAM".into());
     ctx.session_title = Some("Pi fixture".into());
     let id = create_session_and_apply_model(
         &mut agent,
         &ctx,
-        Some("<core-memory>BUZZ_CORE</core-memory>"),
+        Some("<core-memory>HIVE_CORE</core-memory>"),
         NewSessionChannelContext {
-            huddle_instructions: Some("BUZZ_HUDDLE"),
-            canvas: Some("<channel-canvas>BUZZ_CANVAS</channel-canvas>"),
+            huddle_instructions: Some("HIVE_HUDDLE"),
+            canvas: Some("<channel-canvas>HIVE_CANVAS</channel-canvas>"),
             name: None,
             scope: None,
             channel_type: None,
@@ -349,13 +349,13 @@ async fn real_pi_preserves_buzz_prompt_and_launch_skills_on_restore() {
         .unwrap();
         let prompt = data["systemPrompt"].as_str().unwrap();
         for marker in [
-            "BUZZ_BASE",
-            "BUZZ_PERSONA",
-            "BUZZ_TEAM",
-            "BUZZ_CORE",
-            "BUZZ_HUDDLE",
-            "BUZZ_CANVAS",
-            "BUZZ_SKILL_MARKER",
+            "HIVE_BASE",
+            "HIVE_PERSONA",
+            "HIVE_TEAM",
+            "HIVE_CORE",
+            "HIVE_HUDDLE",
+            "HIVE_CANVAS",
+            "HIVE_SKILL_MARKER",
         ] {
             assert_eq!(
                 prompt.matches(marker).count(),

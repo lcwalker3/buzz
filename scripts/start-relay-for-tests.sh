@@ -156,18 +156,18 @@ fi
 
 log "Starting relay..."
 
-TEST_RELAY_PRIVATE_KEY="${BUZZ_RELAY_PRIVATE_KEY:-$(openssl rand -hex 32)}"
+TEST_RELAY_PRIVATE_KEY="${HIVE_RELAY_PRIVATE_KEY:-$(openssl rand -hex 32)}"
 
 # Optional NIP-43 membership gating: exported by callers that need a
 # membership-gated relay (e.g. the mesh lifecycle smoke). All three must be
 # set together — the relay fails fast otherwise.
 MEMBERSHIP_ENV=()
-if [[ "${BUZZ_REQUIRE_RELAY_MEMBERSHIP:-}" == "true" ]]; then
+if [[ "${HIVE_REQUIRE_RELAY_MEMBERSHIP:-}" == "true" ]]; then
   MEMBERSHIP_ENV+=(
-    BUZZ_REQUIRE_RELAY_MEMBERSHIP=true
-    RELAY_OWNER_PUBKEY="${RELAY_OWNER_PUBKEY:?RELAY_OWNER_PUBKEY required with BUZZ_REQUIRE_RELAY_MEMBERSHIP=true}"
+    HIVE_REQUIRE_RELAY_MEMBERSHIP=true
+    RELAY_OWNER_PUBKEY="${RELAY_OWNER_PUBKEY:?RELAY_OWNER_PUBKEY required with HIVE_REQUIRE_RELAY_MEMBERSHIP=true}"
   )
-  : "${BUZZ_RELAY_PRIVATE_KEY:?BUZZ_RELAY_PRIVATE_KEY required with BUZZ_REQUIRE_RELAY_MEMBERSHIP=true}"
+  : "${HIVE_RELAY_PRIVATE_KEY:?HIVE_RELAY_PRIVATE_KEY required with HIVE_REQUIRE_RELAY_MEMBERSHIP=true}"
   log "Membership gating enabled (NIP-43)"
 fi
 
@@ -175,11 +175,11 @@ nohup env \
   DATABASE_URL="postgres://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE}" \
   REDIS_URL=redis://localhost:6379 \
   RELAY_URL=ws://localhost:3000 \
-  BUZZ_BIND_ADDR=0.0.0.0:3000 \
-  BUZZ_RELAY_PRIVATE_KEY="${TEST_RELAY_PRIVATE_KEY}" \
-  BUZZ_REQUIRE_AUTH_TOKEN=false \
-  BUZZ_RECONCILE_CHANNELS=true \
-  BUZZ_GIT_PROBE_WRITERS=8 \
+  HIVE_BIND_ADDR=0.0.0.0:3000 \
+  HIVE_RELAY_PRIVATE_KEY="${TEST_RELAY_PRIVATE_KEY}" \
+  HIVE_REQUIRE_AUTH_TOKEN=false \
+  HIVE_RECONCILE_CHANNELS=true \
+  HIVE_GIT_PROBE_WRITERS=8 \
   ${MEMBERSHIP_ENV[@]+"${MEMBERSHIP_ENV[@]}"} \
   "./target/${CARGO_PROFILE}/buzz-relay" > /tmp/buzz-relay.log 2>&1 &
 echo $! > /tmp/buzz-relay.pid

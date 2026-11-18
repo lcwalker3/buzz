@@ -137,7 +137,7 @@ crates/
 desktop/              # Buzz 0.X Tauri desktop app (deprecated: new desktop work goes to block/buzz-app)
 web/                  # Browser web client (repo browser, served by the relay)
 mobile/               # Flutter mobile app
-migrations/           # SQL migrations (run at relay startup when BUZZ_AUTO_MIGRATE is on: binary default off, Helm default on; deployments at scale apply them out of band — see docs/database.md)
+migrations/           # SQL migrations (run at relay startup when HIVE_AUTO_MIGRATE is on: binary default off, Helm default on; deployments at scale apply them out of band — see docs/database.md)
 schema/               # Desired-state schema (schema/tables/public/ is the declarative schema source)
 scripts/              # Dev tooling
 .env.example          # Config template — copy to .env before running
@@ -369,9 +369,9 @@ check existing reply handlers for the pattern.
 ## Agent CLI (`buzz-cli`)
 
 `buzz` is the agent-first CLI. Auth env vars
-(`BUZZ_RELAY_URL`, `BUZZ_PRIVATE_KEY`, `BUZZ_AUTH_TAG`) are auto-injected
+(`HIVE_RELAY_URL`, `HIVE_PRIVATE_KEY`, `HIVE_AUTH_TAG`) are auto-injected
 by the ACP harness into managed agent subprocesses. In development, set
-`BUZZ_PRIVATE_KEY` and `BUZZ_RELAY_URL` in your environment manually.
+`HIVE_PRIVATE_KEY` and `HIVE_RELAY_URL` in your environment manually.
 
 ### Building the CLI
 
@@ -404,7 +404,7 @@ canonical signed Nostr event fields (`id`, `pubkey`, `kind`, `content`,
 
 `--format` is a **global** flag — it goes before the subcommand:
 `buzz --format compact channels list`, NOT `buzz channels list --format compact`.
-Without the flag it falls back to `BUZZ_OUTPUT_FORMAT` (unknown values mean
+Without the flag it falls back to `HIVE_OUTPUT_FORMAT` (unknown values mean
 `json`); buzz-acp sets that to `agent` for agent
 processes, so their event reads drop `sig`, trim the NIP-OA `auth` tag to
 `["auth", <owner>]`, and fold the NIP-10 `root`/`reply` tags into `reply_to`
@@ -466,7 +466,7 @@ Output is a PNG path on stdout.
 
 Use `--messages` to inject content into a channel before capture. The JSON file
 is an array of objects — `channelName` and `content` are required, all other
-fields are optional and passed through to `__BUZZ_E2E_EMIT_MOCK_MESSAGE__`:
+fields are optional and passed through to `__HIVE_E2E_EMIT_MOCK_MESSAGE__`:
 
 ```json
 [
@@ -580,7 +580,7 @@ must run BEFORE `installMockBridge(page)` — React reads state on mount, the
 bridge triggers mount.
 
 **Live messages:** Call `waitForMockLiveSubscription(page, channelName)` before
-`__BUZZ_E2E_EMIT_MOCK_MESSAGE__` — messages are silently dropped without a
+`__HIVE_E2E_EMIT_MOCK_MESSAGE__` — messages are silently dropped without a
 subscription. Navigate to the channel first (triggers subscription), then away
 (so unread indicators appear), then inject.
 

@@ -1,7 +1,7 @@
 //! NIP-FI community issuer bindings: backfill and explicit operator edits.
 //!
-//! `backfill` and `bind` read `BUZZ_NIP_FI_PROVISION_BINDING`,
-//! `BUZZ_NIP_FI_ISSUERS` and `BUZZ_NIP_FI_COMMUNITIES` with the relay's own
+//! `backfill` and `bind` read `HIVE_NIP_FI_PROVISION_BINDING`,
+//! `HIVE_NIP_FI_ISSUERS` and `HIVE_NIP_FI_COMMUNITIES` with the relay's own
 //! parser and overlap check, so the CLI binds exactly what relay provisioning
 //! would. `unbind` works without provisioning config. See
 //! `docs/operator-nip-fi-bindings.md`.
@@ -31,7 +31,7 @@ pub enum NipFiCommand {
         /// Exact community hostname.
         #[arg(long)]
         host: String,
-        /// Issuer configured in `BUZZ_NIP_FI_ISSUERS`.
+        /// Issuer configured in `HIVE_NIP_FI_ISSUERS`.
         #[arg(long)]
         issuer: String,
     },
@@ -76,7 +76,7 @@ fn policy_for(
     if matches!(command, NipFiCommand::Unbind { .. }) {
         return Ok(load().ok().flatten());
     }
-    let policy = load()?.context("BUZZ_NIP_FI_PROVISION_BINDING is required")?;
+    let policy = load()?.context("HIVE_NIP_FI_PROVISION_BINDING is required")?;
     Ok(Some(policy))
 }
 
@@ -283,7 +283,7 @@ mod postgres_tests {
     /// the first wave of a test lane, where every worker clones its database
     /// at once and a first connection can take longer than 3 s.
     async fn db() -> Db {
-        let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .unwrap_or_else(|_| DbConfig::default().database_url);
         Db::new(&DbConfig {
             database_url,
@@ -308,7 +308,7 @@ mod postgres_tests {
     /// Move a community into `quiescing` the way the deletion executor does:
     /// the lifecycle trigger accepts the change only under its GUCs.
     async fn quiesce(id: buzz_core::CommunityId) {
-        let url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let url = std::env::var("HIVE_TEST_DATABASE_URL")
             .unwrap_or_else(|_| DbConfig::default().database_url);
         let pool = sqlx::PgPool::connect(&url).await.expect("connect");
         let mut tx = pool.begin().await.expect("begin");

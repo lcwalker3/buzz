@@ -23,7 +23,7 @@ impl Fixture {
     }
     fn command(&self) -> Command {
         let mut command = Command::new(env!("CARGO_BIN_EXE_buzz-acp"));
-        for (key, _) in std::env::vars().filter(|(k, _)| k.starts_with("BUZZ_")) {
+        for (key, _) in std::env::vars().filter(|(k, _)| k.starts_with("HIVE_")) {
             command.env_remove(key);
         }
         command
@@ -129,12 +129,12 @@ fn file_and_stdin_run_one_fresh_equipped_session_without_service() {
             let mut command = f.command();
             command
                 .env("TASK_AGENT_PROTOCOL", protocol.to_string())
-                .env("BUZZ_ACP_SETUP_PAYLOAD", "invalid-if-used")
+                .env("HIVE_ACP_SETUP_PAYLOAD", "invalid-if-used")
                 .env(
-                    "BUZZ_ACP_ISOLATED_TURN_SOCKET",
+                    "HIVE_ACP_ISOLATED_TURN_SOCKET",
                     f.dir.join("must-not-exist.sock"),
                 )
-                .env("BUZZ_PRIVATE_KEY", "invalid-inherited-key")
+                .env("HIVE_PRIVATE_KEY", "invalid-inherited-key")
                 .args([
                     "--no-memory",
                     "--system-prompt",
@@ -204,7 +204,7 @@ fn file_and_stdin_run_one_fresh_equipped_session_without_service() {
                 .unwrap();
             let format = mcp_env
                 .iter()
-                .find(|entry| entry["name"] == "BUZZ_OUTPUT_FORMAT");
+                .find(|entry| entry["name"] == "HIVE_OUTPUT_FORMAT");
             assert_eq!(format.map(|entry| &entry["value"]), Some(&json!("agent")));
             let setup = session["params"].to_string();
             assert!(setup.contains("/test/mcp"));
@@ -641,7 +641,7 @@ fn launch_prefix_wraps_the_shipped_local_task_entrypoint() {
     let mut command = f.command();
     command
         .env(
-            "BUZZ_ACP_LAUNCH_PREFIX",
+            "HIVE_ACP_LAUNCH_PREFIX",
             json!([
                 "/bin/sh",
                 "-c",

@@ -13,7 +13,7 @@ import 'inline_agent_typing.dart';
 class TypingMotionPreview extends HookConsumerWidget {
   const TypingMotionPreview({super.key, required this.channelId});
   final String channelId;
-  static const enabled = bool.fromEnvironment('BUZZ_TYPING_PREVIEW');
+  static const enabled = bool.fromEnvironment('HIVE_TYPING_PREVIEW');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

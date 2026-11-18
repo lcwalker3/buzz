@@ -1376,7 +1376,7 @@ fn is_expired(t: &CachedToken) -> bool {
     now_secs() + TOKEN_REFRESH_LEEWAY.as_secs() >= exp
 }
 
-const BUZZ_AGENT_CONFIG_DIR_ENV: &str = "BUZZ_AGENT_CONFIG_DIR";
+const HIVE_AGENT_CONFIG_DIR_ENV: &str = "HIVE_AGENT_CONFIG_DIR";
 
 fn oauth_cache_root_for(
     config_override: Option<PathBuf>,
@@ -1394,7 +1394,7 @@ fn oauth_cache_root_for(
 
 fn default_oauth_cache_root() -> Result<PathBuf, AgentError> {
     oauth_cache_root_for(
-        std::env::var_os(BUZZ_AGENT_CONFIG_DIR_ENV).map(PathBuf::from),
+        std::env::var_os(HIVE_AGENT_CONFIG_DIR_ENV).map(PathBuf::from),
         dirs::home_dir(),
     )
 }

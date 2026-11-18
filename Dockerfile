@@ -70,12 +70,12 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 # Compile immutable artifact identity into the relay. Defaults preserve local
 # and third-party builds that do not run in provenance-aware CI.
-ARG BUZZ_SOURCE_SHA=unknown
-ARG BUZZ_BUILD_ID=local
-ARG BUZZ_BUILD_URL=unknown
-ENV BUZZ_SOURCE_SHA=${BUZZ_SOURCE_SHA} \
-    BUZZ_BUILD_ID=${BUZZ_BUILD_ID} \
-    BUZZ_BUILD_URL=${BUZZ_BUILD_URL}
+ARG HIVE_SOURCE_SHA=unknown
+ARG HIVE_BUILD_ID=local
+ARG HIVE_BUILD_URL=unknown
+ENV HIVE_SOURCE_SHA=${HIVE_SOURCE_SHA} \
+    HIVE_BUILD_ID=${HIVE_BUILD_ID} \
+    HIVE_BUILD_URL=${HIVE_BUILD_URL}
 RUN cargo build --release --locked -p buzz-relay --bin buzz-relay \
                                    -p buzz-admin --bin buzz-admin \
                                    -p buzz-pair-relay --bin buzz-pair-relay
@@ -156,10 +156,10 @@ COPY --from=web-builder /build/web/dist                 /srv/buzz/web
 COPY --from=web-builder /build/admin-web/dist           /srv/buzz/admin-web
 
 # The invite landing page is always served from the bundled web UI. Repository
-# browser routes require the separate BUZZ_SERVE_GIT_WEB_GUI=true opt-in. The
-# admin bundle is inert until BUZZ_ADMIN_HOST is configured.
-ENV BUZZ_WEB_DIR=/srv/buzz/web \
-    BUZZ_ADMIN_WEB_DIR=/srv/buzz/admin-web
+# browser routes require the separate HIVE_SERVE_GIT_WEB_GUI=true opt-in. The
+# admin bundle is inert until HIVE_ADMIN_HOST is configured.
+ENV HIVE_WEB_DIR=/srv/buzz/web \
+    HIVE_ADMIN_WEB_DIR=/srv/buzz/admin-web
 
 # 3000: app (WS + REST)  ·  8080: /_liveness, /_readiness  ·  9102: /metrics
 EXPOSE 3000 8080 9102

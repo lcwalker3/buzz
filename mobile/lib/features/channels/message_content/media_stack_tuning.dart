@@ -1,6 +1,6 @@
 part of '../message_content.dart';
 
-const _stackTuningEnabled = bool.fromEnvironment('BUZZ_PHOTO_STACK_TUNING');
+const _stackTuningEnabled = bool.fromEnvironment('HIVE_PHOTO_STACK_TUNING');
 
 // Preview-only session settings, shared by message stacks and the tuning sheet.
 final _stackTuning = ValueNotifier<List<_StackAdjustment>>(

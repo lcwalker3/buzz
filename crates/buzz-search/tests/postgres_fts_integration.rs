@@ -2,7 +2,7 @@
 //!
 //! Run through `scripts/postgres-test-run.sh -p buzz-search --tests` for a
 //! fresh desired-state database per test. Outside that lane, point
-//! BUZZ_TEST_DATABASE_URL at a disposable dedicated database; fixtures use
+//! HIVE_TEST_DATABASE_URL at a disposable dedicated database; fixtures use
 //! the production migrator and unique community IDs.
 
 use buzz_core::{
@@ -18,7 +18,7 @@ use uuid::Uuid;
 
 const TEST_DB_URL: &str = "postgres://buzz:buzz_dev@localhost:5432/buzz"; // sadscan:disable np.postgres.1 -- local test-only credentials
 async fn setup() -> (PgPool, String) {
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL").unwrap_or_else(|_| TEST_DB_URL.to_string());
+    let url = std::env::var("HIVE_TEST_DATABASE_URL").unwrap_or_else(|_| TEST_DB_URL.to_string());
     // The PostgreSQL lane supplies an isolated desired-state database. Outside
     // that lane use a dedicated database with the production migrations.
     let pool = PgPoolOptions::new()
@@ -26,7 +26,7 @@ async fn setup() -> (PgPool, String) {
         .connect(&url)
         .await
         .expect("connect test database");
-    if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
+    if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
         buzz_db::migration::run_migrations(&pool)
             .await
             .expect("apply production migrations");
@@ -2376,7 +2376,7 @@ async fn profile_names_use_verified_name_index() {
         .await
         .expect("analyze heads");
     // One connection, so this backend's statistics hold the search's scans.
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL").unwrap_or_else(|_| TEST_DB_URL.to_string());
+    let url = std::env::var("HIVE_TEST_DATABASE_URL").unwrap_or_else(|_| TEST_DB_URL.to_string());
     let pool = PgPoolOptions::new()
         .max_connections(1)
         .connect(&url)
@@ -2416,7 +2416,7 @@ async fn profile_names_use_verified_name_index() {
 
 /// Connect the way the relay does: [`buzz_search::pool_options`].
 async fn search_pool() -> PgPool {
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL").unwrap_or_else(|_| TEST_DB_URL.to_string());
+    let url = std::env::var("HIVE_TEST_DATABASE_URL").unwrap_or_else(|_| TEST_DB_URL.to_string());
     buzz_search::pool_options()
         .max_connections(4)
         .connect(&url)

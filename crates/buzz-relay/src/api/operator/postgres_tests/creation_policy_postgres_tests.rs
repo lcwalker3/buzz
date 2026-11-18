@@ -9,7 +9,7 @@ async fn policy_state(operator: &Keys) -> Arc<AppState> {
     let pool = sqlx::PgPool::connect(&crate::test_support::database_url())
         .await
         .expect("creation policy tests require Postgres");
-    if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
+    if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
         buzz_db::Db::from_pool(pool)
             .migrate()
             .await

@@ -26,8 +26,8 @@ async fn cli(url: &str, community: Uuid, pubkey: &str, args: &[&str], code: i32)
             ])
             .args(args)
             .env("DATABASE_URL", url)
-            .env("BUZZ_AUTO_MIGRATE", "false")
-            .env("BUZZ_RELAY_PRIVATE_KEY", format!("{:064x}", 1))
+            .env("HIVE_AUTO_MIGRATE", "false")
+            .env("HIVE_RELAY_PRIVATE_KEY", format!("{:064x}", 1))
             .kill_on_drop(true)
             .output(),
     )
@@ -57,7 +57,7 @@ async fn tokens(pool: &PgPool) -> Value {
 #[tokio::test]
 #[ignore = "requires Postgres"]
 async fn account_command_modes_cap_and_resume_use_real_database_engine() {
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL")
+    let url = std::env::var("HIVE_TEST_DATABASE_URL")
         .or_else(|_| std::env::var("DATABASE_URL"))
         .unwrap();
     let pool = PgPool::connect(&url).await.unwrap();
@@ -144,7 +144,7 @@ async fn account_command_modes_cap_and_resume_use_real_database_engine() {
 #[tokio::test]
 #[ignore = "requires Postgres"]
 async fn global_and_frozen_scope_commands_use_explicit_saved_inputs() {
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL")
+    let url = std::env::var("HIVE_TEST_DATABASE_URL")
         .or_else(|_| std::env::var("DATABASE_URL"))
         .unwrap();
     let pool = PgPool::connect(&url).await.unwrap();
@@ -163,8 +163,8 @@ async fn global_and_frozen_scope_commands_use_explicit_saved_inputs() {
         cmd.arg("user-deletions")
             .args(args)
             .env("DATABASE_URL", &url)
-            .env("BUZZ_AUTO_MIGRATE", "false")
-            .env("BUZZ_RELAY_PRIVATE_KEY", format!("{:064x}", 1))
+            .env("HIVE_AUTO_MIGRATE", "false")
+            .env("HIVE_RELAY_PRIVATE_KEY", format!("{:064x}", 1))
             .env_remove("RELAY_OPERATOR_PUBKEYS")
             .env_remove("RELAY_OWNER_PUBKEY")
             .kill_on_drop(true);

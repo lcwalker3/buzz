@@ -7,12 +7,12 @@ mod media_fixture;
 mod media_retry_postgres_tests;
 
 async fn fixture() -> (EntityDeletionStore, Uuid, sqlx::PgPool) {
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL")
+    let url = std::env::var("HIVE_TEST_DATABASE_URL")
         .or_else(|_| std::env::var("DATABASE_URL"))
         .unwrap();
     let pool = sqlx::PgPool::connect(&url).await.unwrap();
     let db = Db::from_pool(pool.clone());
-    if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
+    if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
         db.migrate().await.unwrap();
     }
     let store = db.entity_deletion_store();

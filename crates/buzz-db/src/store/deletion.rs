@@ -4711,7 +4711,7 @@ pub(crate) mod postgres_tests {
         })
         .await
         .expect("connect deletion test DB");
-        if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
+        if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
             db.migrate().await.expect("migrate deletion test DB");
         }
         let store = db.deletion_store();
@@ -5818,7 +5818,7 @@ DROP FUNCTION protect_community_deletion_manifest_keys();
     }
 
     async fn contender_db(application_name: &str) -> Db {
-        let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| "postgres://buzz:buzz_dev@localhost:5432/buzz".to_string()); // sadscan:disable np.postgres.1 -- local test-only credentials
         let options = PgConnectOptions::from_str(&database_url)
@@ -7868,18 +7868,18 @@ DROP FUNCTION protect_community_deletion_manifest_keys();
             .block_preclaim_setup(
                 request.id,
                 "pre_claim:service_setup",
-                "BUZZ_S3_ENDPOINT is required",
+                "HIVE_S3_ENDPOINT is required",
             )
             .await
             .expect("record setup failure");
         assert_eq!(blocked.stage, DeletionStage::Approved);
         assert_eq!(
             blocked.blocked_reason.as_deref(),
-            Some("BUZZ_S3_ENDPOINT is required")
+            Some("HIVE_S3_ENDPOINT is required")
         );
         assert_eq!(
             blocked.last_error.as_deref(),
-            Some("BUZZ_S3_ENDPOINT is required")
+            Some("HIVE_S3_ENDPOINT is required")
         );
         assert!(blocked.lease_owner.is_none());
         let inspection = store.inspect(request.id).await.expect("inspect failure");
@@ -7891,7 +7891,7 @@ DROP FUNCTION protect_community_deletion_manifest_keys();
         assert_eq!(checkpoint.status, "failed");
         assert_eq!(
             checkpoint.error.as_deref(),
-            Some("BUZZ_S3_ENDPOINT is required")
+            Some("HIVE_S3_ENDPOINT is required")
         );
         assert_eq!(checkpoint.attempts, 1);
         assert!(checkpoint.completed_at.is_none());
@@ -7904,17 +7904,17 @@ DROP FUNCTION protect_community_deletion_manifest_keys();
             .block_preclaim_setup(
                 request.id,
                 "pre_claim:service_setup",
-                "BUZZ_REDIS_URL is required",
+                "HIVE_REDIS_URL is required",
             )
             .await
             .expect("record repeated setup failure");
         assert_eq!(
             blocked_again.blocked_reason.as_deref(),
-            Some("BUZZ_REDIS_URL is required")
+            Some("HIVE_REDIS_URL is required")
         );
         assert_eq!(
             blocked_again.last_error.as_deref(),
-            Some("BUZZ_REDIS_URL is required")
+            Some("HIVE_REDIS_URL is required")
         );
         let repeated = store
             .inspect(request.id)
@@ -7929,14 +7929,14 @@ DROP FUNCTION protect_community_deletion_manifest_keys();
         assert_eq!(checkpoint.attempts, 2);
         assert_eq!(
             checkpoint.error.as_deref(),
-            Some("BUZZ_REDIS_URL is required")
+            Some("HIVE_REDIS_URL is required")
         );
         assert_eq!(
             checkpoint
                 .detail
                 .get("error")
                 .and_then(|value| value.as_str()),
-            Some("BUZZ_REDIS_URL is required")
+            Some("HIVE_REDIS_URL is required")
         );
         assert!(checkpoint.completed_at.is_none());
     }
@@ -8322,7 +8322,7 @@ DROP FUNCTION protect_community_deletion_manifest_keys();
     /// disturb the shared test database. Returns the admin pool and the
     /// scratch database guard, which drops the database.
     async fn scratch_desired_state_database(prefix: &str) -> (PgPool, ScratchDb) {
-        let base_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let base_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| "postgres://buzz:buzz_dev@localhost:5432/buzz".to_string());
         let admin = PgPool::connect(&base_url)
@@ -9272,7 +9272,7 @@ DROP FUNCTION protect_community_deletion_manifest_keys();
         // scenario in a dedicated database so concurrent purge/verify tests
         // never observe the drifted surface; advisory locks are also
         // per-database, so the parked migration lock cannot stall them.
-        let base_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let base_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| "postgres://buzz:buzz_dev@localhost:5432/buzz".to_string());
         let probe_db = ScratchDb::create(&base_url, "buzz_lock_probe").await;

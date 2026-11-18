@@ -69,7 +69,7 @@ pub struct WorkflowConfig {
 }
 
 /// Which workflow runs' messages carry agent-directing `buzz:workflow-mention`
-/// tags. Set relay-wide by `BUZZ_WORKFLOW_AGENT_MENTIONS`.
+/// tags. Set relay-wide by `HIVE_WORKFLOW_AGENT_MENTIONS`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum AgentMentions {
@@ -2068,7 +2068,7 @@ steps:
     // -- SEC-006: event-path regression (requires Postgres) ----------------
 
     fn test_database_url() -> String {
-        std::env::var("BUZZ_TEST_DATABASE_URL")
+        std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             // Local-only test default; this is not a production credential.
             .unwrap_or_else(|_| {

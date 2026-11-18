@@ -24,11 +24,11 @@ pub enum StorageMetricsMode {
 }
 
 impl StorageMetricsMode {
-    /// Read `BUZZ_STORAGE_METRICS`. Unset enables the database reader.
+    /// Read `HIVE_STORAGE_METRICS`. Unset enables the database reader.
     /// Legacy `inline`/`on` values also select the reader so existing charts
     /// need no coordinated mode change. `off` and unknown values disable it.
     pub fn from_env() -> Self {
-        let value = std::env::var("BUZZ_STORAGE_METRICS").ok();
+        let value = std::env::var("HIVE_STORAGE_METRICS").ok();
         parse_storage_metrics_mode(value.as_deref())
     }
 }
@@ -37,14 +37,14 @@ fn parse_storage_metrics_mode(value: Option<&str>) -> StorageMetricsMode {
     match value.map(str::trim).map(str::to_ascii_lowercase).as_deref() {
         Some("off") => StorageMetricsMode::Disabled,
         Some("inline") => {
-            tracing::warn!("BUZZ_STORAGE_METRICS=inline now reads worker snapshots; relay S3 sweeps are retired");
+            tracing::warn!("HIVE_STORAGE_METRICS=inline now reads worker snapshots; relay S3 sweeps are retired");
             StorageMetricsMode::Snapshot
         }
         Some("snapshot" | "external" | "on") | None => StorageMetricsMode::Snapshot,
         Some(other) => {
             tracing::error!(
                 value = other,
-                "invalid BUZZ_STORAGE_METRICS value; storage metrics disabled"
+                "invalid HIVE_STORAGE_METRICS value; storage metrics disabled"
             );
             StorageMetricsMode::Disabled
         }

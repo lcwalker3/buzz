@@ -87,7 +87,7 @@ fn blossom_auth_header(event: &nostr::Event) -> String {
 ///
 /// The trailing `free` box carries a random nonce so every test uploads its own
 /// blob. Tests run in parallel against one relay, and under
-/// `BUZZ_MEDIA_READ_MODE=enforce` any event that publishes a hash records a
+/// `HIVE_MEDIA_READ_MODE=enforce` any event that publishes a hash records a
 /// sticky publication marker, even if the event is later rejected. That marker
 /// ends uploader-preview reads of the hash, so a shared blob let one test's
 /// publish turn another test's GET into a 404.

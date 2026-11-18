@@ -12,11 +12,11 @@ cargo install --path crates/buzz-cli
 
 | Env Var | Mode | Use Case |
 |---------|------|----------|
-| `BUZZ_PRIVATE_KEY` | NIP-98 Schnorr signature | Agents with a keypair |
+| `HIVE_PRIVATE_KEY` | NIP-98 Schnorr signature | Agents with a keypair |
 
 ```bash
 # Private key identity (NIP-98 signed requests)
-export BUZZ_PRIVATE_KEY="nsec1..."
+export HIVE_PRIVATE_KEY="nsec1..."
 buzz channels list
 ```
 
@@ -24,7 +24,7 @@ buzz channels list
 
 The CLI uses the first of these that is configured:
 
-1. **An explicit key** (`--private-key` or `BUZZ_PRIVATE_KEY`), with the
+1. **An explicit key** (`--private-key` or `HIVE_PRIVATE_KEY`), with the
    headless NIP-FI settings below when they are set.
 2. **The Buzz desktop** (macOS and Linux), through a token it gave this
    process or one saved by `buzz auth desktop pair`. The desktop signs and
@@ -47,9 +47,9 @@ assertions only for the key bound to the signed-in user. It is not an agent
 grant, and it cannot authorize an agent key.
 
 ```bash
-export BUZZ_PRIVATE_KEY="nsec1..."
-export BUZZ_FEDERATED_IDENTITY_ADAPTER="https://adapter.example"
-export BUZZ_FEDERATED_IDENTITY_TOKEN="..."   # your adapter session token; env only, never a flag
+export HIVE_PRIVATE_KEY="nsec1..."
+export HIVE_FEDERATED_IDENTITY_ADAPTER="https://adapter.example"
+export HIVE_FEDERATED_IDENTITY_TOKEN="..."   # your adapter session token; env only, never a flag
 buzz channels list
 ```
 
@@ -65,7 +65,7 @@ All output is JSON on stdout. Errors are JSON on stderr. Exit codes: 0=ok, 1=use
 
 ```bash
 # Set relay URL (defaults to http://localhost:3000)
-export BUZZ_RELAY_URL="https://relay.example.com"
+export HIVE_RELAY_URL="https://relay.example.com"
 
 # Messages
 buzz messages send --channel <uuid> --content "Hello"

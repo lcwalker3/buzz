@@ -9,7 +9,7 @@ use clap::Parser;
 use serde_json::{json, Value};
 use std::{fs, os::unix::fs::PermissionsExt, path::PathBuf, process::Command};
 
-const CHILD: &str = "BUZZ_LAUNCH_TEST_CHILD";
+const CHILD: &str = "HIVE_LAUNCH_TEST_CHILD";
 const LITERAL: &str = "policy with spaces, ; $(not-a-shell)";
 
 struct Fixture(PathBuf);
@@ -46,7 +46,7 @@ for line in sys.stdin:
     result = {'protocolVersion': 1, 'argv': sys.argv[1:],
               'hermes': os.environ.get('HERMES_ACP_SKIP_CONFIGURED_MCP'),
               'codex': os.environ.get('CODEX_CONFIG'),
-              'prefix': os.environ.get('BUZZ_ACP_LAUNCH_PREFIX'),
+              'prefix': os.environ.get('HIVE_ACP_LAUNCH_PREFIX'),
               'sessionId': 'ses_test', 'meta': request.get('params', {}).get('_meta')}
     print(json.dumps({'jsonrpc': '2.0', 'id': request['id'], 'result': result}), flush=True)
 "#,
@@ -73,7 +73,7 @@ for line in sys.stdin:
     fn run(&self, mode: &str, prefix: Option<&str>) {
         let mut cmd = Command::new(std::env::current_exe().unwrap());
         for (name, _) in std::env::vars_os() {
-            if name.to_string_lossy().starts_with("BUZZ_") {
+            if name.to_string_lossy().starts_with("HIVE_") {
                 cmd.env_remove(name);
             }
         }

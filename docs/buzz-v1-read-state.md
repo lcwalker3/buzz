@@ -1,6 +1,6 @@
 # Private read-state accessory API
 
-`BUZZ_V1_ENABLED=true` opts into `/buzz/v1`; it is disabled by default.
+`HIVE_V1_ENABLED=true` opts into `/buzz/v1`; it is disabled by default.
 Conversation history, live events, edits and deletion remain Nostr-authoritative.
 This API neither replaces Nostr reads nor writes artificial signed events.
 Legacy NIP-RS continues unchanged, but does not synchronize with these tables.
@@ -114,7 +114,7 @@ whose tags are unusable, whose ancestry is unresolved, or whose conversation
 membership is undecided is left out, as are messages beyond the scan bounds
 (see [Bounds](#bounds-and-deployment)).
 
-The unread horizon defaults to 30 days (`BUZZ_V1_RETENTION_SECONDS`) and is
+The unread horizon defaults to 30 days (`HIVE_V1_RETENTION_SECONDS`) and is
 measured in author time (`created_at`). It filters unread and mentions, not
 latest activity, event storage or frontier state. Frontiers use a different
 clock, relay arrival (see [Order](#order)). Three consequences:
@@ -266,7 +266,7 @@ must use the established authenticated operational process and explicitly scope
 both community and actor; never equate the read-time horizon with data erasure.
 
 There is no down migration, and disabling the API is not a rollback. A relay
-built before 0056 that restarts with `BUZZ_AUTO_MIGRATE=true` (the Helm default)
+built before 0056 that restarts with `HIVE_AUTO_MIGRATE=true` (the Helm default)
 refuses to start on the migrated schema. Whole-community deletion run from a
 build before 0056 rejects the two new tables. A deletion approved on the
 earlier schema and not yet fenced fails structural revalidation after 0056:

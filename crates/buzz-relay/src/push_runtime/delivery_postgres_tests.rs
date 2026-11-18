@@ -4,7 +4,7 @@ use metrics_util::debugging::{DebugValue, DebuggingRecorder};
 #[tokio::test(flavor = "current_thread")]
 #[ignore = "requires Postgres"]
 async fn idle_delivery_worker_does_not_admit_empty_communities() {
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL").expect("isolated database URL");
+    let url = std::env::var("HIVE_TEST_DATABASE_URL").expect("isolated database URL");
     let pool = sqlx::postgres::PgPoolOptions::new()
         .max_connections(1)
         .connect(&url)
@@ -88,7 +88,7 @@ async fn delivery_worker_reaches_later_pages_before_revisiting_busy_communities(
         Json(serde_json::json!({"status": "accepted"}))
     }
 
-    let pool = sqlx::PgPool::connect(&std::env::var("BUZZ_TEST_DATABASE_URL").unwrap())
+    let pool = sqlx::PgPool::connect(&std::env::var("HIVE_TEST_DATABASE_URL").unwrap())
         .await
         .unwrap();
     // 1,000 empty communities and 65 ready communities cross the discovery page.

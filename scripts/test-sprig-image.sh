@@ -23,7 +23,7 @@ assert_run '
 '
 
 docker run --rm --entrypoint /bin/bash \
-  -e BUZZ_RELAY_URL=wss://relay.example.test/ "$IMAGE" -ceu '
+  -e HIVE_RELAY_URL=wss://relay.example.test/ "$IMAGE" -ceu '
     /usr/local/bin/sprig-entrypoint --help >/dev/null
     ! git config --global --get credential.https://relay.example.test/git.helper
     ! git config --global --get-all credential.helper
@@ -60,9 +60,9 @@ chmod 700 "$probe_dir/adapter"
 # Disposable test key; never used with any relay.
 GIT_AUTHOR_NAME='Inherited Human' GIT_AUTHOR_EMAIL=human@example.invalid \
 GIT_COMMITTER_NAME='Inherited Human' GIT_COMMITTER_EMAIL=human@example.invalid \
-BUZZ_PRIVATE_KEY=0000000000000000000000000000000000000000000000000000000000000001 \
-BUZZ_RELAY_URL=wss://relay.invalid \
-BUZZ_ACP_AGENT_COMMAND="$probe_dir/adapter" BUZZ_ACP_AGENT_ARGS= \
+HIVE_PRIVATE_KEY=0000000000000000000000000000000000000000000000000000000000000001 \
+HIVE_RELAY_URL=wss://relay.invalid \
+HIVE_ACP_AGENT_COMMAND="$probe_dir/adapter" HIVE_ACP_AGENT_ARGS= \
     /usr/local/bin/sprig-entrypoint > "$probe_dir/log" 2>&1 &
 pid=$!
 for _ in {1..100}; do

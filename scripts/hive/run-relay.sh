@@ -18,12 +18,12 @@ set +o allexport
 # Persistent data lives outside the repo so a re-clone never loses it.
 data_dir="${HIVE_DATA_DIR:-$HOME/Library/Application Support/TheHive}"
 mkdir -p "$data_dir/git" "$data_dir/git-pack-cache"
-export BUZZ_GIT_REPO_PATH="${BUZZ_GIT_REPO_PATH:-$data_dir/git}"
-export BUZZ_GIT_PACK_CACHE_PATH="${BUZZ_GIT_PACK_CACHE_PATH:-$data_dir/git-pack-cache}"
+export HIVE_GIT_REPO_PATH="${HIVE_GIT_REPO_PATH:-$data_dir/git}"
+export HIVE_GIT_PACK_CACHE_PATH="${HIVE_GIT_PACK_CACHE_PATH:-$data_dir/git-pack-cache}"
 
 # Serve the web client from the same origin when it has been built.
-if [[ -z "${BUZZ_WEB_DIR:-}" && -f web/dist/index.html ]]; then
-  export BUZZ_WEB_DIR="$repo_root/web/dist"
+if [[ -z "${HIVE_WEB_DIR:-}" && -f web/dist/index.html ]]; then
+  export HIVE_WEB_DIR="$repo_root/web/dist"
 fi
 
 exec "$repo_root/target/release/buzz-relay"

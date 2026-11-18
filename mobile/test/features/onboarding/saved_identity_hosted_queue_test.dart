@@ -142,7 +142,7 @@ void main() {
       expect(paths.length, count);
     },
     skip:
-        !const bool.fromEnvironment('BUZZ_HOSTED_RELAY_AUTH') ||
+        !const bool.fromEnvironment('HIVE_HOSTED_RELAY_AUTH') ||
         !HostedEnvironment.enabled,
   );
 }

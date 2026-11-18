@@ -40,7 +40,7 @@ operation was never accepted.
 Ship migrated callers with mutation dispatch paused before rolling out the
 route removal. Close the old gate on all old binaries and keep the new gate
 closed on new binaries. Apply additive schema, complete the whole-fleet rollout,
-then open `BUZZ_NIP_FI_CHANGES` and resume supported callers. See
+then open `HIVE_NIP_FI_CHANGES` and resume supported callers. See
 [rollout](community-auth-upgrades.md#schema-and-rollout). An uncertain operation
 from the old caller needs explicit reconciliation; a missing receipt is not
 permission to synthesize a replacement policy write.

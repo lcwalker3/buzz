@@ -99,12 +99,12 @@ where
     let matches = build_command().try_get_matches_from(args)?;
     let mut cli = Cli::from_arg_matches(&matches)?;
     if matches.value_source("format") == Some(clap::parser::ValueSource::DefaultValue) {
-        cli.format = env_output_format(std::env::var_os("BUZZ_OUTPUT_FORMAT").as_deref());
+        cli.format = env_output_format(std::env::var_os("HIVE_OUTPUT_FORMAT").as_deref());
     }
     Ok(cli)
 }
 
-/// `BUZZ_OUTPUT_FORMAT` only picks the default `--format`, so an empty or
+/// `HIVE_OUTPUT_FORMAT` only picks the default `--format`, so an empty or
 /// unknown value (e.g. one a newer harness sets) falls back to `json` rather
 /// than failing every command, writes included.
 fn env_output_format(value: Option<&std::ffi::OsStr>) -> OutputFormat {
@@ -115,7 +115,7 @@ fn env_output_format(value: Option<&std::ffi::OsStr>) -> OutputFormat {
         .to_str()
         .and_then(|value| OutputFormat::from_str(value, false).ok())
         .unwrap_or_else(|| {
-            eprintln!("warning: ignoring unsupported BUZZ_OUTPUT_FORMAT={value:?}; using json");
+            eprintln!("warning: ignoring unsupported HIVE_OUTPUT_FORMAT={value:?}; using json");
             OutputFormat::default()
         })
 }
@@ -128,21 +128,21 @@ fn env_output_format(value: Option<&std::ffi::OsStr>) -> OutputFormat {
 Buzz CLI — interact with a Buzz relay
 
 Configuration (flags override env vars):
-  BUZZ_RELAY_URL     Relay base URL        [default: the relay an agent's inherited
+  HIVE_RELAY_URL     Relay base URL        [default: the relay an agent's inherited
                      Buzz desktop credential acts on; else, with no private key,
                      the one relay a running Buzz desktop accepts this CLI's
                      pairing for (see `buzz auth desktop list`); else
                      http://localhost:3000. `auth desktop pair` given none
                      pairs for the desktop's active community. A bare host
                      means https://]
-  BUZZ_PRIVATE_KEY   Nostr private key (hex or nsec)  [unless a Buzz desktop provides it]
-  BUZZ_AUTH_TAG      NIP-OA auth tag JSON  [optional]
-  BUZZ_FEDERATED_IDENTITY_TOKEN    Your NIP-FA sign-in session token  [optional]
-  BUZZ_FEDERATED_IDENTITY_ADAPTER  NIP-FA adapter base URL  [optional]
+  HIVE_PRIVATE_KEY   Nostr private key (hex or nsec)  [unless a Buzz desktop provides it]
+  HIVE_AUTH_TAG      NIP-OA auth tag JSON  [optional]
+  HIVE_FEDERATED_IDENTITY_TOKEN    Your NIP-FA sign-in session token  [optional]
+  HIVE_FEDERATED_IDENTITY_ADAPTER  NIP-FA adapter base URL  [optional]
     Set both for relays that enforce federated identity (NIP-FI). The token
     is a human session for your own key, not an agent grant. The CLI requests
     an assertion, the adapter mints it, and the CLI sends it on every request.
-  BUZZ_OUTPUT_FORMAT Default --format; unknown values fall back to json  [optional]
+  HIVE_OUTPUT_FORMAT Default --format; unknown values fall back to json  [optional]
 
 The 'pack' subcommand runs locally and does not require a relay connection.
 
@@ -150,26 +150,26 @@ Exit codes: 0=ok  1=bad input  2=relay/network error  3=auth error  4=other  5=w
 Errors are JSON on stderr: {\"error\": \"<category>\", \"message\": \"<detail>\"}"
 )]
 struct Cli {
-    /// Relay URL; a bare host means https://. Overrides BUZZ_RELAY_URL env
+    /// Relay URL; a bare host means https://. Overrides HIVE_RELAY_URL env
     /// var. Without either, the relay an agent's inherited Buzz desktop
     /// credential acts on; else, with no private key, the one relay a running
     /// Buzz desktop accepts this CLI's pairing for; otherwise
     /// http://localhost:3000. Pairing given none uses the desktop's active
     /// community.
-    #[arg(long, global = true, env = "BUZZ_RELAY_URL")]
+    #[arg(long, global = true, env = "HIVE_RELAY_URL")]
     relay: Option<String>,
 
     /// Nostr private key (hex or nsec). This is the CLI's identity.
-    #[arg(long, env = "BUZZ_PRIVATE_KEY", hide_env_values = true)]
+    #[arg(long, env = "HIVE_PRIVATE_KEY", hide_env_values = true)]
     private_key: Option<String>,
 
     /// NIP-OA auth tag JSON (owner attestation). Injected into every signed event.
-    #[arg(long, env = "BUZZ_AUTH_TAG", hide_env_values = true)]
+    #[arg(long, env = "HIVE_AUTH_TAG", hide_env_values = true)]
     auth_tag: Option<String>,
 
     /// Output format: 'json' (default, full fields), 'compact' (reduced fields),
     /// or 'agent' (event reads without signature material). Defaults to
-    /// `BUZZ_OUTPUT_FORMAT` when that names a known format.
+    /// `HIVE_OUTPUT_FORMAT` when that names a known format.
     #[arg(long, value_enum, default_value = "json")]
     format: OutputFormat,
 
@@ -559,7 +559,7 @@ republish in progress). If the retry also fails, the command exits with an error
 Suggested --reason codes (unknown values are allowed): rotated, retired, \
 bot-rebuilt, left-organization, spam\n\n\
 Archiving a third-party identity is a human owner/admin action: an agent \
-running under BUZZ_AUTH_TAG signs as itself, so it can only ever satisfy \
+running under HIVE_AUTH_TAG signs as itself, so it can only ever satisfy \
 the self path (target == signer) — not the owner-of-agent path for another \
 identity.\n\n\
 Examples:\n  \
@@ -2257,15 +2257,15 @@ pub enum IssuesCmd {
     /// Create a git issue (NIP-34 kind:1621)
     Create {
         /// Repo owner pubkey (64-char hex). Optional when `--channel` (or
-        /// `BUZZ_GIT_ORIGIN_CHANNEL_ID`) names a project home.
+        /// `HIVE_GIT_ORIGIN_CHANNEL_ID`) names a project home.
         #[arg(long)]
         repo_owner: Option<String>,
         /// Repo identifier (d-tag). Optional when `--channel` (or
-        /// `BUZZ_GIT_ORIGIN_CHANNEL_ID`) names a project home.
+        /// `HIVE_GIT_ORIGIN_CHANNEL_ID`) names a project home.
         #[arg(long)]
         repo_id: Option<String>,
         /// Project home channel. Infers the repository, creating one bound to
-        /// this project when none exists. Defaults to `BUZZ_GIT_ORIGIN_CHANNEL_ID`.
+        /// this project when none exists. Defaults to `HIVE_GIT_ORIGIN_CHANNEL_ID`.
         #[arg(long)]
         channel: Option<String>,
         /// Issue title
@@ -2401,7 +2401,7 @@ pub enum MediaCmd {
 pub enum MemCmd {
     /// List non-tombstoned memory entries
     Ls {
-        /// Owner pubkey (hex). Overrides BUZZ_AUTH_TAG.
+        /// Owner pubkey (hex). Overrides HIVE_AUTH_TAG.
         #[arg(long)]
         owner: Option<String>,
         /// Agent pubkey (hex) to read as this key's owner.
@@ -2497,7 +2497,7 @@ pub enum PackCmd {
 /// Community moderation commands.
 ///
 /// The community (tenant) is selected by the relay host in `--relay` /
-/// `BUZZ_RELAY_URL` — moderation commands are community-global and carry no
+/// `HIVE_RELAY_URL` — moderation commands are community-global and carry no
 /// channel scope. The signing key must be a community owner/admin; the relay
 /// authorizes every command.
 #[derive(Subcommand)]
@@ -2590,7 +2590,7 @@ pub enum ModerationCmd {
     },
 }
 
-/// Normalize hand-authored `BUZZ_AUTH_TAG` input to strict JSON.
+/// Normalize hand-authored `HIVE_AUTH_TAG` input to strict JSON.
 ///
 /// `.env` files and shell exports sometimes carry the tag in the unquoted
 /// shorthand `[auth,<hex>,<conditions>,<hex>]` (quotes dropped by hand).

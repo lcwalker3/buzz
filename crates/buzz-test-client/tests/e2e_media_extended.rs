@@ -898,7 +898,7 @@ async fn test_ws_invalid_imeta_missing_fields() {
     client.disconnect().await.unwrap();
 }
 
-/// Run against an isolated relay with BUZZ_MEDIA_READ_MODE=enforce.
+/// Run against an isolated relay with HIVE_MEDIA_READ_MODE=enforce.
 #[tokio::test]
 #[ignore = "requires a relay with channel media enforcement"]
 async fn test_private_channel_media_revocation() {

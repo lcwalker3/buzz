@@ -116,7 +116,7 @@ class HostedRelayAuth extends ChangeNotifier {
   }
 
   /// Whether this build turns hosted relay auth on.
-  static const configured = bool.fromEnvironment('BUZZ_HOSTED_RELAY_AUTH');
+  static const configured = bool.fromEnvironment('HIVE_HOSTED_RELAY_AUTH');
 
   final BuilderlabAccountClient account;
   final BuilderlabAccountClient? organization;

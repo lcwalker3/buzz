@@ -9,13 +9,13 @@
 //!
 //! | Variable | Required | Description |
 //! |---|---|---|
-//! | `BUZZ_NIP_FI_MODE` | No | `off` (default), `shadow`, `enforce`, or `deny_protected`. `shadow` requires everything `enforce` does. |
-//! | `BUZZ_NIP_FI_ISSUERS` | If enforce | JSON array of issuer configs (see [`IssuerEnvConfig`]). |
-//! | `BUZZ_NIP_FI_COMMUNITIES` | If enforce | JSON array mapping each community's canonical URI to its authorized issuers (see [`CommunityEnvConfig`]). |
-//! | `BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS` | If enforce | Per-partition limit on session lifetime. |
-//! | `BUZZ_NIP_FI_PROVISION_BINDING` | No | JSON `{"host_suffix", "authorized_issuers"}` binding communities created one label under the suffix; read in every mode (see [`buzz_auth::ProvisionBindingPolicy`]). |
+//! | `HIVE_NIP_FI_MODE` | No | `off` (default), `shadow`, `enforce`, or `deny_protected`. `shadow` requires everything `enforce` does. |
+//! | `HIVE_NIP_FI_ISSUERS` | If enforce | JSON array of issuer configs (see [`IssuerEnvConfig`]). |
+//! | `HIVE_NIP_FI_COMMUNITIES` | If enforce | JSON array mapping each community's canonical URI to its authorized issuers (see [`CommunityEnvConfig`]). |
+//! | `HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS` | If enforce | Per-partition limit on session lifetime. |
+//! | `HIVE_NIP_FI_PROVISION_BINDING` | No | JSON `{"host_suffix", "authorized_issuers"}` binding communities created one label under the suffix; read in every mode (see [`buzz_auth::ProvisionBindingPolicy`]). |
 //!
-//! Each `BUZZ_NIP_FI_ISSUERS` entry also carries the S4 command-API fields.
+//! Each `HIVE_NIP_FI_ISSUERS` entry also carries the S4 command-API fields.
 //! Enforce-mode startup fails if any issuer lacks the required ones:
 //!
 //! | Field | Required | Constraint |
@@ -28,7 +28,7 @@
 //! the issuer JSON array), not a relay-level env var. A relay-level duplicate that could
 //! disagree with the enforced per-issuer value was removed in this PR.
 //!
-//! Absent or empty `BUZZ_NIP_FI_MODE` defaults to `off`, keeping the relay
+//! Absent or empty `HIVE_NIP_FI_MODE` defaults to `off`, keeping the relay
 //! backward-compatible until an operator explicitly enables enforcement.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -51,7 +51,7 @@ const MAX_CONNECTION_LIFETIME_SECS: u64 = 30 * 24 * 3600;
 
 // ── Per-issuer JSON config shape ─────────────────────────────────────────────
 
-/// One entry in the `BUZZ_NIP_FI_ISSUERS` JSON array.
+/// One entry in the `HIVE_NIP_FI_ISSUERS` JSON array.
 ///
 /// **Example** (one issuer, `nip-fi+jwt` dedicated assertions):
 /// ```json
@@ -96,7 +96,7 @@ pub(super) struct IssuerEnvConfig {
     /// Exact `iss` value.
     pub issuer: String,
     /// One or more accepted `aud` values for S4 command JWTs. Assertion `aud`
-    /// is the community's canonical URI from `BUZZ_NIP_FI_COMMUNITIES`.
+    /// is the community's canonical URI from `HIVE_NIP_FI_COMMUNITIES`.
     pub command_audiences: Vec<String>,
     /// Removed field. Present only so a stale config fails loudly instead of
     /// being silently ignored.
@@ -167,7 +167,7 @@ pub(super) enum JwksTransportEnvConfig {
     Mesh,
 }
 
-/// One entry in the `BUZZ_NIP_FI_COMMUNITIES` JSON array.
+/// One entry in the `HIVE_NIP_FI_COMMUNITIES` JSON array.
 ///
 /// ```json
 /// [{ "canonical_uri": "https://acme.relay.example",
@@ -232,7 +232,7 @@ impl NipFiCommunities {
             {
                 return Err(format!(
                     "community at index {idx}: authorized issuer at index {i} \
-                     is not configured in BUZZ_NIP_FI_ISSUERS"
+                     is not configured in HIVE_NIP_FI_ISSUERS"
                 ));
             }
             let binding = CommunityBinding::new(entry.canonical_uri, entry.authorized_issuers)
@@ -259,9 +259,9 @@ impl NipFiCommunities {
     }
 }
 
-/// Parse `BUZZ_NIP_FI_PROVISION_BINDING`, independent of `BUZZ_NIP_FI_MODE`.
+/// Parse `HIVE_NIP_FI_PROVISION_BINDING`, independent of `HIVE_NIP_FI_MODE`.
 /// [`buzz_auth::ProvisionBindingPolicy::from_env`] also refuses a suffix that
-/// covers a `BUZZ_NIP_FI_COMMUNITIES` host, for `buzz-admin` too.
+/// covers a `HIVE_NIP_FI_COMMUNITIES` host, for `buzz-admin` too.
 pub fn parse_provision_binding() -> Result<Option<buzz_auth::ProvisionBindingPolicy>, ConfigError> {
     buzz_auth::ProvisionBindingPolicy::from_env()
         .map_err(|e| ConfigError::InvalidValue(e.to_string()))
@@ -276,9 +276,9 @@ pub fn parse_provision_binding() -> Result<Option<buzz_auth::ProvisionBindingPol
 /// session-lifetime bound.
 #[derive(Debug, Clone)]
 pub struct NipFiRelayConfig {
-    /// The enforcement mode selected by `BUZZ_NIP_FI_MODE`.
+    /// The enforcement mode selected by `HIVE_NIP_FI_MODE`.
     pub mode: NipFiMode,
-    /// Where community bindings come from (`BUZZ_NIP_FI_COMMUNITY_SOURCE`).
+    /// Where community bindings come from (`HIVE_NIP_FI_COMMUNITY_SOURCE`).
     pub source: CommunitySource,
     /// Validated per-issuer assertion-policy registry.
     pub registry: IssuerRegistry,
@@ -300,19 +300,19 @@ pub struct NipFiRelayConfig {
 impl NipFiRelayConfig {
     /// Parse NIP-FI relay configuration from the process environment.
     ///
-    /// Returns `Err` when `BUZZ_NIP_FI_MODE=enforce` but required config is
+    /// Returns `Err` when `HIVE_NIP_FI_MODE=enforce` but required config is
     /// missing or invalid (fail-closed: no token is accepted until this passes).
     pub fn from_env() -> Result<Self, ConfigError> {
         let mode = parse_mode()?;
         let source = parse_community_source()?;
         if source == CommunitySource::Database
-            && !std::env::var("BUZZ_NIP_FI_COMMUNITIES")
+            && !std::env::var("HIVE_NIP_FI_COMMUNITIES")
                 .unwrap_or_default()
                 .trim()
                 .is_empty()
         {
             return Err(ConfigError::InvalidValue(
-                "BUZZ_NIP_FI_COMMUNITY_SOURCE=database but BUZZ_NIP_FI_COMMUNITIES is set; \
+                "HIVE_NIP_FI_COMMUNITY_SOURCE=database but HIVE_NIP_FI_COMMUNITIES is set; \
                  database-sourced communities are read from community_nip_fi_issuers"
                     .to_string(),
             ));
@@ -335,15 +335,15 @@ impl NipFiRelayConfig {
         }
 
         // Enforce and Shadow: all fields required.
-        let issuers_json = std::env::var("BUZZ_NIP_FI_ISSUERS").map_err(|_| {
+        let issuers_json = std::env::var("HIVE_NIP_FI_ISSUERS").map_err(|_| {
             mode_requires(
                 mode,
-                "BUZZ_NIP_FI_ISSUERS is not set; set it to a JSON array of issuer configs",
+                "HIVE_NIP_FI_ISSUERS is not set; set it to a JSON array of issuer configs",
             )
         })?;
         if issuers_json.trim().is_empty() {
             return Err(ConfigError::InvalidValue(
-                "BUZZ_NIP_FI_ISSUERS must not be empty in enforce mode".to_string(),
+                "HIVE_NIP_FI_ISSUERS must not be empty in enforce mode".to_string(),
             ));
         }
 
@@ -353,7 +353,7 @@ impl NipFiRelayConfig {
                 // include the unexpected field value verbatim (issuer URLs, etc).
                 // Use classify() and positional info only.  [NIP-FI.md:777-779]
                 ConfigError::InvalidValue(format!(
-                    "BUZZ_NIP_FI_ISSUERS is not valid JSON: {:?} at line {} column {}",
+                    "HIVE_NIP_FI_ISSUERS is not valid JSON: {:?} at line {} column {}",
                     e.classify(),
                     e.line(),
                     e.column(),
@@ -362,18 +362,18 @@ impl NipFiRelayConfig {
 
         if issuer_entries.is_empty() {
             return Err(ConfigError::InvalidValue(
-                "BUZZ_NIP_FI_ISSUERS must contain at least one issuer in enforce mode".to_string(),
+                "HIVE_NIP_FI_ISSUERS must contain at least one issuer in enforce mode".to_string(),
             ));
         }
 
-        // `BUZZ_NIP_FI_MAXIMUM_ASSERTION_AGE_SECS` is intentionally NOT parsed
+        // `HIVE_NIP_FI_MAXIMUM_ASSERTION_AGE_SECS` is intentionally NOT parsed
         // here. The authoritative `maximum_assertion_age` comes from each issuer's
         // JSON config entry (field `maximum_assertion_age_seconds`). A relay-level
         // duplicate that could disagree with the per-issuer value is a config-drift
         // trap — removed in this PR.
 
         let max_connection_lifetime_secs = match parse_u64_bounded(
-            "BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS",
+            "HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS",
             1,
             MAX_CONNECTION_LIFETIME_SECS,
         )? {
@@ -382,7 +382,7 @@ impl NipFiRelayConfig {
             None => {
                 return Err(mode_requires(
                     mode,
-                    "BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS is not set; \
+                    "HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS is not set; \
                      every enforce deployment must configure a positive finite value",
                 ))
             }
@@ -398,7 +398,7 @@ impl NipFiRelayConfig {
                 ConfigError::InvalidValue(format!(
                     // issuer_idx is a non-identifying diagnostic code.
                     // Raw `iss` is excluded per NIP-FI.md:777-779.
-                    "BUZZ_NIP_FI_ISSUERS: issuer at index {issuer_idx}: {e}"
+                    "HIVE_NIP_FI_ISSUERS: issuer at index {issuer_idx}: {e}"
                 ))
             })?;
             let refresh = entry.verified_at_refresh_seconds.unwrap_or(3600);
@@ -431,14 +431,14 @@ impl NipFiRelayConfig {
                 // Malformed S4 fields in enforce mode must reject startup.
                 if principals.is_empty() {
                     return Err(ConfigError::InvalidValue(format!(
-                        "BUZZ_NIP_FI_ISSUERS: issuer [index {issuer_idx}]: \
+                        "HIVE_NIP_FI_ISSUERS: issuer [index {issuer_idx}]: \
                          maximum_command_age_seconds is set but authorized_principals is \
                          absent or empty — command API requires at least one authorized principal"
                     )));
                 }
                 if cmd_age == 0 || cmd_age > 60 {
                     return Err(ConfigError::InvalidValue(format!(
-                        "BUZZ_NIP_FI_ISSUERS: issuer [index {issuer_idx}]: \
+                        "HIVE_NIP_FI_ISSUERS: issuer [index {issuer_idx}]: \
                          maximum_command_age_seconds must be in [1, 60]; got {cmd_age}"
                     )));
                 }
@@ -447,7 +447,7 @@ impl NipFiRelayConfig {
                     .unwrap_or(crate::api::nip_fi::DEFAULT_DENY_SET_CAPACITY);
                 if capacity == 0 {
                     return Err(ConfigError::InvalidValue(format!(
-                        "BUZZ_NIP_FI_ISSUERS: issuer [index {issuer_idx}]: \
+                        "HIVE_NIP_FI_ISSUERS: issuer [index {issuer_idx}]: \
                          deny_set_capacity must be positive (non-zero)"
                     )));
                 }
@@ -479,14 +479,14 @@ impl NipFiRelayConfig {
                 // error feedback before the all-or-nothing rejection fires.
                 if entry.authorized_principals.is_some() {
                     return Err(ConfigError::InvalidValue(format!(
-                        "BUZZ_NIP_FI_ISSUERS: issuer [index {issuer_idx}]: \
+                        "HIVE_NIP_FI_ISSUERS: issuer [index {issuer_idx}]: \
                          authorized_principals is set but maximum_command_age_seconds is absent — \
                          S4 command API requires maximum_command_age_seconds"
                     )));
                 }
                 if entry.deny_set_capacity.is_some() {
                     return Err(ConfigError::InvalidValue(format!(
-                        "BUZZ_NIP_FI_ISSUERS: issuer [index {issuer_idx}]: \
+                        "HIVE_NIP_FI_ISSUERS: issuer [index {issuer_idx}]: \
                          deny_set_capacity is set but maximum_command_age_seconds is absent — \
                          S4 command API requires maximum_command_age_seconds"
                     )));
@@ -494,11 +494,11 @@ impl NipFiRelayConfig {
                 // No orphan fields: reject because enforce mode requires every issuer
                 // to be command-capable (NIP-FI.md:405-409).
                 return Err(ConfigError::InvalidValue(format!(
-                    "BUZZ_NIP_FI_ISSUERS: issuer [index {issuer_idx}]: \
+                    "HIVE_NIP_FI_ISSUERS: issuer [index {issuer_idx}]: \
                      maximum_command_age_seconds is required in enforce mode — \
                      every configured issuer must be command-capable. \
                      Add maximum_command_age_seconds and authorized_principals, \
-                     or remove this issuer from BUZZ_NIP_FI_ISSUERS"
+                     or remove this issuer from HIVE_NIP_FI_ISSUERS"
                 )));
             }
         }
@@ -513,8 +513,8 @@ impl NipFiRelayConfig {
                 for (issuer_idx, policy) in policies.iter().enumerate() {
                     if !communities.authorizes_anywhere(policy.issuer()) {
                         return Err(ConfigError::InvalidValue(format!(
-                            "BUZZ_NIP_FI_ISSUERS: issuer at index {issuer_idx} is not \
-                             authorized by any community in BUZZ_NIP_FI_COMMUNITIES"
+                            "HIVE_NIP_FI_ISSUERS: issuer at index {issuer_idx} is not \
+                             authorized by any community in HIVE_NIP_FI_COMMUNITIES"
                         )));
                     }
                 }
@@ -552,29 +552,29 @@ impl NipFiRelayConfig {
     }
 }
 
-/// Parse and validate `BUZZ_NIP_FI_COMMUNITIES` against `registry`.
+/// Parse and validate `HIVE_NIP_FI_COMMUNITIES` against `registry`.
 fn parse_communities(
     mode: NipFiMode,
     configured: &BTreeSet<&str>,
 ) -> Result<NipFiCommunities, ConfigError> {
-    let raw = std::env::var("BUZZ_NIP_FI_COMMUNITIES").unwrap_or_default();
+    let raw = std::env::var("HIVE_NIP_FI_COMMUNITIES").unwrap_or_default();
     if raw.trim().is_empty() {
         return Err(mode_requires(
             mode,
-            "BUZZ_NIP_FI_COMMUNITIES is not set; \
+            "HIVE_NIP_FI_COMMUNITIES is not set; \
              set it to a JSON array of {canonical_uri, authorized_issuers}",
         ));
     }
     let entries: Vec<CommunityEnvConfig> = serde_json::from_str(&raw).map_err(|e| {
         ConfigError::InvalidValue(format!(
-            "BUZZ_NIP_FI_COMMUNITIES is not valid JSON: {:?} at line {} column {}",
+            "HIVE_NIP_FI_COMMUNITIES is not valid JSON: {:?} at line {} column {}",
             e.classify(),
             e.line(),
             e.column(),
         ))
     })?;
     NipFiCommunities::from_entries(entries, configured)
-        .map_err(|e| ConfigError::InvalidValue(format!("BUZZ_NIP_FI_COMMUNITIES: {e}")))
+        .map_err(|e| ConfigError::InvalidValue(format!("HIVE_NIP_FI_COMMUNITIES: {e}")))
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -582,7 +582,7 @@ fn parse_communities(
 /// Where the Host → community bindings come from.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum CommunitySource {
-    /// The static `BUZZ_NIP_FI_COMMUNITIES` map (the default).
+    /// The static `HIVE_NIP_FI_COMMUNITIES` map (the default).
     #[default]
     Env,
     /// The `community_nip_fi_issuers` table, via the snapshot resolver.
@@ -590,7 +590,7 @@ pub enum CommunitySource {
 }
 
 fn parse_community_source() -> Result<CommunitySource, ConfigError> {
-    match std::env::var("BUZZ_NIP_FI_COMMUNITY_SOURCE")
+    match std::env::var("HIVE_NIP_FI_COMMUNITY_SOURCE")
         .ok()
         .as_deref()
         .map(str::trim)
@@ -598,13 +598,13 @@ fn parse_community_source() -> Result<CommunitySource, ConfigError> {
         None | Some("") | Some("env") => Ok(CommunitySource::Env),
         Some("database") => Ok(CommunitySource::Database),
         Some(other) => Err(ConfigError::InvalidValue(format!(
-            "BUZZ_NIP_FI_COMMUNITY_SOURCE must be \"env\" or \"database\"; got {other:?}"
+            "HIVE_NIP_FI_COMMUNITY_SOURCE must be \"env\" or \"database\"; got {other:?}"
         ))),
     }
 }
 
 fn parse_mode() -> Result<NipFiMode, ConfigError> {
-    match std::env::var("BUZZ_NIP_FI_MODE")
+    match std::env::var("HIVE_NIP_FI_MODE")
         .ok()
         .as_deref()
         .map(str::trim)
@@ -614,7 +614,7 @@ fn parse_mode() -> Result<NipFiMode, ConfigError> {
         Some("deny_protected") => Ok(NipFiMode::DenyProtected),
         Some("shadow") => Ok(NipFiMode::Shadow),
         Some(other) => Err(ConfigError::InvalidValue(format!(
-            "BUZZ_NIP_FI_MODE must be \"enforce\", \"shadow\", \"deny_protected\", or \"off\"; \
+            "HIVE_NIP_FI_MODE must be \"enforce\", \"shadow\", \"deny_protected\", or \"off\"; \
              got {other:?}"
         ))),
     }
@@ -633,7 +633,7 @@ pub(crate) fn mode_name(mode: NipFiMode) -> &'static str {
 /// A missing-setting startup error naming the configured mode.
 fn mode_requires(mode: NipFiMode, missing: &str) -> ConfigError {
     let value = mode_name(mode);
-    ConfigError::InvalidValue(format!("BUZZ_NIP_FI_MODE={value} but {missing}"))
+    ConfigError::InvalidValue(format!("HIVE_NIP_FI_MODE={value} but {missing}"))
 }
 
 /// Parse an optional positive `u64` env var bounded to `[min_val, max_val]`.
@@ -689,7 +689,7 @@ fn build_issuer(entry: &IssuerEnvConfig) -> Result<(IssuerPolicy, IssuerJwksConf
     if entry.audiences {
         return Err("\"audiences\" was removed: list command-JWT audiences in \
              \"command_audiences\" and map assertion audiences per community in \
-             BUZZ_NIP_FI_COMMUNITIES"
+             HIVE_NIP_FI_COMMUNITIES"
             .to_string());
     }
     let algorithms: Vec<Algorithm> = entry
@@ -851,18 +851,18 @@ mod tests {
         }
     }
 
-    /// Set `BUZZ_NIP_FI_ISSUERS` to `json` and, when it parses, map one
+    /// Set `HIVE_NIP_FI_ISSUERS` to `json` and, when it parses, map one
     /// community authorizing every listed issuer.
     fn set_issuers(json: impl AsRef<std::ffi::OsStr>) {
         let json = json.as_ref();
-        std::env::set_var("BUZZ_NIP_FI_ISSUERS", json);
+        std::env::set_var("HIVE_NIP_FI_ISSUERS", json);
         let Ok(entries) = serde_json::from_str::<Vec<serde_json::Value>>(&json.to_string_lossy())
         else {
             return;
         };
         let issuers: Vec<_> = entries.iter().filter_map(|e| e.get("issuer")).collect();
         std::env::set_var(
-            "BUZZ_NIP_FI_COMMUNITIES",
+            "HIVE_NIP_FI_COMMUNITIES",
             serde_json::json!([{
                 "canonical_uri": "https://relay.test",
                 "authorized_issuers": issuers,
@@ -872,11 +872,11 @@ mod tests {
     }
 
     const NIP_FI_VARS: &[&str] = &[
-        "BUZZ_NIP_FI_MODE",
-        "BUZZ_NIP_FI_ISSUERS",
-        "BUZZ_NIP_FI_COMMUNITIES",
-        "BUZZ_NIP_FI_MAXIMUM_ASSERTION_AGE_SECS",
-        "BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS",
+        "HIVE_NIP_FI_MODE",
+        "HIVE_NIP_FI_ISSUERS",
+        "HIVE_NIP_FI_COMMUNITIES",
+        "HIVE_NIP_FI_MAXIMUM_ASSERTION_AGE_SECS",
+        "HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS",
     ];
 
     /// Same-process witness (plain libtest, not nextest): a fixture's
@@ -889,8 +889,8 @@ mod tests {
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let env = EnvGuard::new(NIP_FI_VARS);
-        std::env::set_var("BUZZ_NIP_FI_MODE", "enforce");
-        std::env::remove_var("BUZZ_NIP_FI_ISSUERS");
+        std::env::set_var("HIVE_NIP_FI_MODE", "enforce");
+        std::env::remove_var("HIVE_NIP_FI_ISSUERS");
 
         let reader = std::thread::spawn(|| crate::config::Config::for_test().nip_fi.mode);
         let reader_id = reader.thread().id();
@@ -930,7 +930,7 @@ mod tests {
         let _env = EnvGuard::new(NIP_FI_VARS);
 
         // NipFiMode::Off is the default: no issuers, no age limit.
-        std::env::remove_var("BUZZ_NIP_FI_MODE");
+        std::env::remove_var("HIVE_NIP_FI_MODE");
         let cfg = NipFiRelayConfig::from_env().expect("Off mode must not fail");
         assert!(matches!(cfg.mode, NipFiMode::Off));
         assert!(cfg.registry.is_empty());
@@ -943,7 +943,7 @@ mod tests {
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _env = EnvGuard::new(NIP_FI_VARS);
 
-        std::env::set_var("BUZZ_NIP_FI_MODE", "deny_protected");
+        std::env::set_var("HIVE_NIP_FI_MODE", "deny_protected");
         let cfg = NipFiRelayConfig::from_env().expect("DenyProtected mode must not fail");
         assert!(matches!(cfg.mode, NipFiMode::DenyProtected));
     }
@@ -955,14 +955,14 @@ mod tests {
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _env = EnvGuard::new(NIP_FI_VARS);
 
-        std::env::set_var("BUZZ_NIP_FI_MODE", "enforce");
-        std::env::remove_var("BUZZ_NIP_FI_ISSUERS");
-        std::env::remove_var("BUZZ_NIP_FI_MAXIMUM_ASSERTION_AGE_SECS");
+        std::env::set_var("HIVE_NIP_FI_MODE", "enforce");
+        std::env::remove_var("HIVE_NIP_FI_ISSUERS");
+        std::env::remove_var("HIVE_NIP_FI_MAXIMUM_ASSERTION_AGE_SECS");
         let err = NipFiRelayConfig::from_env()
             .expect_err("enforce without issuers must be a config error");
         let msg = err.to_string();
         assert!(
-            msg.contains("BUZZ_NIP_FI_ISSUERS"),
+            msg.contains("HIVE_NIP_FI_ISSUERS"),
             "error names the missing var: {msg}"
         );
     }
@@ -998,8 +998,8 @@ mod tests {
         mesh["jwks_uri"] = "http://mesh.example.test/.well-known/jwks.json".into();
         mesh["jwks_transport"] = "mesh".into();
 
-        std::env::set_var("BUZZ_NIP_FI_MODE", "enforce");
-        std::env::set_var("BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
+        std::env::set_var("HIVE_NIP_FI_MODE", "enforce");
+        std::env::set_var("HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
         set_issuers(serde_json::json!([public, mesh]).to_string());
         let cfg = NipFiRelayConfig::from_env().expect("mixed transport config is valid");
 
@@ -1044,8 +1044,8 @@ mod tests {
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _env = EnvGuard::new(NIP_FI_VARS);
 
-        std::env::set_var("BUZZ_NIP_FI_MODE", "enforce");
-        std::env::set_var("BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
+        std::env::set_var("HIVE_NIP_FI_MODE", "enforce");
+        std::env::set_var("HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
 
         let mut unknown = valid_enforce_issuer();
         unknown["jwks_uri"] = "https://sentinel-uri.example.test/jwks".into();
@@ -1053,7 +1053,7 @@ mod tests {
         set_issuers(serde_json::json!([unknown]).to_string());
         let error = NipFiRelayConfig::from_env().expect_err("unknown transport must fail");
         let message = error.to_string();
-        assert!(message.contains("BUZZ_NIP_FI_ISSUERS"));
+        assert!(message.contains("HIVE_NIP_FI_ISSUERS"));
         assert!(!message.contains("sentinel-uri.example.test"));
         assert!(!message.contains("sentinel-unknown-transport"));
 
@@ -1083,8 +1083,8 @@ mod tests {
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _env = EnvGuard::new(NIP_FI_VARS);
-        std::env::set_var("BUZZ_NIP_FI_MODE", "enforce");
-        std::env::set_var("BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
+        std::env::set_var("HIVE_NIP_FI_MODE", "enforce");
+        std::env::set_var("HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
 
         // Success control: the complete fixture is accepted.
         let valid = valid_enforce_issuer();
@@ -1107,7 +1107,7 @@ mod tests {
         // failure (which a defaulted age would hit instead).
         let msg = err.to_string();
         assert!(
-            msg.contains("BUZZ_NIP_FI_ISSUERS is not valid JSON: Data"),
+            msg.contains("HIVE_NIP_FI_ISSUERS is not valid JSON: Data"),
             "missing maximum_assertion_age_seconds must be rejected at deserialization: {msg}"
         );
     }
@@ -1119,14 +1119,14 @@ mod tests {
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _env = EnvGuard::new(NIP_FI_VARS);
 
-        std::env::set_var("BUZZ_NIP_FI_MODE", "permissive");
+        std::env::set_var("HIVE_NIP_FI_MODE", "permissive");
         let err = NipFiRelayConfig::from_env().expect_err("unknown mode must error");
-        assert!(err.to_string().contains("BUZZ_NIP_FI_MODE"));
+        assert!(err.to_string().contains("HIVE_NIP_FI_MODE"));
     }
 
     // ── R5 privacy sentinel tests ─────────────────────────────────────────────
     //
-    // These tests prove that parse errors on BUZZ_NIP_FI_ISSUERS do NOT echo
+    // These tests prove that parse errors on HIVE_NIP_FI_ISSUERS do NOT echo
     // raw issuer config values (URLs, audience strings, issuer identifiers) in
     // the error messages.  [NIP-FI.md:777-779]
     //
@@ -1174,9 +1174,9 @@ mod tests {
             "jwks_hard_deadline_seconds": 3600
         }])
         .to_string();
-        std::env::set_var("BUZZ_NIP_FI_MODE", "enforce");
+        std::env::set_var("HIVE_NIP_FI_MODE", "enforce");
         set_issuers(&issuers_json);
-        std::env::set_var("BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
+        std::env::set_var("HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
 
         let err = NipFiRelayConfig::from_env().expect_err("wrong-typed field must fail");
         let msg = err.to_string();
@@ -1187,7 +1187,7 @@ mod tests {
         );
         // The error must still be non-empty and identify the config variable.
         assert!(
-            msg.contains("BUZZ_NIP_FI_ISSUERS"),
+            msg.contains("HIVE_NIP_FI_ISSUERS"),
             "error must name the config variable: {msg}"
         );
     }
@@ -1216,9 +1216,9 @@ mod tests {
         }])
         .to_string();
 
-        std::env::set_var("BUZZ_NIP_FI_MODE", "enforce");
+        std::env::set_var("HIVE_NIP_FI_MODE", "enforce");
         set_issuers(&issuers_json);
-        std::env::set_var("BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
+        std::env::set_var("HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
 
         let err = NipFiRelayConfig::from_env().expect_err("unknown algorithm must fail");
         let msg = err.to_string();
@@ -1254,9 +1254,9 @@ mod tests {
         }])
         .to_string();
 
-        std::env::set_var("BUZZ_NIP_FI_MODE", "enforce");
+        std::env::set_var("HIVE_NIP_FI_MODE", "enforce");
         set_issuers(&issuers_json);
-        std::env::set_var("BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
+        std::env::set_var("HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
 
         let err = NipFiRelayConfig::from_env()
             .expect_err("empty audiences must cause a policy build failure");
@@ -1412,8 +1412,8 @@ mod tests {
         // string, potentially exposing the surrounding value.
         const SENTINEL: &str = "admin+private-sentinel@example.invalid";
 
-        std::env::set_var("BUZZ_NIP_FI_MODE", "enforce");
-        std::env::set_var("BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
+        std::env::set_var("HIVE_NIP_FI_MODE", "enforce");
+        std::env::set_var("HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
         // The authorized_principals field is a string instead of an array,
         // which causes serde to emit a type-error that typically includes the
         // supplied value when formatted with `{e}` (the bug we are guarding).
@@ -1438,7 +1438,7 @@ mod tests {
 
         // Safe category must be present.
         assert!(
-            display_msg.contains("BUZZ_NIP_FI_ISSUERS is not valid JSON"),
+            display_msg.contains("HIVE_NIP_FI_ISSUERS is not valid JSON"),
             "Display message must contain the safe category string: {display_msg}"
         );
         // Sentinel must NOT appear in any user-facing output path.
@@ -1459,8 +1459,8 @@ mod tests {
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _env = EnvGuard::new(NIP_FI_VARS);
 
-        std::env::set_var("BUZZ_NIP_FI_MODE", "enforce");
-        std::env::set_var("BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
+        std::env::set_var("HIVE_NIP_FI_MODE", "enforce");
+        std::env::set_var("HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
         // issuer has command age but no principals
         set_issuers(
             r#"[{
@@ -1496,8 +1496,8 @@ mod tests {
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _env = EnvGuard::new(NIP_FI_VARS);
 
-        std::env::set_var("BUZZ_NIP_FI_MODE", "enforce");
-        std::env::set_var("BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
+        std::env::set_var("HIVE_NIP_FI_MODE", "enforce");
+        std::env::set_var("HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
         // All three S4 command fields absent — pure assertion/JWKS issuer.
         set_issuers(
             r#"[{
@@ -1527,8 +1527,8 @@ mod tests {
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _env = EnvGuard::new(NIP_FI_VARS);
 
-        std::env::set_var("BUZZ_NIP_FI_MODE", "enforce");
-        std::env::set_var("BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
+        std::env::set_var("HIVE_NIP_FI_MODE", "enforce");
+        std::env::set_var("HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
         // authorized_principals without maximum_command_age_seconds — orphan field.
         set_issuers(
             r#"[{
@@ -1563,8 +1563,8 @@ mod tests {
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _env = EnvGuard::new(NIP_FI_VARS);
 
-        std::env::set_var("BUZZ_NIP_FI_MODE", "enforce");
-        std::env::set_var("BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
+        std::env::set_var("HIVE_NIP_FI_MODE", "enforce");
+        std::env::set_var("HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
         // deny_set_capacity without maximum_command_age_seconds — orphan field.
         set_issuers(
             r#"[{
@@ -1593,20 +1593,20 @@ mod tests {
     }
 
     /// `from_env` in enforce mode over the valid issuer fixture plus a second
-    /// issuer, with `communities` as `BUZZ_NIP_FI_COMMUNITIES`.
+    /// issuer, with `communities` as `HIVE_NIP_FI_COMMUNITIES`.
     fn enforce_with_communities(
         communities: serde_json::Value,
     ) -> Result<NipFiRelayConfig, String> {
         let mut second = valid_enforce_issuer();
         second["issuer"] = "https://issuer-b.test".into();
         second["jwks_uri"] = "https://issuer-b.test/.well-known/jwks.json".into();
-        std::env::set_var("BUZZ_NIP_FI_MODE", "enforce");
-        std::env::set_var("BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
+        std::env::set_var("HIVE_NIP_FI_MODE", "enforce");
+        std::env::set_var("HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
         std::env::set_var(
-            "BUZZ_NIP_FI_ISSUERS",
+            "HIVE_NIP_FI_ISSUERS",
             serde_json::json!([valid_enforce_issuer(), second]).to_string(),
         );
-        std::env::set_var("BUZZ_NIP_FI_COMMUNITIES", communities.to_string());
+        std::env::set_var("HIVE_NIP_FI_COMMUNITIES", communities.to_string());
         NipFiRelayConfig::from_env().map_err(|e| e.to_string())
     }
 
@@ -1614,7 +1614,7 @@ mod tests {
         serde_json::json!({ "canonical_uri": uri, "authorized_issuers": issuers })
     }
 
-    /// Startup (`Config::from_env`) with `BUZZ_NIP_FI_COMMUNITIES` declaring
+    /// Startup (`Config::from_env`) with `HIVE_NIP_FI_COMMUNITIES` declaring
     /// `a.relay.test` and a provisioning binding under `suffix`.
     fn startup_with_provision_suffix(mode: &str, suffix: &str) -> Result<(), String> {
         enforce_with_communities(serde_json::json!([community_entry(
@@ -1622,7 +1622,7 @@ mod tests {
             &["https://issuer.test", "https://issuer-b.test"]
         )]))
         .expect("valid enforce config");
-        std::env::set_var("BUZZ_NIP_FI_MODE", mode);
+        std::env::set_var("HIVE_NIP_FI_MODE", mode);
         std::env::set_var(
             buzz_auth::nip_fi::provision::PROVISION_BINDING_ENV,
             serde_json::json!({
@@ -1647,7 +1647,7 @@ mod tests {
             let err = startup_with_provision_suffix(mode, "relay.test")
                 .expect_err("suffix covering an enterprise host");
             assert!(
-                err.contains("covers a BUZZ_NIP_FI_COMMUNITIES host"),
+                err.contains("covers a HIVE_NIP_FI_COMMUNITIES host"),
                 "{mode}: {err}"
             );
             startup_with_provision_suffix(mode, "communities.buzz.xyz")
@@ -1671,13 +1671,13 @@ mod tests {
             )])
             .to_string(),
         ] {
-            std::env::set_var("BUZZ_NIP_FI_COMMUNITIES", &communities);
+            std::env::set_var("HIVE_NIP_FI_COMMUNITIES", &communities);
             let err = crate::config::Config::from_env()
                 .map(|_| ())
                 .expect_err("unreadable enterprise hosts");
             assert!(
                 err.to_string()
-                    .contains("BUZZ_NIP_FI_COMMUNITIES hosts are unreadable"),
+                    .contains("HIVE_NIP_FI_COMMUNITIES hosts are unreadable"),
                 "{communities}: {err}"
             );
         }
@@ -1716,11 +1716,11 @@ mod tests {
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _env = EnvGuard::new(NIP_FI_VARS);
         enforce_with_communities(serde_json::json!([])).expect_err("empty array");
-        std::env::remove_var("BUZZ_NIP_FI_COMMUNITIES");
+        std::env::remove_var("HIVE_NIP_FI_COMMUNITIES");
         let err = NipFiRelayConfig::from_env().expect_err("unset communities must fail");
         assert!(
             err.to_string()
-                .contains("BUZZ_NIP_FI_COMMUNITIES is not set"),
+                .contains("HIVE_NIP_FI_COMMUNITIES is not set"),
             "{err}"
         );
     }
@@ -1842,8 +1842,8 @@ mod tests {
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _env = EnvGuard::new(NIP_FI_VARS);
-        std::env::set_var("BUZZ_NIP_FI_MODE", "enforce");
-        std::env::set_var("BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
+        std::env::set_var("HIVE_NIP_FI_MODE", "enforce");
+        std::env::set_var("HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
         for value in [
             serde_json::json!(["https://relay.test"]),
             serde_json::Value::Null,
@@ -1915,8 +1915,8 @@ mod tests {
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _env = EnvGuard::new(NIP_FI_VARS);
-        std::env::set_var("BUZZ_NIP_FI_MODE", "deny_protected");
-        std::env::set_var("BUZZ_NIP_FI_COMMUNITIES", "not json");
+        std::env::set_var("HIVE_NIP_FI_MODE", "deny_protected");
+        std::env::set_var("HIVE_NIP_FI_COMMUNITIES", "not json");
         let cfg = NipFiRelayConfig::from_env().expect("repair mode must still boot");
         assert!(cfg.communities.resolve("a.relay.test").is_none());
     }
@@ -1929,8 +1929,8 @@ mod tests {
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let _env = EnvGuard::new(NIP_FI_VARS);
-        std::env::set_var("BUZZ_NIP_FI_MODE", mode);
-        std::env::remove_var("BUZZ_NIP_FI_ISSUERS");
+        std::env::set_var("HIVE_NIP_FI_MODE", mode);
+        std::env::remove_var("HIVE_NIP_FI_ISSUERS");
         match NipFiRelayConfig::from_env() {
             Err(ConfigError::InvalidValue(msg)) => msg,
             other => panic!("expected InvalidValue, got {other:?}"),
@@ -1941,7 +1941,7 @@ mod tests {
     fn enforce_missing_issuers_error_is_exact() {
         assert_eq!(
             missing_issuers_error("enforce"),
-            "BUZZ_NIP_FI_MODE=enforce but BUZZ_NIP_FI_ISSUERS is not set; \
+            "HIVE_NIP_FI_MODE=enforce but HIVE_NIP_FI_ISSUERS is not set; \
              set it to a JSON array of issuer configs"
         );
     }
@@ -1950,7 +1950,7 @@ mod tests {
     fn shadow_missing_issuers_error_names_shadow() {
         assert_eq!(
             missing_issuers_error("shadow"),
-            "BUZZ_NIP_FI_MODE=shadow but BUZZ_NIP_FI_ISSUERS is not set; \
+            "HIVE_NIP_FI_MODE=shadow but HIVE_NIP_FI_ISSUERS is not set; \
              set it to a JSON array of issuer configs"
         );
     }
@@ -1968,15 +1968,15 @@ mod tests {
             &["https://issuer.test", "https://issuer-b.test"]
         )]);
         enforce_with_communities(communities.clone()).expect("enforce fixture is valid");
-        std::env::set_var("BUZZ_NIP_FI_MODE", "shadow");
+        std::env::set_var("HIVE_NIP_FI_MODE", "shadow");
         let cfg = NipFiRelayConfig::from_env().expect("shadow accepts the enforce config");
         assert_eq!(cfg.mode, NipFiMode::Shadow);
         assert!(cfg.communities.resolve("a.relay.test").is_some());
-        std::env::remove_var("BUZZ_NIP_FI_COMMUNITIES");
+        std::env::remove_var("HIVE_NIP_FI_COMMUNITIES");
         let err = NipFiRelayConfig::from_env().expect_err("shadow without communities");
         assert!(
             err.to_string()
-                .contains("BUZZ_NIP_FI_MODE=shadow but BUZZ_NIP_FI_COMMUNITIES is not set"),
+                .contains("HIVE_NIP_FI_MODE=shadow but HIVE_NIP_FI_COMMUNITIES is not set"),
             "{err}"
         );
     }
@@ -1993,15 +1993,15 @@ mod tests {
             &["https://issuer.test", "https://issuer-b.test"]
         )]);
         enforce_with_communities(communities).expect("enforce fixture is valid");
-        std::env::remove_var("BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS");
+        std::env::remove_var("HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS");
         for mode in ["enforce", "shadow"] {
-            std::env::set_var("BUZZ_NIP_FI_MODE", mode);
+            std::env::set_var("HIVE_NIP_FI_MODE", mode);
             let err = NipFiRelayConfig::from_env().expect_err("lifetime is required");
             assert_eq!(
                 err.to_string(),
                 format!(
-                    "invalid config: BUZZ_NIP_FI_MODE={mode} but \
-                     BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS is not set; \
+                    "invalid config: HIVE_NIP_FI_MODE={mode} but \
+                     HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS is not set; \
                      every enforce deployment must configure a positive finite value"
                 )
             );

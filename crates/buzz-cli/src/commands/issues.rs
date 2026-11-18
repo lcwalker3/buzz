@@ -283,7 +283,7 @@ async fn resolve_issue_repo_target(
                 .or_else(|| std::env::var(GIT_ORIGIN_CHANNEL_ENV).ok());
             let Some(channel) = channel else {
                 return Err(CliError::Usage(
-                    "provide --repo-owner and --repo-id, or --channel (or set BUZZ_GIT_ORIGIN_CHANNEL_ID)".into(),
+                    "provide --repo-owner and --repo-id, or --channel (or set HIVE_GIT_ORIGIN_CHANNEL_ID)".into(),
                 ));
             };
             let resolved = crate::commands::project_channel::resolve_or_ensure_repo_for_channel(

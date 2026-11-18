@@ -276,11 +276,11 @@ fn publication_metadata_growth_keeps_live_events_bounded() {
 #[test]
 #[ignore = "manual observer retention and emit-time measurement"]
 fn retention_probe() {
-    let count: usize = std::env::var("BUZZ_OBSERVER_PROBE_EVENTS")
+    let count: usize = std::env::var("HIVE_OBSERVER_PROBE_EVENTS")
         .unwrap_or_else(|_| "1000".into())
         .parse()
         .unwrap();
-    let payload_bytes: usize = std::env::var("BUZZ_OBSERVER_PROBE_BYTES")
+    let payload_bytes: usize = std::env::var("HIVE_OBSERVER_PROBE_BYTES")
         .unwrap_or_else(|_| "1048576".into())
         .parse()
         .unwrap();

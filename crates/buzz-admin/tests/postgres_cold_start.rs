@@ -132,7 +132,7 @@ async fn s3_listing() -> Server {
 }
 
 async fn database() -> (String, PgPool) {
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL")
+    let url = std::env::var("HIVE_TEST_DATABASE_URL")
         .expect("run through scripts/postgres-test-run.sh for an isolated database");
     let pool = PgPoolOptions::new()
         .max_connections(1)
@@ -169,8 +169,8 @@ async fn run_worker(database_url: &str, proxy: &Server, s3: &Server) -> WorkerOu
         proxy,
         &["storage-snapshot", "--max-objects", "100"],
         &[
-            ("BUZZ_S3_ENDPOINT", format!("http://{}", s3.address)),
-            ("BUZZ_STORAGE_SNAPSHOT_CODE_SHA", "startup-test".to_owned()),
+            ("HIVE_S3_ENDPOINT", format!("http://{}", s3.address)),
+            ("HIVE_STORAGE_SNAPSHOT_CODE_SHA", "startup-test".to_owned()),
         ],
     )
     .await
@@ -184,7 +184,7 @@ async fn run_drain(database_url: &str, proxy: &Server) -> WorkerOutput {
         proxy,
         &["deletions", "drain", "--executor-id", "cold-start-test"],
         &[
-            ("BUZZ_S3_ENDPOINT", "http://127.0.0.1:9".to_owned()),
+            ("HIVE_S3_ENDPOINT", "http://127.0.0.1:9".to_owned()),
             ("REDIS_URL", "redis://127.0.0.1:9".to_owned()),
         ],
     )
@@ -212,10 +212,10 @@ async fn run_admin(
         .args(args)
         .env_clear()
         .env("DATABASE_URL", url.as_str())
-        .env("BUZZ_S3_BUCKET", "test-bucket")
-        .env("BUZZ_S3_REGION", "us-east-1")
-        .env("BUZZ_S3_ACCESS_KEY", "test-access-key")
-        .env("BUZZ_S3_SECRET_KEY", "test-secret-key")
+        .env("HIVE_S3_BUCKET", "test-bucket")
+        .env("HIVE_S3_REGION", "us-east-1")
+        .env("HIVE_S3_ACCESS_KEY", "test-access-key")
+        .env("HIVE_S3_SECRET_KEY", "test-secret-key")
         .envs(env.iter().map(|(key, value)| (key, value)))
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())

@@ -2,7 +2,7 @@
 use super::AcpError;
 use tokio::process::Command;
 
-pub(super) const PREFIX_ENV: &str = "BUZZ_ACP_LAUNCH_PREFIX";
+pub(super) const PREFIX_ENV: &str = "HIVE_ACP_LAUNCH_PREFIX";
 
 pub(super) fn command(worker: &str, args: &[String]) -> Result<Command, AcpError> {
     command_with_prefix(worker, args, std::env::var_os(PREFIX_ENV))

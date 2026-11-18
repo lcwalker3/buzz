@@ -591,7 +591,7 @@ mod postgres_tests {
     #[tokio::test]
     #[ignore = "requires PostgreSQL with CREATEDB/CREATEROLE"]
     async fn cluster_global_readiness_requires_migrated_schema_dml_and_no_ddl() {
-        let admin_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let admin_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| TEST_DB_URL.to_owned());
         let admin = PgPoolOptions::new()
@@ -703,7 +703,7 @@ mod postgres_tests {
     #[tokio::test]
     #[ignore = "requires PostgreSQL"]
     async fn reaper_retains_revocation_tombstones_until_authority_expiry() {
-        let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| TEST_DB_URL.to_owned());
         let pool = PgPoolOptions::new()
@@ -832,7 +832,7 @@ mod postgres_tests {
     // exercises the real PK/UNIQUE replay fences that the memory store's single
     // mutex cannot. Returns (pool, schema) for teardown.
     async fn full_schema(max_connections: u32) -> (PgPool, String) {
-        let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| TEST_DB_URL.to_owned());
         let schema = format!("push_admit_{}", Uuid::new_v4().simple());
@@ -1501,7 +1501,7 @@ mod postgres_tests {
     }
 
     async fn drop_schema(schema: &str) {
-        let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| TEST_DB_URL.to_owned());
         let pool = PgPoolOptions::new()

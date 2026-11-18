@@ -743,7 +743,7 @@ fn extract_before_id(raw: &Value) -> BeforeId {
 /// ancestry verification) sets `"consistency": "strong"` so the relay serves it
 /// from the writer pool, never a replica that may lag behind the caller's own
 /// just-accepted write. Absent = the default routed path (replica-eligible when
-/// `BUZZ_REPLICA_READ_MAX_AGE_MS` is set).
+/// `HIVE_REPLICA_READ_MAX_AGE_MS` is set).
 ///
 /// This only ever forces the *writer*, which is always the sound direction (a
 /// replica can be stale, the writer never is), so it cannot be abused to skip
@@ -5856,7 +5856,7 @@ pub(crate) mod postgres_tests {
         config.nip_fi.communities =
             crate::nip_fi_core::test_support::any_host("https://relay.example");
         // Pin the GIF provider absent: `Config::from_env()` imports
-        // `BUZZ_KLIPY_API_KEY`, and the GIF positive control's exact 404
+        // `HIVE_KLIPY_API_KEY`, and the GIF positive control's exact 404
         // (`gifs.rs` "GIF search is not configured") depends on `klipy = None`.
         config.klipy = None;
         // No issuers configured → nip_fi_verifier = None (startup-race path).

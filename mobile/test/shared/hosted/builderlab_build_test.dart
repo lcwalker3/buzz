@@ -57,7 +57,7 @@ void main() {
         distribution: '',
         url: '',
         relays: '',
-        retired: ['BUZZ_ORGANIZATION_URL'],
+        retired: ['HIVE_ORGANIZATION_URL'],
       ),
       throwsStateError,
     );

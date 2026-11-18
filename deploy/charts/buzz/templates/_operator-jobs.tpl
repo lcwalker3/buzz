@@ -55,10 +55,10 @@ spec:
               command: ["/usr/local/bin/buzz-admin"]
               args: ["deletions", "drain"]
               env:
-                - { name: BUZZ_S3_ENDPOINT, value: {{ required "s3.endpoint is required when operatorJobs.deletionDrain.enabled=true" (include "buzz.s3Endpoint" $root) | quote }} }
-                - { name: BUZZ_S3_BUCKET, value: {{ required "s3.bucket is required when operatorJobs.deletionDrain.enabled=true" $root.Values.s3.bucket | quote }} }
-                - { name: BUZZ_S3_REGION, value: {{ $root.Values.s3.region | quote }} }
-                - { name: BUZZ_S3_ADDRESSING_STYLE, value: {{ $root.Values.s3.addressingStyle | quote }} }
+                - { name: HIVE_S3_ENDPOINT, value: {{ required "s3.endpoint is required when operatorJobs.deletionDrain.enabled=true" (include "buzz.s3Endpoint" $root) | quote }} }
+                - { name: HIVE_S3_BUCKET, value: {{ required "s3.bucket is required when operatorJobs.deletionDrain.enabled=true" $root.Values.s3.bucket | quote }} }
+                - { name: HIVE_S3_REGION, value: {{ $root.Values.s3.region | quote }} }
+                - { name: HIVE_S3_ADDRESSING_STYLE, value: {{ $root.Values.s3.addressingStyle | quote }} }
                 - name: DATABASE_URL
                   valueFrom:
                     secretKeyRef:
@@ -69,17 +69,17 @@ spec:
                     secretKeyRef:
                       name: {{ include "buzz.envSecretName" $root }}
                       key: REDIS_URL
-                - name: BUZZ_S3_ACCESS_KEY
+                - name: HIVE_S3_ACCESS_KEY
                   valueFrom:
                     secretKeyRef:
                       name: {{ include "buzz.envSecretName" $root }}
-                      key: BUZZ_S3_ACCESS_KEY
+                      key: HIVE_S3_ACCESS_KEY
                       optional: true
-                - name: BUZZ_S3_SECRET_KEY
+                - name: HIVE_S3_SECRET_KEY
                   valueFrom:
                     secretKeyRef:
                       name: {{ include "buzz.envSecretName" $root }}
-                      key: BUZZ_S3_SECRET_KEY
+                      key: HIVE_S3_SECRET_KEY
                       optional: true
               resources:
                 {{- toYaml $job.resources | nindent 16 }}

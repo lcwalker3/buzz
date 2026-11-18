@@ -329,7 +329,7 @@ class BrowserAuth {
       return _channel.invokeMethod<String>('start', {
         'url': uri.toString(),
         if (kDebugMode &&
-            const bool.fromEnvironment('BUZZ_DEBUG_PRIVATE_LOGIN'))
+            const bool.fromEnvironment('HIVE_DEBUG_PRIVATE_LOGIN'))
           'ephemeral': 'true',
       });
     }

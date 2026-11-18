@@ -652,7 +652,7 @@ async fn shared_diagnostics_never_log_oauth_bodies_urls_opener_or_callback_detai
     use std::{io::Write, sync::Mutex};
     // Isolate tracing's global callsite interest cache from concurrently running
     // lib tests. The child runs ONLY this test, never an agent or real browser.
-    const MARKER: &str = "BUZZ_TEST_OAUTH_LOG_CAPTURE_CHILD";
+    const MARKER: &str = "HIVE_TEST_OAUTH_LOG_CAPTURE_CHILD";
     if std::env::var_os(MARKER).is_none() {
         let output = tokio::time::timeout(Duration::from_secs(15),
             tokio::process::Command::new(std::env::current_exe().unwrap())

@@ -1,7 +1,7 @@
 # Relay-proxied GIF search
 
 Buzz relays can optionally provide GIF search without distributing a provider
-credential to desktop clients. An operator configures `BUZZ_KLIPY_API_KEY` in
+credential to desktop clients. An operator configures `HIVE_KLIPY_API_KEY` in
 the relay's secret store. When present, the relay advertises this NIP-11 shape:
 
 ```json
@@ -21,7 +21,7 @@ only safe relay-relative search and share paths.
 
 `POST /gifs/search` requires NIP-98 authentication and relay membership. Its
 per-pubkey, per-community Redis admission limit defaults to 30 requests per
-minute and can be tuned with `BUZZ_RATE_LIMIT_GIF_SEARCHES_PER_MIN`. The relay
+minute and can be tuned with `HIVE_RATE_LIMIT_GIF_SEARCHES_PER_MIN`. The relay
 sends the provider credential upstream and returns only allowlisted successful
 result data. Provider error bodies are never returned to clients or written to
 logs.

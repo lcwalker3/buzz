@@ -47,7 +47,7 @@ const PASSTHROUGH_ENV: &[&str] = &[
     "XDG_CONFIG_HOME",
     // Explicit Buzz-owned OAuth root for named demo builds. The agent may spawn
     // auth-capable child tools after clearing its ambient environment.
-    "BUZZ_AGENT_CONFIG_DIR",
+    "HIVE_AGENT_CONFIG_DIR",
     // SSH — required for git clone/push over SSH (git@github.com:...)
     "SSH_AUTH_SOCK",
     "SSH_AGENT_PID",
@@ -81,16 +81,16 @@ const PASSTHROUGH_ENV: &[&str] = &[
     "SSL_CERT_FILE",
     "SSL_CERT_DIR",
     // Git config/keyfile paths arrive explicitly in session/new mcpServers[].env.
-    "BUZZ_PRIVATE_KEY",
-    "BUZZ_RELAY_URL",
-    "BUZZ_AUTH_TAG",
+    "HIVE_PRIVATE_KEY",
+    "HIVE_RELAY_URL",
+    "HIVE_AUTH_TAG",
     // Harness-chosen `buzz` CLI read format (token-lean event reads).
-    "BUZZ_OUTPUT_FORMAT",
+    "HIVE_OUTPUT_FORMAT",
     // Agent display name for tools. On the
     // Desktop path this arrives via the wire `mcpServers[].env` declaration
     // (which wins here anyway); the allowlist entry covers ACP clients that
     // spawn buzz-agent without declaring it.
-    "BUZZ_ACP_DISPLAY_NAME",
+    "HIVE_ACP_DISPLAY_NAME",
 ];
 
 // Windows has no $TMPDIR/$HOME. TMP/TEMP/USERPROFILE are what
@@ -1053,7 +1053,7 @@ mod content_tests {
 
     #[test]
     fn passthrough_includes_buzz_owner_attestation() {
-        assert!(PASSTHROUGH_ENV.contains(&"BUZZ_AUTH_TAG"));
+        assert!(PASSTHROUGH_ENV.contains(&"HIVE_AUTH_TAG"));
     }
 
     #[test]

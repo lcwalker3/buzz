@@ -17,7 +17,7 @@ pub(crate) fn tracing_dispatch_lock() -> std::sync::MutexGuard<'static, ()> {
 
 /// Resolve the database URL shared by PostgreSQL-backed relay tests.
 pub(crate) fn database_url() -> String {
-    std::env::var("BUZZ_TEST_DATABASE_URL")
+    std::env::var("HIVE_TEST_DATABASE_URL")
         .or_else(|_| std::env::var("TEST_DATABASE_URL"))
         .or_else(|_| std::env::var("DATABASE_URL"))
         .unwrap_or_else(|_| DEFAULT_DATABASE_URL.to_owned())

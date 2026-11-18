@@ -11,7 +11,7 @@ async fn workflow_output(url: &str, args: &[&str]) -> Output {
             .arg("user-deletions")
             .args(args)
             .env("DATABASE_URL", url)
-            .env("BUZZ_DB_POOL_SIZE", "1")
+            .env("HIVE_DB_POOL_SIZE", "1")
             .kill_on_drop(true)
             .output(),
     )

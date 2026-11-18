@@ -107,7 +107,7 @@ impl UserDeletionStore {
         let signer = if delete && plan.ops.iter().any(|o| o.snapshot.is_some()) {
             Some(
                 nostr::Keys::parse(relay_secret.ok_or_else(|| {
-                    invalid("archive snapshot replacement requires BUZZ_RELAY_PRIVATE_KEY")
+                    invalid("archive snapshot replacement requires HIVE_RELAY_PRIVATE_KEY")
                 })?)
                 .map_err(|_| invalid("invalid relay signing key"))?,
             )

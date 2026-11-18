@@ -1434,18 +1434,18 @@ pub async fn receive_pack(
     );
     let hooks_dir = repo.path().join("hooks").display().to_string();
     let mut hook_env = vec![
-        ("BUZZ_HOOK_URL", hook_url),
+        ("HIVE_HOOK_URL", hook_url),
         (
-            "BUZZ_HOOK_SECRET",
+            "HIVE_HOOK_SECRET",
             state.config.git_hook_hmac_secret.clone(),
         ),
-        ("BUZZ_REPO_ID", repo_name.to_string()),
-        ("BUZZ_REPO_OWNER", params.owner.clone()),
+        ("HIVE_REPO_ID", repo_name.to_string()),
+        ("HIVE_REPO_OWNER", params.owner.clone()),
         (
-            "BUZZ_COMMUNITY_ID",
+            "HIVE_COMMUNITY_ID",
             auth.tenant.community().as_uuid().to_string(),
         ),
-        ("BUZZ_PUSHER_PUBKEY", pusher_hex.clone()),
+        ("HIVE_PUSHER_PUBKEY", pusher_hex.clone()),
     ];
     hook_env.extend(receive_pack_git_config(hooks_dir));
 
@@ -2880,7 +2880,7 @@ mod track_c_tests {
         let mut config = crate::config::Config::for_test(); // [FI-TRACE-ENV-RACE]
         config.require_relay_membership = false;
         config.redis_url = "redis://127.0.0.1:1".to_string();
-        config.database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        config.database_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| TEST_DB_URL.to_string());
         let pool = sqlx::PgPool::connect(&config.database_url)
@@ -3986,7 +3986,7 @@ mod sec005_postgres_tests {
     const TEST_DB_URL: &str = "postgres://buzz:buzz_dev@localhost:5432/buzz"; // sadscan:disable np.postgres.1
 
     async fn setup_db() -> buzz_db::Db {
-        let url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| TEST_DB_URL.to_string());
         let pool = sqlx::PgPool::connect(&url).await.expect("connect test DB");
@@ -4422,7 +4422,7 @@ mod sec005_postgres_tests {
     #[tokio::test]
     #[ignore = "requires Postgres"]
     async fn ban_gate_fails_closed_with_503_when_the_store_is_unreachable() {
-        let url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| TEST_DB_URL.to_string());
         let pool = sqlx::PgPool::connect(&url).await.expect("connect test DB");
@@ -4653,7 +4653,7 @@ mod off_mode_precedence_tests {
             config.require_relay_membership = false;
             config.redis_url =
                 std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string());
-            config.database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+            config.database_url = std::env::var("HIVE_TEST_DATABASE_URL")
                 .or_else(|_| std::env::var("DATABASE_URL"))
                 .unwrap_or_else(|_| "postgres://buzz:buzz_dev@localhost:5432/buzz".to_string()); // sadscan:disable np.postgres.1
 
@@ -5312,7 +5312,7 @@ mod off_mode_precedence_tests {
             config.relay_url = "ws://nip-fi-git-test.invalid".to_string();
             config.redis_url =
                 std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string());
-            config.database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+            config.database_url = std::env::var("HIVE_TEST_DATABASE_URL")
                 .or_else(|_| std::env::var("DATABASE_URL"))
                 .unwrap_or_else(|_| "postgres://buzz:buzz_dev@localhost:5432/buzz".to_string()); // sadscan:disable np.postgres.1
 
@@ -5449,7 +5449,7 @@ mod off_mode_precedence_tests {
             config.relay_url = "ws://nip-fi-git-pack-test.invalid".to_string();
             config.redis_url =
                 std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string());
-            config.database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+            config.database_url = std::env::var("HIVE_TEST_DATABASE_URL")
                 .or_else(|_| std::env::var("DATABASE_URL"))
                 .unwrap_or_else(|_| "postgres://buzz:buzz_dev@localhost:5432/buzz".to_string()); // sadscan:disable np.postgres.1
 

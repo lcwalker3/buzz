@@ -27,7 +27,7 @@ mod frame_writer;
 const MAX_LINE_SIZE: usize = 10_000_000; // 10 MB
 
 /// Package and binary name used by Buzz's Pi ACP fork.
-pub(crate) const BUZZ_PI_ACP_NAME: &str = "buzz-pi-acp";
+pub(crate) const HIVE_PI_ACP_NAME: &str = "buzz-pi-acp";
 
 /// An MCP server configuration passed to `session/new`.
 ///
@@ -486,7 +486,7 @@ impl AcpClient {
         // so the version check below could inspect the wrong binary.
         let launch_prefixed = std::env::var_os(launch::PREFIX_ENV).is_some();
         let mut cmd = launch::command(command, args)?;
-        if crate::config::normalize_agent_command_identity(command) == BUZZ_PI_ACP_NAME {
+        if crate::config::normalize_agent_command_identity(command) == HIVE_PI_ACP_NAME {
             if !args.iter().any(|arg| arg == "--") {
                 cmd.arg("--");
             }
@@ -503,7 +503,7 @@ impl AcpClient {
             // Callers MUST still call shutdown().await for guaranteed cleanup.
             .kill_on_drop(true);
 
-        // Per-persona env vars (e.g., GOOSE_PROVIDER, BUZZ_AGENT_PROVIDER).
+        // Per-persona env vars (e.g., GOOSE_PROVIDER, HIVE_AGENT_PROVIDER).
         // For most keys, operator precedence wins: skip injection if already set
         // in the parent environment.
         //
@@ -2709,11 +2709,11 @@ mod tests {
             args: vec![],
             env: vec![
                 EnvVar {
-                    name: "BUZZ_RELAY_URL".into(),
+                    name: "HIVE_RELAY_URL".into(),
                     value: "ws://localhost:3000".into(),
                 },
                 EnvVar {
-                    name: "BUZZ_PRIVATE_KEY".into(),
+                    name: "HIVE_PRIVATE_KEY".into(),
                     value: "nsec1abc".into(),
                 },
             ],
@@ -2730,7 +2730,7 @@ mod tests {
         assert_eq!(serialized["env"].as_array().unwrap().len(), 2);
         assert_eq!(
             serialized["env"][0]["name"].as_str(),
-            Some("BUZZ_RELAY_URL")
+            Some("HIVE_RELAY_URL")
         );
     }
 

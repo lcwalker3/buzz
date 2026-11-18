@@ -1,4 +1,4 @@
-//! Database-sourced NIP-FI community resolution (`BUZZ_NIP_FI_COMMUNITY_SOURCE=database`).
+//! Database-sourced NIP-FI community resolution (`HIVE_NIP_FI_COMMUNITY_SOURCE=database`).
 //!
 //! Each pod holds a snapshot of every registry-filtered binding of an active
 //! community, loaded at startup and refreshed every 30s, start to start. A
@@ -62,15 +62,15 @@ pub const NEGATIVE_TTL: Duration = Duration::from_secs(5);
 /// from the environment; the lookup queue limits are fixed.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ResolverBounds {
-    /// `BUZZ_NIP_FI_RESOLVER_NEGATIVE_CACHE_MAX`, at most 1,000,000.
+    /// `HIVE_NIP_FI_RESOLVER_NEGATIVE_CACHE_MAX`, at most 1,000,000.
     pub negative_cache_max: usize,
-    /// `BUZZ_NIP_FI_RESOLVER_MAX_INFLIGHT`, kept below the writer pool size
+    /// `HIVE_NIP_FI_RESOLVER_MAX_INFLIGHT`, kept below the writer pool size
     /// so lookups never take every database connection.
     pub max_inflight: usize,
-    /// `BUZZ_NIP_FI_SNAPSHOT_MAX_ROWS`, at most 10,000,000:
+    /// `HIVE_NIP_FI_SNAPSHOT_MAX_ROWS`, at most 10,000,000:
     /// community-issuer pairs, not communities.
     pub snapshot_max_rows: usize,
-    /// `BUZZ_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS`, shorter than
+    /// `HIVE_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS`, shorter than
     /// [`REFRESH_INTERVAL`].
     pub refresh_timeout: Duration,
     /// Hosts with a lookup in flight.
@@ -109,26 +109,26 @@ impl ResolverBounds {
         };
         let below_interval = REFRESH_INTERVAL.as_millis() as u64 - 1;
         let refresh_timeout = crate::nip_fi_config::parse_u64_bounded(
-            "BUZZ_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS",
+            "HIVE_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS",
             1,
             below_interval,
         )?
         .map_or(d.refresh_timeout, Duration::from_millis);
         let max_inflight = bounded(
-            "BUZZ_NIP_FI_RESOLVER_MAX_INFLIGHT",
+            "HIVE_NIP_FI_RESOLVER_MAX_INFLIGHT",
             u32::MAX.into(),
             d.max_inflight,
         )?
         .min(db_pool_size.saturating_sub(1).max(1) as usize);
         Ok(Self {
             negative_cache_max: bounded(
-                "BUZZ_NIP_FI_RESOLVER_NEGATIVE_CACHE_MAX",
+                "HIVE_NIP_FI_RESOLVER_NEGATIVE_CACHE_MAX",
                 1_000_000,
                 d.negative_cache_max,
             )?,
             max_inflight,
             snapshot_max_rows: bounded(
-                "BUZZ_NIP_FI_SNAPSHOT_MAX_ROWS",
+                "HIVE_NIP_FI_SNAPSHOT_MAX_ROWS",
                 10_000_000,
                 d.snapshot_max_rows,
             )?,
@@ -235,9 +235,9 @@ type PendingLookup = Shared<BoxFuture<'static, MissOutcome>>;
 pub enum LoadFailure {
     /// The store failed.
     Store(String),
-    /// More rows than `BUZZ_NIP_FI_SNAPSHOT_MAX_ROWS`.
+    /// More rows than `HIVE_NIP_FI_SNAPSHOT_MAX_ROWS`.
     OverCap,
-    /// The whole attempt exceeded `BUZZ_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS`.
+    /// The whole attempt exceeded `HIVE_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS`.
     Timeout,
     /// Its read started before the published one's (defensive).
     Superseded,

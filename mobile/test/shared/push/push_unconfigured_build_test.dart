@@ -27,7 +27,7 @@ void main() {
         Env.debugPushGatewayUrlOverride = null;
         expect(
           Env.pushGatewayUrl,
-          const String.fromEnvironment('BUZZ_PUSH_GATEWAY_URL'),
+          const String.fromEnvironment('HIVE_PUSH_GATEWAY_URL'),
         );
       },
     );

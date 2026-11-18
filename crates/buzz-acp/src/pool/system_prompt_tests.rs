@@ -52,13 +52,13 @@ fn old_zed_adapter_name_falls_through_to_protocol_version_gate() {
 #[test]
 fn pi_prompt_support_uses_metadata_regardless_of_protocol_version() {
     for version in [1, 2] {
-        assert!(has_system_prompt_support(version, BUZZ_PI_ACP_NAME, None));
+        assert!(has_system_prompt_support(version, HIVE_PI_ACP_NAME, None));
         assert_eq!(
-            session_new_system_prompt(false, version, BUZZ_PI_ACP_NAME, Some("instructions")),
+            session_new_system_prompt(false, version, HIVE_PI_ACP_NAME, Some("instructions")),
             Some(SystemPromptTransport::PiMeta("instructions"))
         );
         assert_eq!(
-            session_new_system_prompt(false, version, BUZZ_PI_ACP_NAME, None),
+            session_new_system_prompt(false, version, HIVE_PI_ACP_NAME, None),
             None
         );
     }

@@ -87,14 +87,14 @@ ownerPubkey: ""
 # Secret falls back to chart-side autogen (only effective at first install).
 #
 # Expected keys (all optional unless required by relay config):
-#   BUZZ_RELAY_PRIVATE_KEY        — 64-char hex; relay identity (rotation = identity change)
-#   BUZZ_GIT_HOOK_HMAC_SECRET     — 32+ chars; required when replicaCount > 1
+#   HIVE_RELAY_PRIVATE_KEY        — 64-char hex; relay identity (rotation = identity change)
+#   HIVE_GIT_HOOK_HMAC_SECRET     — 32+ chars; required when replicaCount > 1
 #   DATABASE_URL                  — full Postgres URL (preferred over externalPostgresql.url)
 #   READ_DATABASE_URL             — optional Postgres read-replica URL; omit to keep all reads on the writer
 #   REDIS_URL                     — full Redis URL with auth
-#   BUZZ_S3_ACCESS_KEY            — S3 access key
-#   BUZZ_S3_SECRET_KEY            — S3 secret key
-#   BUZZ_KLIPY_API_KEY            — KLIPY GIF search key; omit to disable GIF search
+#   HIVE_S3_ACCESS_KEY            — S3 access key
+#   HIVE_S3_SECRET_KEY            — S3 secret key
+#   HIVE_KLIPY_API_KEY            — KLIPY GIF search key; omit to disable GIF search
 secrets:
   existingSecret: ""
   # Inline overrides (NOT recommended for production; they land in values).
@@ -335,7 +335,7 @@ externalRedis:
 #   No row means no storage gauges; a later worker publication is picked up on
 #   the next usage tick without restarting or reconfiguring the relay.
 # - inline is a legacy alias for external in current relay images.
-#   A directly configured BUZZ_STORAGE_METRICS=on also selects the reader.
+#   A directly configured HIVE_STORAGE_METRICS=on also selects the reader.
 # - off disables storage metrics in the relay.
 # storageAccounting.enabled controls the CronJob independently of the reader.
 # Only worker scans require `s3:ListBucket` on the bucket ARN itself (bucket-level;
@@ -374,7 +374,7 @@ s3:
 # Isolated S3 accounting worker. Disabled by default. The relay is ready to
 # consume snapshots whenever an operator enables a worker in this environment.
 # To push each new snapshot's per-community totals to a usage endpoint, set
-# BUZZ_STORAGE_USAGE_URL through relay.extraEnv (see .env.example).
+# HIVE_STORAGE_USAGE_URL through relay.extraEnv (see .env.example).
 storageAccounting:
   enabled: false
   schedule: "0 3 * * *"
@@ -447,7 +447,7 @@ git:
   maxConcurrentOps: 20
 
 # ── Migrations ───────────────────────────────────────────────────────────────
-# Relay runs sqlx migrations at startup via BUZZ_AUTO_MIGRATE=true.
+# Relay runs sqlx migrations at startup via HIVE_AUTO_MIGRATE=true.
 migrate:
   autoMigrate: true
   preUpgradeJob:

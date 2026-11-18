@@ -38,9 +38,9 @@ Tests in `migration::postgres_tests` receive an empty database and own the
 embedded migration lifecycle. A test outside that module that intentionally
 depends on migration-created triggers or seed rows must prefix its function
 name with `migration_schema_`; it also receives an empty database with
-`BUZZ_TEST_SCHEMA_MODE=migration`.
+`HIVE_TEST_SCHEMA_MODE=migration`.
 
-Helpers that normally run migrations honor `BUZZ_TEST_SCHEMA_MODE=desired` in
+Helpers that normally run migrations honor `HIVE_TEST_SCHEMA_MODE=desired` in
 the default lane. Do not rerun migrations against a desired-state database.
 When behavior should match in both schema paths, add explicit desired-state and
 migration-applied coverage rather than making the bootstrap implicit.
@@ -60,7 +60,7 @@ scripts/test-postgres-test-discovery.sh
 scripts/postgres-test-run.sh
 ```
 
-Set `BUZZ_POSTGRES_ADMIN_URL` to a PostgreSQL maintenance database owned by a
+Set `HIVE_POSTGRES_ADMIN_URL` to a PostgreSQL maintenance database owned by a
 role that can create and drop databases. Set `PGHOST`, `PGPORT`, `PGUSER`, and
 `PGPASSWORD` for desired-state bootstrap, plus `REDIS_URL` for Redis-backed
 tests. The complete privilege-boundary inventory also needs `CREATEROLE` and

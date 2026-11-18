@@ -47,7 +47,7 @@ meaning under a committed UUID returns 409 `idempotency_conflict`. Identical
 committed replay recovers history before mutable preflight and never writes policy.
 
 Enable requires a single deployment-selected authorized issuer in
-`BUZZ_NIP_FI_PROVISION_BINDING`, an applicable registry policy and exact existing
+`HIVE_NIP_FI_PROVISION_BINDING`, an applicable registry policy and exact existing
 community binding. It locks the binding against unbind and adds no trust.
 Disable does not depend on issuer availability and does not alter bindings.
 Every optional→required transition, including re-enable, excludes new host leases
@@ -98,8 +98,8 @@ for the [policy client contract](operator-nip-fi-policy-client.md) before this
 relay version reaches their fleet, with their mutations paused until rollout ends.
 No client may guess CAS fields or refresh a saved request during recovery.
 
-Before rolling, close `BUZZ_NIP_FI_UPGRADES_ENABLED` on every old relay and keep
-`BUZZ_NIP_FI_CHANGES=false` on new relays. Apply schema first, roll the whole
+Before rolling, close `HIVE_NIP_FI_UPGRADES_ENABLED` on every old relay and keep
+`HIVE_NIP_FI_CHANGES=false` on new relays. Apply schema first, roll the whole
 fleet to the supported policy writer, then explicitly enable the new gate and
 resume migrated clients. Old binaries with their old gate open can still accept
 unfenced enables and reverse a disable; a new-name setting alone cannot close

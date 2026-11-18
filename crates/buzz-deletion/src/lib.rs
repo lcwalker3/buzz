@@ -563,7 +563,7 @@ async fn connect_database() -> Result<Db> {
     let db = Db::connect_cold_start(
         DbConfig {
             database_url,
-            max_connections: env_parse("BUZZ_DB_POOL_SIZE", 20),
+            max_connections: env_parse("HIVE_DB_POOL_SIZE", 20),
             ..DbConfig::default()
         }
         .with_session_timeouts_from_env(),
@@ -593,12 +593,12 @@ async fn connect_services() -> Result<Services> {
 async fn connect_services_with_store(store: DeletionStore) -> Result<Services> {
     let (s3_access_key, s3_secret_key) = s3_key_pair_from_env();
     let media_config = buzz_media::MediaConfig {
-        s3_endpoint: required_env("BUZZ_S3_ENDPOINT")?,
+        s3_endpoint: required_env("HIVE_S3_ENDPOINT")?,
         s3_access_key,
         s3_secret_key,
-        s3_bucket: required_env("BUZZ_S3_BUCKET")?,
+        s3_bucket: required_env("HIVE_S3_BUCKET")?,
         s3_region: s3_region_from_env(),
-        s3_addressing_style: std::env::var("BUZZ_S3_ADDRESSING_STYLE")
+        s3_addressing_style: std::env::var("HIVE_S3_ADDRESSING_STYLE")
             .unwrap_or_else(|_| "path".to_string())
             .parse()
             .map_err(anyhow::Error::msg)?,
@@ -623,7 +623,7 @@ async fn connect_services_with_store(store: DeletionStore) -> Result<Services> {
 
 fn s3_region_from_env() -> String {
     resolve_s3_region(
-        std::env::var("BUZZ_S3_REGION").ok(),
+        std::env::var("HIVE_S3_REGION").ok(),
         std::env::var("AWS_REGION").ok(),
     )
 }
@@ -634,8 +634,8 @@ fn s3_key_pair_from_env() -> (String, String) {
 
 fn s3_key_pair_from(get_env: impl Fn(&str) -> Option<String>) -> (String, String) {
     (
-        optional_env_from(&get_env, "BUZZ_S3_ACCESS_KEY"),
-        optional_env_from(&get_env, "BUZZ_S3_SECRET_KEY"),
+        optional_env_from(&get_env, "HIVE_S3_ACCESS_KEY"),
+        optional_env_from(&get_env, "HIVE_S3_SECRET_KEY"),
     )
 }
 
@@ -1793,7 +1793,7 @@ async fn verify_redis_absence(
 }
 
 fn sweep_object_cap() -> u64 {
-    std::env::var("BUZZ_DELETION_SWEEP_MAX_OBJECTS")
+    std::env::var("HIVE_DELETION_SWEEP_MAX_OBJECTS")
         .ok()
         .and_then(|value| value.parse().ok())
         .filter(|value| *value > 0)
@@ -1801,7 +1801,7 @@ fn sweep_object_cap() -> u64 {
 }
 
 fn manifest_chunk_keys() -> usize {
-    std::env::var("BUZZ_DELETION_MANIFEST_CHUNK_KEYS")
+    std::env::var("HIVE_DELETION_MANIFEST_CHUNK_KEYS")
         .ok()
         .and_then(|value| value.parse::<usize>().ok())
         .filter(|value| *value > 0)
@@ -1907,9 +1907,9 @@ mod postgres_tests {
     }
 
     fn test_database_url() -> String {
-        std::env::var("BUZZ_TEST_DATABASE_URL")
+        std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
-            .expect("BUZZ_TEST_DATABASE_URL or DATABASE_URL is required")
+            .expect("HIVE_TEST_DATABASE_URL or DATABASE_URL is required")
     }
 
     async fn claimed_test_deletion(prefix: &str) -> (Db, Services, ClaimedDeletion) {
@@ -1917,7 +1917,7 @@ mod postgres_tests {
             .await
             .expect("connect deletion engine test DB");
         let db = Db::from_pool(pool);
-        if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
+        if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
             db.migrate().await.expect("migrate deletion engine test DB");
         }
         claimed_test_deletion_in(db, prefix).await
@@ -2020,14 +2020,14 @@ mod postgres_tests {
     async fn owner_preparation_fixture(
         prefix: &str,
     ) -> (Db, Services, DeletionRequest, FrozenInventory) {
-        let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
-            .expect("BUZZ_TEST_DATABASE_URL or DATABASE_URL is required");
+            .expect("HIVE_TEST_DATABASE_URL or DATABASE_URL is required");
         let pool = sqlx::PgPool::connect(&database_url)
             .await
             .expect("connect owner preparation test DB");
         let db = Db::from_pool(pool);
-        if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
+        if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
             db.migrate().await.expect("migrate deletion engine test DB");
         }
         let store = db.deletion_store();
@@ -2372,8 +2372,8 @@ mod postgres_tests {
 
         assert_eq!(
             s3_key_pair_from(env_of(&[
-                ("BUZZ_S3_ACCESS_KEY", ""),
-                ("BUZZ_S3_SECRET_KEY", "   "),
+                ("HIVE_S3_ACCESS_KEY", ""),
+                ("HIVE_S3_SECRET_KEY", "   "),
             ])),
             (String::new(), String::new())
         );
@@ -2383,32 +2383,32 @@ mod postgres_tests {
     fn deletion_s3_key_pair_trims_static_and_preserves_partial_pairs() {
         assert_eq!(
             s3_key_pair_from(env_of(&[
-                ("BUZZ_S3_ACCESS_KEY", " buzz_dev "),
-                ("BUZZ_S3_SECRET_KEY", " buzz_dev_secret "),
+                ("HIVE_S3_ACCESS_KEY", " buzz_dev "),
+                ("HIVE_S3_SECRET_KEY", " buzz_dev_secret "),
             ])),
             ("buzz_dev".to_string(), "buzz_dev_secret".to_string())
         );
 
         for (env, expected) in [
             (
-                &[("BUZZ_S3_ACCESS_KEY", " buzz_dev ")][..],
+                &[("HIVE_S3_ACCESS_KEY", " buzz_dev ")][..],
                 ("buzz_dev".to_string(), String::new()),
             ),
             (
-                &[("BUZZ_S3_SECRET_KEY", " buzz_dev_secret ")][..],
+                &[("HIVE_S3_SECRET_KEY", " buzz_dev_secret ")][..],
                 (String::new(), "buzz_dev_secret".to_string()),
             ),
             (
                 &[
-                    ("BUZZ_S3_ACCESS_KEY", " buzz_dev "),
-                    ("BUZZ_S3_SECRET_KEY", "   "),
+                    ("HIVE_S3_ACCESS_KEY", " buzz_dev "),
+                    ("HIVE_S3_SECRET_KEY", "   "),
                 ][..],
                 ("buzz_dev".to_string(), String::new()),
             ),
             (
                 &[
-                    ("BUZZ_S3_ACCESS_KEY", "   "),
-                    ("BUZZ_S3_SECRET_KEY", " buzz_dev_secret "),
+                    ("HIVE_S3_ACCESS_KEY", "   "),
+                    ("HIVE_S3_SECRET_KEY", " buzz_dev_secret "),
                 ][..],
                 (String::new(), "buzz_dev_secret".to_string()),
             ),
@@ -2418,26 +2418,26 @@ mod postgres_tests {
     }
 
     fn deletion_test_media_storage() -> Arc<MediaStorage> {
-        let endpoint = std::env::var("BUZZ_TEST_S3_ENDPOINT")
-            .or_else(|_| std::env::var("BUZZ_S3_ENDPOINT"))
-            .expect("BUZZ_TEST_S3_ENDPOINT or BUZZ_S3_ENDPOINT is required");
-        let access_key = std::env::var("BUZZ_TEST_S3_ACCESS_KEY")
-            .or_else(|_| std::env::var("BUZZ_S3_ACCESS_KEY"))
-            .expect("BUZZ_TEST_S3_ACCESS_KEY or BUZZ_S3_ACCESS_KEY is required");
-        let secret_key = std::env::var("BUZZ_TEST_S3_SECRET_KEY")
-            .or_else(|_| std::env::var("BUZZ_S3_SECRET_KEY"))
-            .expect("BUZZ_TEST_S3_SECRET_KEY or BUZZ_S3_SECRET_KEY is required");
-        let bucket = std::env::var("BUZZ_TEST_S3_BUCKET")
-            .or_else(|_| std::env::var("BUZZ_S3_BUCKET"))
-            .expect("BUZZ_TEST_S3_BUCKET or BUZZ_S3_BUCKET is required");
+        let endpoint = std::env::var("HIVE_TEST_S3_ENDPOINT")
+            .or_else(|_| std::env::var("HIVE_S3_ENDPOINT"))
+            .expect("HIVE_TEST_S3_ENDPOINT or HIVE_S3_ENDPOINT is required");
+        let access_key = std::env::var("HIVE_TEST_S3_ACCESS_KEY")
+            .or_else(|_| std::env::var("HIVE_S3_ACCESS_KEY"))
+            .expect("HIVE_TEST_S3_ACCESS_KEY or HIVE_S3_ACCESS_KEY is required");
+        let secret_key = std::env::var("HIVE_TEST_S3_SECRET_KEY")
+            .or_else(|_| std::env::var("HIVE_S3_SECRET_KEY"))
+            .expect("HIVE_TEST_S3_SECRET_KEY or HIVE_S3_SECRET_KEY is required");
+        let bucket = std::env::var("HIVE_TEST_S3_BUCKET")
+            .or_else(|_| std::env::var("HIVE_S3_BUCKET"))
+            .expect("HIVE_TEST_S3_BUCKET or HIVE_S3_BUCKET is required");
         Arc::new(
             MediaStorage::new(&buzz_media::MediaConfig {
                 s3_endpoint: endpoint,
                 s3_access_key: access_key,
                 s3_secret_key: secret_key,
                 s3_bucket: bucket,
-                s3_region: std::env::var("BUZZ_TEST_S3_REGION")
-                    .or_else(|_| std::env::var("BUZZ_S3_REGION"))
+                s3_region: std::env::var("HIVE_TEST_S3_REGION")
+                    .or_else(|_| std::env::var("HIVE_S3_REGION"))
                     .unwrap_or_else(|_| "us-east-1".to_string()),
                 s3_addressing_style: buzz_media::S3AddressingStyle::Path,
                 max_image_bytes: 1,
@@ -2776,7 +2776,7 @@ mod postgres_tests {
 
     #[test]
     fn deletion_configuration_requires_every_destructive_dependency() {
-        let variable = format!("BUZZ_DELETION_REQUIRED_TEST_{}", Uuid::new_v4().simple());
+        let variable = format!("HIVE_DELETION_REQUIRED_TEST_{}", Uuid::new_v4().simple());
         assert!(required_env(&variable).is_err());
         std::env::set_var(&variable, "   ");
         assert!(required_env(&variable).is_err());
@@ -2851,9 +2851,9 @@ mod postgres_tests {
     /// tables are purged and verified and a bystander's survive. A table added
     /// after approval that is not listed still stops the request before fencing.
     async fn approval_before_an_expand_migration_completes() {
-        let redis_url = std::env::var("BUZZ_TEST_REDIS_URL")
+        let redis_url = std::env::var("HIVE_TEST_REDIS_URL")
             .or_else(|_| std::env::var("REDIS_URL"))
-            .expect("BUZZ_TEST_REDIS_URL or REDIS_URL is required");
+            .expect("HIVE_TEST_REDIS_URL or REDIS_URL is required");
         let services_with_infra = |mut services: Services| {
             services.media = deletion_test_media_storage();
             services.redis = redis_connection(&redis_url).expect("connect Redis");
@@ -3011,7 +3011,7 @@ mod postgres_tests {
     #[ignore = "requires Postgres"]
     async fn stale_lease_during_failure_recording_is_lost_ownership() {
         let (_, services, claim) = claimed_test_deletion("deletion-stale-record").await;
-        let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .expect("test database URL");
         let pool = sqlx::PgPool::connect(&database_url)
@@ -3098,14 +3098,14 @@ mod postgres_tests {
     #[tokio::test]
     #[ignore = "requires Postgres"]
     async fn serving_guard_cancels_protected_operation_when_heartbeat_is_lost() {
-        let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
-            .expect("BUZZ_TEST_DATABASE_URL or DATABASE_URL is required");
+            .expect("HIVE_TEST_DATABASE_URL or DATABASE_URL is required");
         let pool = sqlx::PgPool::connect(&database_url)
             .await
             .expect("connect serving guard test DB");
         let db = Db::from_pool(pool.clone());
-        if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
+        if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
             db.migrate().await.expect("migrate serving guard test DB");
         }
         let community = db

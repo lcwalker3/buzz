@@ -380,7 +380,7 @@ pub(crate) async fn handle_connection(
     connection_time: chrono::DateTime<chrono::Utc>,
 ) {
     // Held through bootstrap, the active handler and any refusal drain, so a
-    // socket counts against `BUZZ_MAX_CONNECTIONS` for as long as it is open.
+    // socket counts against `HIVE_MAX_CONNECTIONS` for as long as it is open.
     let conn_id = Uuid::new_v4();
     // Owned from the upgrade on, so every exit (inactive community, the
     // connection limit, the active handler, or this future being dropped)
@@ -6034,7 +6034,7 @@ pub(crate) mod terminal_close_delivery_tests {
 
     /// A socket refused during bootstrap keeps its connection slot until the
     /// socket ends, including the bounded wait for a Close reply that never
-    /// comes, so refusals cannot open sockets beyond `BUZZ_MAX_CONNECTIONS`.
+    /// comes, so refusals cannot open sockets beyond `HIVE_MAX_CONNECTIONS`.
     #[tokio::test]
     async fn refused_bootstrap_holds_connection_slot_until_socket_ends() {
         let state = crate::state::tests::test_state().await;

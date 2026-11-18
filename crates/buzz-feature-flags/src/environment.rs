@@ -1,6 +1,6 @@
 //! Process-wide environment-backed feature-flag evaluator.
 //!
-//! Environment variables use the fixed `BUZZ_FEATURE_FLAG_` namespace and a
+//! Environment variables use the fixed `HIVE_FEATURE_FLAG_` namespace and a
 //! normalized form of each flag key.
 //!
 //! Normalization algorithm:
@@ -23,7 +23,7 @@ use std::{
 
 use crate::{BooleanFlag, EvaluationContext, FlagEvaluator, IntegerFlag};
 
-const ENV_NAMESPACE: &str = "BUZZ_FEATURE_FLAG_";
+const ENV_NAMESPACE: &str = "HIVE_FEATURE_FLAG_";
 
 #[derive(Clone)]
 enum SnapshotValue {
@@ -84,7 +84,7 @@ impl EnvironmentEvaluator {
 
     /// Build an evaluator from a deterministic key/value snapshot.
     ///
-    /// Only entries whose names start with `BUZZ_FEATURE_FLAG_` are retained.
+    /// Only entries whose names start with `HIVE_FEATURE_FLAG_` are retained.
     /// Entries with non-Unicode names are ignored; non-Unicode values are
     /// retained only as invalid-value markers.
     pub fn from_pairs<I, K, V>(pairs: I) -> Self
@@ -241,11 +241,11 @@ mod tests {
     fn normalization_uses_fixed_namespace_and_collapses_separators() {
         assert_eq!(
             normalize_flag_env_name("relay.feature.query-v2"),
-            Some("BUZZ_FEATURE_FLAG_RELAY_FEATURE_QUERY_V2".to_owned())
+            Some("HIVE_FEATURE_FLAG_RELAY_FEATURE_QUERY_V2".to_owned())
         );
         assert_eq!(
             normalize_flag_env_name("___relay..foo---bar***baz??9___"),
-            Some("BUZZ_FEATURE_FLAG_RELAY_FOO_BAR_BAZ_9".to_owned())
+            Some("HIVE_FEATURE_FLAG_RELAY_FOO_BAR_BAZ_9".to_owned())
         );
     }
 
@@ -258,14 +258,14 @@ mod tests {
     #[test]
     fn snapshot_retains_only_namespaced_entries() {
         let evaluator = EnvironmentEvaluator::from_pairs([
-            ("BUZZ_FEATURE_FLAG_RELAY_ENABLED", "true"),
+            ("HIVE_FEATURE_FLAG_RELAY_ENABLED", "true"),
             ("DATABASE_URL", "sensitive"),
         ]);
 
         assert_eq!(evaluator.snapshot.len(), 1);
         assert!(evaluator
             .snapshot
-            .contains_key("BUZZ_FEATURE_FLAG_RELAY_ENABLED"));
+            .contains_key("HIVE_FEATURE_FLAG_RELAY_ENABLED"));
     }
 
     #[cfg(unix)]
@@ -275,7 +275,7 @@ mod tests {
 
         let evaluator = EnvironmentEvaluator::from_pairs([
             (
-                OsString::from("BUZZ_FEATURE_FLAG_RELAY_NON_UNICODE_NAME"),
+                OsString::from("HIVE_FEATURE_FLAG_RELAY_NON_UNICODE_NAME"),
                 OsString::from_vec(vec![0x80]),
             ),
             (OsString::from_vec(vec![0x81]), OsString::from("true")),
@@ -297,7 +297,7 @@ mod tests {
     #[test]
     fn poisoned_diagnostic_mutex_recovers_without_panicking() {
         let evaluator = EnvironmentEvaluator::from_pairs([(
-            "BUZZ_FEATURE_FLAG_RELAY_POISONED",
+            "HIVE_FEATURE_FLAG_RELAY_POISONED",
             "not-a-boolean",
         )]);
         let diagnostics = Arc::clone(&evaluator.diagnostics);

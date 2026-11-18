@@ -10,7 +10,7 @@ mkdir -p "$fixture_root/bin"
 
 cat >"$fixture_root/bin/createdb" <<'SH'
 #!/usr/bin/env bash
-printf '%s\n' "$*" >"$BUZZ_CREATEDB_LOG"
+printf '%s\n' "$*" >"$HIVE_CREATEDB_LOG"
 SH
 
 cat >"$fixture_root/bin/dropdb" <<'SH'
@@ -20,7 +20,7 @@ SH
 
 cat >"$fixture_root/bin/capture-schema-mode" <<'SH'
 #!/usr/bin/env bash
-printf '%s\n' "$BUZZ_TEST_SCHEMA_MODE" >"$BUZZ_SCHEMA_MODE_LOG"
+printf '%s\n' "$HIVE_TEST_SCHEMA_MODE" >"$HIVE_SCHEMA_MODE_LOG"
 SH
 
 chmod +x "$fixture_root/bin/createdb" \
@@ -40,10 +40,10 @@ run_case() {
     NEXTEST_BINARY_ID=postgres_fixture \
     NEXTEST_TEST_NAME="$test_name" \
     NEXTEST_ATTEMPT_ID=1 \
-    BUZZ_POSTGRES_ADMIN_URL=postgres://buzz@localhost/postgres \
-    BUZZ_POSTGRES_DESIRED_TEMPLATE=desired_template \
-    BUZZ_CREATEDB_LOG="$createdb_log" \
-    BUZZ_SCHEMA_MODE_LOG="$mode_log" \
+    HIVE_POSTGRES_ADMIN_URL=postgres://buzz@localhost/postgres \
+    HIVE_POSTGRES_DESIRED_TEMPLATE=desired_template \
+    HIVE_CREATEDB_LOG="$createdb_log" \
+    HIVE_SCHEMA_MODE_LOG="$mode_log" \
     PG_BIN_DIR="$fixture_root/bin" \
     "$wrapper" "$fixture_root/bin/capture-schema-mode"
 

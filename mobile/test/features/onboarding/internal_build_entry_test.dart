@@ -26,9 +26,9 @@ import '../../helpers/widget_helpers.dart';
 import '../../helpers/test_assertion.dart';
 
 /// Runs as an internal build, for example:
-/// `--dart-define=BUZZ_DISTRIBUTION=internal`
-/// `--dart-define=BUZZ_BUILDERLAB_URL=https://id.example.org`
-/// `--dart-define=BUZZ_BUILDERLAB_RELAYS=buzz.example.org`
+/// `--dart-define=HIVE_DISTRIBUTION=internal`
+/// `--dart-define=HIVE_BUILDERLAB_URL=https://id.example.org`
+/// `--dart-define=HIVE_BUILDERLAB_RELAYS=buzz.example.org`
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final skip = !OrganizationEnvironment.enabled;

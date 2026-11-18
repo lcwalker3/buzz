@@ -20,7 +20,7 @@ fn admin_binary() -> std::ffi::OsString {
 #[tokio::test]
 #[ignore = "requires Postgres"]
 async fn cluster_global_inventory_cli_uses_only_existing_membership_tables() {
-    let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+    let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
         .or_else(|_| std::env::var("DATABASE_URL"))
         .unwrap();
     let pool = PgPool::connect(&database_url).await.unwrap();
@@ -199,7 +199,7 @@ fn invalid_inventory_key_fails_before_database_connection() {
 #[tokio::test]
 #[ignore = "requires Postgres"]
 async fn inventory_submission_completes_demo_but_refuses_unfinished_real_workflow() {
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL").unwrap();
+    let url = std::env::var("HIVE_TEST_DATABASE_URL").unwrap();
     let pool = PgPool::connect(&url).await.unwrap();
     let key = "ab".repeat(32);
     let npub = nostr::PublicKey::parse(&key).unwrap().to_bech32().unwrap();
@@ -324,7 +324,7 @@ async fn inventory_submission_completes_demo_but_refuses_unfinished_real_workflo
 #[tokio::test]
 #[ignore = "requires Postgres"]
 async fn inventory_approval_and_resume_use_saved_account_identity_without_resolution() {
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL").unwrap();
+    let url = std::env::var("HIVE_TEST_DATABASE_URL").unwrap();
     let pool = PgPool::connect(&url).await.unwrap();
     let saved = workflow_cli(
         &url,

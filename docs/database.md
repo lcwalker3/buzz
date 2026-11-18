@@ -16,7 +16,7 @@ PostgreSQL stores data. The application owns behavior.
 | Concern | Today | Target |
 |---|---|---|
 | Schema source of truth | Two parallel sources: ordered sqlx migrations in `migrations/` and the desired-state manifest in `schema/` | The declarative desired state in `schema/tables/public/` is the source of truth. Deployments that apply schema out of band plan each change from it, with the tool of their choice. `migrations/` stays, because auto-migration stays supported (next row). Each app owns its own migrations and declarative schema: the relay's copies of the push gateway's tables are debt to remove (Rule 4). |
-| Who applies DDL | Startup migrations when `BUZZ_AUTO_MIGRATE` is on (binary default off, Helm chart default on), `buzz-admin migrate`, the push gateway's pre-upgrade Helm Job, and partition creation at relay startup and on a schedule | Both modes stay supported. Deployments at scale, including Block's hosted deployment, apply schema changes out of band through a reviewed workflow before deploying, and their serving relay runs no DDL. Smaller and self-hosted deployments MAY keep auto-migration on. Still open: how the two modes share one schema source, how auto-migration orders a release whose expand, backfill, and contract steps arrive in one upgrade, and how an operator recovers after a contract migration fails at boot (Rule 5). Monthly partition creation is planned to move out of the relay. Changes to partitioned tables (`events`, `delivery_log`) are outside the out-of-band envelope (Rule 6): attaching a partition to a live parent and building an index on a partitioned parent need their own reviewed procedure. |
+| Who applies DDL | Startup migrations when `HIVE_AUTO_MIGRATE` is on (binary default off, Helm chart default on), `buzz-admin migrate`, the push gateway's pre-upgrade Helm Job, and partition creation at relay startup and on a schedule | Both modes stay supported. Deployments at scale, including Block's hosted deployment, apply schema changes out of band through a reviewed workflow before deploying, and their serving relay runs no DDL. Smaller and self-hosted deployments MAY keep auto-migration on. Still open: how the two modes share one schema source, how auto-migration orders a release whose expand, backfill, and contract steps arrive in one upgrade, and how an operator recovers after a contract migration fails at boot (Rule 5). Monthly partition creation is planned to move out of the relay. Changes to partitioned tables (`events`, `delivery_log`) are outside the out-of-band envelope (Rule 6): attaching a partition to a live parent and building an index on a partitioned parent need their own reviewed procedure. |
 | Integrity between tables | Some foreign keys, including `ON DELETE CASCADE` and `ON DELETE SET NULL` | None in the database. The owning application transaction checks references and performs deletes explicitly. |
 | Guards and follow-up writes | Triggers and PL/pgSQL functions (`schema/functions/`, `schema/triggers/`) | None in the database. Guards run in the owning writer's transaction; follow-up work is recorded in the same transaction and processed as durable, retryable application work. |
 | Data repair | Some historical repair embedded in migrations | Backfill definitions in application code, run by the durable framework in [data-backfills.md](data-backfills.md). |
@@ -291,7 +291,7 @@ provenance-only checklist under Rule 1.
 Buzz supports two ways of applying migrations, and every change MUST be safe
 under both:
 
-- **Auto-migration.** The relay binary defaults `BUZZ_AUTO_MIGRATE` to off,
+- **Auto-migration.** The relay binary defaults `HIVE_AUTO_MIGRATE` to off,
   but the Helm chart defaults `migrate.autoMigrate` to `true`. With it on, the
   first new pod migrates at boot while old pods are still serving.
 - **Out of band.** An operator applies the migrations while the current relay
@@ -306,7 +306,7 @@ write against.
 The relay has no general schema-version compatibility check. It verifies only
 specific catalog surfaces, such as the deletion serving fence, so the ordering
 below is the main protection. When
-`BUZZ_AUTO_MIGRATE` is on, an older binary refuses a database that has
+`HIVE_AUTO_MIGRATE` is on, an older binary refuses a database that has
 migrations it does not know (sqlx `VersionMissing`), so `helm rollback` with
 auto-migration on fails at startup, and so does any old pod that restarts
 mid-rollout after a new pod has migrated. A rollback therefore depends on the
@@ -420,7 +420,7 @@ parity assertion on the table for that window.
   `SET LOCAL statement_timeout` when a statement can scan. A migration that
   cannot get its lock fails and is retried. It MUST NOT queue behind
   traffic on a hot table.
-- With `BUZZ_AUTO_MIGRATE` on, migrations are the whole upgrade procedure, so
+- With `HIVE_AUTO_MIGRATE` on, migrations are the whole upgrade procedure, so
   every migration MUST apply its own change on a database that holds data. A
   migration MUST NOT refuse to run because a table has rows: every
   auto-migrating relay with data would crash-loop on that version until

@@ -31,16 +31,16 @@ feature and no external dependency).
 ## Environment Variable Naming
 
 `EnvironmentEvaluator` reads only the fixed namespace
-`BUZZ_FEATURE_FLAG_`.
+`HIVE_FEATURE_FLAG_`.
 
 For each flag key:
 
 - uppercase ASCII letters,
 - replace each run of non-ASCII-alphanumeric characters with `_`,
 - trim leading/trailing `_`,
-- prepend `BUZZ_FEATURE_FLAG_`.
+- prepend `HIVE_FEATURE_FLAG_`.
 
-Example: `relay.feature.query-v2` → `BUZZ_FEATURE_FLAG_RELAY_FEATURE_QUERY_V2`.
+Example: `relay.feature.query-v2` → `HIVE_FEATURE_FLAG_RELAY_FEATURE_QUERY_V2`.
 
 Normalized names must be unique across declared flags. Collisions (for example
 `a-b` and `a_b`) intentionally map to the same environment variable. Enforcing
@@ -50,14 +50,14 @@ registry yet.
 ## Relay Provider Selection
 
 `buzz-relay` builds exactly one evaluator at startup, chosen by
-`BUZZ_FEATURE_FLAGS_PROVIDER` (outside the `BUZZ_FEATURE_FLAG_` namespace, so
+`HIVE_FEATURE_FLAGS_PROVIDER` (outside the `HIVE_FEATURE_FLAG_` namespace, so
 it can never be read as a flag):
 
 | Value | Evaluator |
 |-------|-----------|
 | unset, `static` | `StaticEvaluator` |
 | `environment` | `EnvironmentEvaluator::from_process_environment()` |
-| `launchdarkly` | `LaunchDarklyEvaluator`, from `BUZZ_LAUNCHDARKLY_SDK_KEY` and the optional Relay Proxy URL `BUZZ_LAUNCHDARKLY_RELAY_PROXY_URL` |
+| `launchdarkly` | `LaunchDarklyEvaluator`, from `HIVE_LAUNCHDARKLY_SDK_KEY` and the optional Relay Proxy URL `HIVE_LAUNCHDARKLY_RELAY_PROXY_URL` |
 
 The value is parsed into one provider; there is no stacking, no precedence and
 no fallback from one provider to another, and the evaluator never changes for

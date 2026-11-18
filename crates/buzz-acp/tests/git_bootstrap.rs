@@ -82,7 +82,7 @@ exec sleep 60
             "",
         ])
         .env("PROBE_DIR", workspace)
-        .env("BUZZ_ACP_DISPLAY_NAME", "Git Probe")
+        .env("HIVE_ACP_DISPLAY_NAME", "Git Probe")
         .env("GIT_AUTHOR_NAME", "Inherited Human")
         .env("GIT_AUTHOR_EMAIL", "human@example.invalid")
         .env("GIT_COMMITTER_NAME", "Inherited Human")
@@ -106,8 +106,8 @@ exec sleep 60
         .env("GIT_CONFIG_NOSYSTEM", "1")
         .env("GIT_CONFIG_GLOBAL", "/dev/null")
         .env("GIT_CONFIG_PARAMETERS", "'user.name=Inherited Human'")
-        .env_remove("BUZZ_ACP_SETUP_PAYLOAD")
-        .env_remove("BUZZ_AUTH_TAG")
+        .env_remove("HIVE_ACP_SETUP_PAYLOAD")
+        .env_remove("HIVE_AUTH_TAG")
         .stdin(Stdio::null())
         .stdout(log.try_clone().unwrap())
         .stderr(log)
@@ -214,8 +214,8 @@ fn check_keyfile_removed_after_adapter_failure(task: bool) {
             "/missing-buzz-adapter",
         ])
         .env("TMPDIR", temp.path())
-        .env_remove("BUZZ_ACP_SETUP_PAYLOAD")
-        .env_remove("BUZZ_AUTH_TAG")
+        .env_remove("HIVE_ACP_SETUP_PAYLOAD")
+        .env_remove("HIVE_AUTH_TAG")
         .output()
         .unwrap();
     assert!(!output.status.success());

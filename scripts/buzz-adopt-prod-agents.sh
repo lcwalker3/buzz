@@ -36,12 +36,12 @@
 #     only until that first boot consumes it.
 #   - It does NOT copy baked build-time agent defaults. The prod DMG bakes a
 #     provider and default env vars at compile time via `option_env!` in
-#     `build.rs` (driven by `BUZZ_BUILD_BUZZ_AGENT_PROVIDER` and
-#     `BUZZ_BUILD_AGENT_ENV`). These are compiled into the binary, not stored in
+#     `build.rs` (driven by `HIVE_BUILD_HIVE_AGENT_PROVIDER` and
+#     `HIVE_BUILD_AGENT_ENV`). These are compiled into the binary, not stored in
 #     app-data — there is no file here to copy. Dev parity means setting those
 #     env vars when invoking the dev build:
-#       export BUZZ_BUILD_BUZZ_AGENT_PROVIDER="databricks_v2"
-#       export BUZZ_BUILD_AGENT_ENV=$'DATABRICKS_HOST=...\nDATABRICKS_MODEL=...'
+#       export HIVE_BUILD_HIVE_AGENT_PROVIDER="databricks_v2"
+#       export HIVE_BUILD_AGENT_ENV=$'DATABRICKS_HOST=...\nDATABRICKS_MODEL=...'
 #       just production
 #     Do NOT add these to .env — `set dotenv-load := true` in the Justfile
 #     would bake them into every recipe in that checkout, including test runs.
@@ -63,8 +63,8 @@
 #
 # ENV OVERRIDES (read-only against prod; exist so the identity read can be
 # fixture-tested against a scratch keychain without touching real secrets)
-#   BUZZ_KEYCHAIN_SVC   keychain service    (default buzz-desktop)
-#   BUZZ_KEYCHAIN_ACCT  keychain account    (default secrets)
+#   HIVE_KEYCHAIN_SVC   keychain service    (default buzz-desktop)
+#   HIVE_KEYCHAIN_ACCT  keychain account    (default secrets)
 #
 set -euo pipefail
 
@@ -75,8 +75,8 @@ set -euo pipefail
 SUPPORT="$HOME/Library/Application Support"
 PROD_DIR="$SUPPORT/xyz.block.buzz.app"
 DEV_DIR="$SUPPORT/xyz.block.buzz.app.dev"
-KEYCHAIN_SVC="${BUZZ_KEYCHAIN_SVC:-buzz-desktop}"
-KEYCHAIN_ACCT="${BUZZ_KEYCHAIN_ACCT:-secrets}"
+KEYCHAIN_SVC="${HIVE_KEYCHAIN_SVC:-buzz-desktop}"
+KEYCHAIN_ACCT="${HIVE_KEYCHAIN_ACCT:-secrets}"
 
 DRY_RUN=0
 FORCE=0
@@ -482,11 +482,11 @@ cat <<EOF
        (copies agent:<pubkey> keys buzz-desktop → buzz-desktop-dev).
      - First boot adopts identity.key into the dev keyring, then deletes it.
   2. Worktree launches: worktree-suffixed dev dirs are symlinked to the
-     canonical dev dir by sync_shared_agent_data ONLY when BUZZ_SHARE_IDENTITY=1.
-     If you launch from a worktree, export BUZZ_SHARE_IDENTITY=1 (and
-     BUZZ_PRIVATE_KEY) or the worktree will mint its own duplicate agents.
+     canonical dev dir by sync_shared_agent_data ONLY when HIVE_SHARE_IDENTITY=1.
+     If you launch from a worktree, export HIVE_SHARE_IDENTITY=1 (and
+     HIVE_PRIVATE_KEY) or the worktree will mint its own duplicate agents.
 EOF
-if [[ "${BUZZ_SHARE_IDENTITY:-}" != "1" ]]; then
-  say "  NOTE: BUZZ_SHARE_IDENTITY is not set in this shell — set it for worktree launches."
+if [[ "${HIVE_SHARE_IDENTITY:-}" != "1" ]]; then
+  say "  NOTE: HIVE_SHARE_IDENTITY is not set in this shell — set it for worktree launches."
 fi
 exit 0

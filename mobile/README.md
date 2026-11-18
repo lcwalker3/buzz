@@ -13,20 +13,20 @@ Builderlab. Set all three or none:
 
 ```bash
 flutter run \
-  --dart-define=BUZZ_DISTRIBUTION=public \
-  --dart-define=BUZZ_BUILDERLAB_URL=https://app.builderlab.xyz \
-  --dart-define=BUZZ_BUILDERLAB_RELAYS=communities.buzz.xyz
+  --dart-define=HIVE_DISTRIBUTION=public \
+  --dart-define=HIVE_BUILDERLAB_URL=https://app.builderlab.xyz \
+  --dart-define=HIVE_BUILDERLAB_RELAYS=communities.buzz.xyz
 ```
 
-- `BUZZ_DISTRIBUTION`: `public` or `internal`. See the
+- `HIVE_DISTRIBUTION`: `public` or `internal`. See the
   [public build](../CONTEXT.md#public-build) and
   [internal build](../CONTEXT.md#internal-build), and
   [ADR 0001](../docs/adr/0001-internal-and-public-mobile-builds.md).
-- `BUZZ_BUILDERLAB_URL`: the build's Builderlab HTTPS origin. On iOS, sign-in
+- `HIVE_BUILDERLAB_URL`: the build's Builderlab HTTPS origin. On iOS, sign-in
   currently opens only Builderlab's own hosts (`app.builderlab.xyz`, or a
   `<tenant>.builderlab.xyz` organization) and their staging equivalents; the
   native browser bridge refuses any other origin.
-- `BUZZ_BUILDERLAB_RELAYS`: comma-separated DNS domains whose relays use that
+- `HIVE_BUILDERLAB_RELAYS`: comma-separated DNS domains whose relays use that
   Builderlab's session. Entries match the domain itself and its subdomains,
   case-insensitively. Use DNS names, not URLs or wildcards.
 
@@ -36,16 +36,16 @@ restoration. QR/code pairing, community links and invites use Nostr-only entry.
 Saved account keys and sessions are retained for a later enabled build.
 
 A public build signs in with Builderlab's web account setup, and requires it for
-communities under `BUZZ_BUILDERLAB_RELAYS`, which also places new communities
+communities under `HIVE_BUILDERLAB_RELAYS`, which also places new communities
 under the first domain. QR pairing and other communities stay available.
 
 An internal build offers one **Sign in** action that goes to the organization's
 single sign-on and then joins the community at its
-`BUZZ_BUILDERLAB_RELAYS` host. It has no QR pairing, community switching or
+`HIVE_BUILDERLAB_RELAYS` host. It has no QR pairing, community switching or
 community creation, refuses links to other relays, and hides communities on
 other relays that an earlier build saved, keeping their keys.
 
-An internal build takes exactly one `BUZZ_BUILDERLAB_RELAYS` entry, its
+An internal build takes exactly one `HIVE_BUILDERLAB_RELAYS` entry, its
 organization's relay host. It matches that exact host, not a domain, and the
 relay always receives its Builderlab session's relay assertions.
 
@@ -99,8 +99,8 @@ is `lib/features/agents/agent_creation_draft.dart`.
 
 ## Hosted relay authentication
 
-`--dart-define=BUZZ_HOSTED_RELAY_AUTH=true` enables Builderlab relay assertions
-and reconnect sign-in for a public build's `BUZZ_BUILDERLAB_RELAYS`. It
+`--dart-define=HIVE_HOSTED_RELAY_AUTH=true` enables Builderlab relay assertions
+and reconnect sign-in for a public build's `HIVE_BUILDERLAB_RELAYS`. It
 defaults off: configure backend assertion issuance before enabling mobile
 authentication, and enable relay enforcement last.
 
@@ -155,7 +155,7 @@ runner. The internal release toolchain is configured separately in
 just mobile-dev
 
 # Direct (uses the app's configured community; apply worktree overrides first):
-cd mobile && flutter run --dart-define=BUZZ_PUSH_GATEWAY_URL=https://push.example
+cd mobile && flutter run --dart-define=HIVE_PUSH_GATEWAY_URL=https://push.example
 ```
 
 ### Worktree-aware debug identity
@@ -201,19 +201,19 @@ switch to refresh the display label (the install identity never changes);
 the persisted files are then picked up by any subsequent build. In the main
 checkout the script is a no-op that removes stale override files, restoring
 the plain `Buzz` identity. To enable push in direct Xcode builds and Runner tests, supply a
-`BUZZ_PUSH_GATEWAY_URL` build setting in the gitignored
+`HIVE_PUSH_GATEWAY_URL` build setting in the gitignored
 `mobile/ios/Flutter/AppOverrides.xcconfig`; the build phase validates and
 passes it through as a Flutter Dart define. Since `//` begins an xcconfig
-comment, spell the origin as `BUZZ_PUSH_GATEWAY_URL = https:/$()/push.example`.
+comment, spell the origin as `HIVE_PUSH_GATEWAY_URL = https:/$()/push.example`.
 
 For an Android debug build that must remain installed alongside other Buzz
 worktree builds, set an explicit launcher name and package suffix when invoking
 the generator or a recipe that invokes it:
 
 ```bash
-BUZZ_PUSH_GATEWAY_URL="https://push.example" \
-BUZZ_ANDROID_DEBUG_APP_NAME="Buzz Huddles" \
-BUZZ_ANDROID_DEBUG_ID_SUFFIX=".huddles_829c" \
+HIVE_PUSH_GATEWAY_URL="https://push.example" \
+HIVE_ANDROID_DEBUG_APP_NAME="Buzz Huddles" \
+HIVE_ANDROID_DEBUG_ID_SUFFIX=".huddles_829c" \
 ./bin/just mobile-build-android
 ```
 
@@ -243,8 +243,8 @@ Mobile builds without a gateway origin succeed with push unavailable. To enable
 push, supply the gateway origin explicitly:
 
 ```bash
-flutter build ios --dart-define=BUZZ_PUSH_GATEWAY_URL=https://push.example
-flutter build apk --dart-define=BUZZ_PUSH_GATEWAY_URL=https://push.example
+flutter build ios --dart-define=HIVE_PUSH_GATEWAY_URL=https://push.example
+flutter build apk --dart-define=HIVE_PUSH_GATEWAY_URL=https://push.example
 ```
 
 The iOS and Android build gates validate any supplied define, rejecting empty or
@@ -259,7 +259,7 @@ expire under their original gateway's lease policy. Current-gateway response
 loss is still retried from the exact journaled request.
 
 Relay rollout remains an explicit deployment opt-in. Only deployments with
-`BUZZ_PUSH_ENABLED=true` advertise the descriptor and process push. See
+`HIVE_PUSH_ENABLED=true` advertise the descriptor and process push. See
 `docs/push-gateway-deployment.md` for the canonical gateway profile contract,
 manual physical-device proof, measurements, and rollback procedure.
 
@@ -268,17 +268,17 @@ environments in the gitignored `mobile/ios/Flutter/AppOverrides.xcconfig`:
 
 ```xcconfig
 BUNDLE_IDENTIFIER = com.example.buzz.mobile
-BUZZ_DEVELOPMENT_TEAM = YOUR_TEAM_ID
-BUZZ_IOS_PUSH_ENVIRONMENT = development
-BUZZ_APP_ATTEST_ENVIRONMENT = development
-BUZZ_PUSH_GATEWAY_URL = https:/$()/push.example
+HIVE_DEVELOPMENT_TEAM = YOUR_TEAM_ID
+HIVE_IOS_PUSH_ENVIRONMENT = development
+HIVE_APP_ATTEST_ENVIRONMENT = development
+HIVE_PUSH_GATEWAY_URL = https:/$()/push.example
 ```
 
 Use your personal bundle ID and team above. Provision both the parent and its
 `.NotificationService` extension. Configure an isolated gateway with the matching
 App Attest application ID, APNs topic and sandbox certificate. Development
 attestation requires the explicit `personal-dev-app-attest` gateway build feature
-and `BUZZ_PUSH_APP_ATTEST_ENVIRONMENT=development`; ordinary gateway builds accept
+and `HIVE_PUSH_APP_ATTEST_ENVIRONMENT=development`; ordinary gateway builds accept
 production attestation only. See `docs/push-gateway-deployment.md`.
 Validate distributed builds separately using a signed release candidate and
 its matching gateway configuration.
@@ -318,18 +318,18 @@ many small logic tests. See
 Android release builds fail unless all upload-key inputs are supplied through the
 environment:
 
-- `BUZZ_ANDROID_UPLOAD_KEYSTORE_PATH`: path to a CI-vended keystore file
-- `BUZZ_ANDROID_UPLOAD_KEYSTORE_PASSWORD`
-- `BUZZ_ANDROID_UPLOAD_KEY_ALIAS`
-- `BUZZ_ANDROID_UPLOAD_KEY_PASSWORD`
+- `HIVE_ANDROID_UPLOAD_KEYSTORE_PATH`: path to a CI-vended keystore file
+- `HIVE_ANDROID_UPLOAD_KEYSTORE_PASSWORD`
+- `HIVE_ANDROID_UPLOAD_KEY_ALIAS`
+- `HIVE_ANDROID_UPLOAD_KEY_PASSWORD`
 
 The keystore path must be absolute, and the keystore must remain outside the
 repository. Development and debug builds do not require these variables.
 
 Release pipelines that sign through the central APK Signer service instead of
-a local upload keystore must set `BUZZ_ANDROID_RELEASE_SIGNING=external`. That
+a local upload keystore must set `HIVE_ANDROID_RELEASE_SIGNING=external`. That
 mode produces an unsigned release bundle and refuses to run if any
-`BUZZ_ANDROID_UPLOAD_*` value is also set.
+`HIVE_ANDROID_UPLOAD_*` value is also set.
 
 ## Architecture
 

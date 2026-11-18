@@ -22,7 +22,7 @@ render = lambda do |label, expected, args, values|
     raise "#{label}: #{entry['name']} is not a string" unless value.is_a?(String)
     [entry.fetch('name'), value]
   end
-  raise "#{label}: lifetime missing" unless literal_env.key?('BUZZ_PUSH_MAX_GRANT_LIFETIME_SECONDS')
+  raise "#{label}: lifetime missing" unless literal_env.key?('HIVE_PUSH_MAX_GRANT_LIFETIME_SECONDS')
   cases << [label, expected, literal_env]
 end
 render.call('default', 2592000, [], '')
@@ -42,5 +42,5 @@ end
 File.write(ARGV.fetch(0), JSON.generate(cases))
 RUBY
 
-BUZZ_TEST_HELM_ENV_FILE="$fixture" cargo test -p buzz-push-gateway --lib \
+HIVE_TEST_HELM_ENV_FILE="$fixture" cargo test -p buzz-push-gateway --lib \
   config::tests::helm_rendered_grant_lifetimes -- --ignored --exact

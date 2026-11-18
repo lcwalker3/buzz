@@ -20,8 +20,8 @@ async fn cli(url: &str, args: &[&str]) -> Output {
             .arg("user-deletions")
             .args(args)
             .env("DATABASE_URL", url)
-            .env("BUZZ_DB_POOL_SIZE", "2")
-            .env("BUZZ_RELAY_PRIVATE_KEY", format!("{:064x}", 1))
+            .env("HIVE_DB_POOL_SIZE", "2")
+            .env("HIVE_RELAY_PRIVATE_KEY", format!("{:064x}", 1))
             .env_remove("RELAY_OPERATOR_PUBKEYS")
             .env_remove("RELAY_OWNER_PUBKEY")
             .kill_on_drop(true)
@@ -41,12 +41,12 @@ async fn cli(url: &str, args: &[&str]) -> Output {
 #[tokio::test]
 #[ignore = "requires Postgres"]
 async fn account_workflow_stdout_is_one_document_and_direct_output_remains_ndjson() {
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL")
+    let url = std::env::var("HIVE_TEST_DATABASE_URL")
         .or_else(|_| std::env::var("DATABASE_URL"))
         .unwrap();
     let pool = PgPool::connect(&url).await.unwrap();
     let db = Db::from_pool(pool.clone());
-    if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
+    if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
         db.migrate().await.unwrap();
     }
     let community = Uuid::new_v4();

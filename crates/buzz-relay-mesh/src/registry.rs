@@ -466,13 +466,13 @@ mod tests {
     }
 
     /// Redis-backed registry tests. CI runs them in the relay integration lane
-    /// (`--run-ignored ignored-only`, `BUZZ_TEST_REDIS_URL`). They share the
+    /// (`--run-ignored ignored-only`, `HIVE_TEST_REDIS_URL`). They share the
     /// fleet-wide index key, so they assert only on their own records.
     mod external_infra_redis {
         use super::*;
 
         fn pool() -> buzz_pubsub::RedisConnection {
-            let url = std::env::var("BUZZ_TEST_REDIS_URL")
+            let url = std::env::var("HIVE_TEST_REDIS_URL")
                 .unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string());
             lazy_redis(&url)
         }

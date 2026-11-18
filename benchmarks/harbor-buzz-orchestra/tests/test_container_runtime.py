@@ -167,7 +167,7 @@ def test_prompt_hash_and_identity_override_are_fail_closed(tmp_path):
         )
 
     endpoint = EndpointLaunchConfig(
-        "anthropic", "ANTHROPIC_API_KEY", {"BUZZ_ACP_MCP_COMMAND": "evil"}
+        "anthropic", "ANTHROPIC_API_KEY", {"HIVE_ACP_MCP_COMMAND": "evil"}
     )
     with pytest.raises(RuntimeLaunchError, match="identity"):
         runtime(tmp_path)._reject_identity_overrides(endpoint)
@@ -329,17 +329,17 @@ async def test_launch_wires_the_desktop_environment(tmp_path, configured, expect
     command, env = environment.commands[-1]
     assert f"{REMOTE_BIN}/buzz-acp" in command
     # The real product wiring: acp spawns buzz-agent, which gets buzz-dev-mcp.
-    assert env["BUZZ_ACP_AGENT_COMMAND"] == f"{REMOTE_BIN}/buzz-agent"
-    assert env["BUZZ_ACP_MCP_COMMAND"] == f"{REMOTE_BIN}/buzz-dev-mcp"
-    assert env["BUZZ_RELAY_URL"] == trial.relay_ws_url
-    assert env["BUZZ_PRIVATE_KEY"] == orch.nostr_secret_key
+    assert env["HIVE_ACP_AGENT_COMMAND"] == f"{REMOTE_BIN}/buzz-agent"
+    assert env["HIVE_ACP_MCP_COMMAND"] == f"{REMOTE_BIN}/buzz-dev-mcp"
+    assert env["HIVE_RELAY_URL"] == trial.relay_ws_url
+    assert env["HIVE_PRIVATE_KEY"] == orch.nostr_secret_key
     assert env["NOSTR_PRIVATE_KEY"] == orch.nostr_secret_key
-    assert env["BUZZ_AGENT_NO_HINTS"] == "1"
-    assert env["BUZZ_AGENT_MAX_ROUNDS"] == expected
-    assert env["BUZZ_ACP_SYSTEM_PROMPT_FILE"].endswith("orch-1.system-prompt.md")
+    assert env["HIVE_AGENT_NO_HINTS"] == "1"
+    assert env["HIVE_AGENT_MAX_ROUNDS"] == expected
+    assert env["HIVE_ACP_SYSTEM_PROMPT_FILE"].endswith("orch-1.system-prompt.md")
     # The composed prompt was uploaded into the container.
     assert any(
-        target == env["BUZZ_ACP_SYSTEM_PROMPT_FILE"]
+        target == env["HIVE_ACP_SYSTEM_PROMPT_FILE"]
         for _, target in environment.uploads
     )
 
@@ -357,8 +357,8 @@ def test_memory_task_disables_auto_memory_injection(tmp_path):
         remote_prompt="/prompt.md",
     )
 
-    assert env["BUZZ_ACP_CHANNELS"] == "channel"
-    assert env["BUZZ_ACP_NO_MEMORY"] == "true"
+    assert env["HIVE_ACP_CHANNELS"] == "channel"
+    assert env["HIVE_ACP_NO_MEMORY"] == "true"
 
 
 @pytest.mark.asyncio
@@ -390,12 +390,12 @@ async def test_memory_seed_uses_agent_credentials_and_stdin(tmp_path, monkeypatc
     assert len(captured) == len(seeds)
     for invocation, seed in zip(captured, seeds, strict=True):
         assert invocation["args"][1:] == ("mem", "set", seed.slug, "-")
-        assert invocation["env"]["BUZZ_PRIVATE_KEY"] == orch.nostr_secret_key
+        assert invocation["env"]["HIVE_PRIVATE_KEY"] == orch.nostr_secret_key
         assert invocation["value"] == seed.value.encode()
 
 
 def test_runtime_validates_construction_bounds(tmp_path):
-    # 0 is legal and means unbounded (BUZZ_AGENT_MAX_ROUNDS=0); the trial
+    # 0 is legal and means unbounded (HIVE_AGENT_MAX_ROUNDS=0); the trial
     # budget is the clock. Only negatives are rejected.
     runtime(tmp_path, max_agent_rounds=0)
     with pytest.raises(ValueError, match="unbounded"):
@@ -880,4 +880,4 @@ async def test_thinking_effort_reaches_the_agent(tmp_path, pinned, expected):
         trial_dir=tmp_path,
     )
     _, env = environment.commands[-1]
-    assert env["BUZZ_AGENT_THINKING_EFFORT"] == expected
+    assert env["HIVE_AGENT_THINKING_EFFORT"] == expected

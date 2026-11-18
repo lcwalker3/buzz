@@ -1746,7 +1746,7 @@ mod tests {
     }
 
     fn probe_enabled() -> bool {
-        std::env::var("BUZZ_GIT_S3_PROBE").as_deref() == Ok("1")
+        std::env::var("HIVE_GIT_S3_PROBE").as_deref() == Ok("1")
     }
 
     fn live_store() -> GitStore {
