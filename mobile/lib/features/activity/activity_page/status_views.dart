@@ -112,10 +112,23 @@ class _EmptyFilterState extends StatelessWidget {
   final InboxFilter filter;
   final bool unreadOnly;
 
-  const _EmptyFilterState({required this.filter, required this.unreadOnly});
+  /// The user just cleared their last unread item.
+  final bool celebrate;
+
+  const _EmptyFilterState({
+    required this.filter,
+    required this.unreadOnly,
+    this.celebrate = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (unreadOnly && filter == InboxFilter.all) {
+      return CaughtUpCelebration(
+        celebrate: celebrate,
+        detail: 'Nothing unread. Turn off the unread filter to see the rest.',
+      );
+    }
     if (unreadOnly) {
       return const _EmptySurface(
         icon: BuzzIcons.mailOpen,

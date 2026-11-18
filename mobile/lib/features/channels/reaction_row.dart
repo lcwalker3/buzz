@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:buzz/shared/theme/buzz_icons.dart';
@@ -310,9 +311,32 @@ class _ReactionPill extends HookConsumerWidget {
     required this.onLongPress,
   });
 
+  /// Pop played on the pill when the user adds their reaction.
+  static const _popDuration = Duration(milliseconds: 280);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reacted = reaction.reactedByCurrentUser;
+    final pop = useAnimationController(duration: _popDuration);
+    final popScale = useMemoized(
+      () => TweenSequence<double>([
+        TweenSequenceItem(
+          tween: Tween(
+            begin: 1.0,
+            end: 1.22,
+          ).chain(CurveTween(curve: Curves.easeOut)),
+          weight: 40,
+        ),
+        TweenSequenceItem(
+          tween: Tween(
+            begin: 1.22,
+            end: 1.0,
+          ).chain(CurveTween(curve: Curves.elasticOut)),
+          weight: 60,
+        ),
+      ]).animate(pop),
+      [pop],
+    );
 
     // Fire a burst armed elsewhere (quick-reaction row, emoji picker) now that
     // the pill it belongs to is finally on screen. Keyed on [reacted] rather
@@ -365,30 +389,41 @@ class _ReactionPill extends HookConsumerWidget {
             if (!reacted && isPositiveEmojiParticle(reaction.emoji)) {
               burstEmojiFromContext(ref, context, reaction.emoji);
             }
+            if (!reacted) {
+              // Adding (not removing) a reaction gets a little pop: a haptic
+              // always, the scale only when motion is allowed.
+              unawaited(HapticFeedback.selectionClick());
+              if (!MediaQuery.disableAnimationsOf(context)) {
+                unawaited(pop.forward(from: 0));
+              }
+            }
             onTap();
           },
-          child: _PillSurface(
-            highlighted: reacted,
-            minWidth: _pillMinWidth,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              // Centered so a short reaction sits mid-pill once the min width kicks
-              // in rather than hugging the left edge.
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _ReactionEmoji(reaction: reaction, size: _pillGlyphSize),
-                const SizedBox(width: _pillGap),
-                // Desktop shows the count even at 1; hiding it made a fresh
-                // reaction jump in width the moment a second person joined.
-                Text(
-                  '${reaction.count}',
-                  style: reactionCountTextStyle.copyWith(
-                    color: reacted
-                        ? context.colors.primary
-                        : context.colors.onSurfaceVariant,
+          child: ScaleTransition(
+            scale: popScale,
+            child: _PillSurface(
+              highlighted: reacted,
+              minWidth: _pillMinWidth,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                // Centered so a short reaction sits mid-pill once the min width kicks
+                // in rather than hugging the left edge.
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _ReactionEmoji(reaction: reaction, size: _pillGlyphSize),
+                  const SizedBox(width: _pillGap),
+                  // Desktop shows the count even at 1; hiding it made a fresh
+                  // reaction jump in width the moment a second person joined.
+                  Text(
+                    '${reaction.count}',
+                    style: reactionCountTextStyle.copyWith(
+                      color: reacted
+                          ? context.colors.primary
+                          : context.colors.onSurfaceVariant,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

@@ -25,6 +25,7 @@ import '../../shared/push/push_bootstrap.dart';
 import '../../shared/relay/relay.dart';
 import '../../shared/utils/string_utils.dart';
 import '../pairing/pairing_provider.dart';
+import 'hive_page.dart';
 import '../../shared/theme/theme.dart';
 import '../../shared/widgets/app_list.dart';
 import '../../shared/widgets/app_list_card.dart';
@@ -40,6 +41,7 @@ part 'settings_page/status_section.dart';
 part 'settings_page/connection_section.dart';
 part 'settings_page/notifications_section.dart';
 part 'settings_page/builderlab_account_section.dart';
+part 'settings_page/hive_section.dart';
 
 Widget _emptyProfileEditPage(BuildContext context) => const SizedBox.shrink();
 
@@ -96,6 +98,7 @@ class SettingsPage extends HookConsumerWidget {
           onEditProfileDescription: onEditProfileDescription,
         ),
       ),
+      ('Your Hive', const _HiveSection()),
       if (_notificationsVisible(ref))
         ('Notifications', const _NotificationsSection()),
       (
@@ -238,6 +241,7 @@ class SettingsPage extends HookConsumerWidget {
                       onEditDisplayName: onEditDisplayName,
                       onEditProfileDescription: onEditProfileDescription,
                     ),
+                    const _HiveSection(),
                     const _NotificationsSection(),
                     _ConnectionSection(
                       identityRecoveryPageBuilder: identityRecoveryPageBuilder,
