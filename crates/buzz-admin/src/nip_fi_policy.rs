@@ -135,7 +135,12 @@ fn endpoint(origin: &str) -> Result<Url> {
     Ok(base.join(PATH)?)
 }
 
-fn authorization(keys: &Keys, method: &Method, url: &Url, body: Option<&[u8]>) -> Result<String> {
+pub(crate) fn authorization(
+    keys: &Keys,
+    method: &Method,
+    url: &Url,
+    body: Option<&[u8]>,
+) -> Result<String> {
     let mut tags = vec![
         Tag::parse(["u", url.as_str()])?,
         Tag::parse(["method", method.as_str()])?,

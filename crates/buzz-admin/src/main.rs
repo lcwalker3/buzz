@@ -20,6 +20,7 @@
 //! the database; the CLI only pushes the committed list to Redis.
 
 mod communities;
+mod community_create;
 mod deletions;
 mod nip_fi;
 mod nip_fi_policy;
