@@ -21,6 +21,7 @@ import '../../shared/mentions/agent_identity_provider.dart';
 import '../../shared/mentions/mention_tags.dart';
 import '../../shared/relay/relay.dart';
 import '../../shared/relay/thread_reference.dart';
+import '../../shared/fun/caught_up_celebration.dart';
 import '../../shared/theme/theme.dart';
 import '../../shared/utils/string_utils.dart';
 import '../../shared/widgets/sheet_action_section.dart';
@@ -53,6 +54,7 @@ import 'feed_item.dart';
 import 'inbox_item.dart';
 import 'inbox_local_state_provider.dart';
 import 'inbox_read_state.dart';
+import 'inbox_unread_provider.dart';
 import 'reminders_provider.dart' hide ReminderTarget;
 
 part 'activity_page/header_actions.dart';
@@ -101,6 +103,29 @@ class ActivityPage extends HookConsumerWidget {
     final channelsAsync = ref.watch(channelsProvider);
     final filter = useState(InboxFilter.all);
     final unreadOnly = useState(false);
+    // "All caught up": celebrate the moment the last unread item is cleared —
+    // a transition, not a state, so an empty inbox doesn't celebrate on open.
+    final hasUnread = ref.watch(inboxHasUnreadProvider);
+    final hadUnread = usePrevious(hasUnread);
+    final justCaughtUp = useState(false);
+    useEffect(() {
+      final caughtUp = hadUnread == true && !hasUnread;
+      if (!caughtUp && !(hasUnread && justCaughtUp.value)) return null;
+      // Hook effects run during build, where neither state changes nor
+      // snackbars are allowed — act once the frame is done.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        justCaughtUp.value = caughtUp;
+        // On the unread view the empty state celebrates; elsewhere, say it.
+        if (caughtUp && !unreadOnly.value) {
+          ScaffoldMessenger.maybeOf(context)?.showFeedbackSnackBar(
+            const SnackBar(content: Text('🐝  All caught up!')),
+            kind: ToastKind.success,
+          );
+        }
+      });
+      return null;
+    }, [hasUnread]);
     final sender = useState('Anyone');
     final agents = ref.watch(knownAgentPubkeysProvider);
     final profiles = ref.watch(userCacheProvider);
@@ -482,6 +507,7 @@ class ActivityPage extends HookConsumerWidget {
       body = _EmptyFilterState(
         filter: filter.value,
         unreadOnly: unreadOnly.value,
+        celebrate: justCaughtUp.value,
       );
     } else {
       body = BeeRefreshIndicator(
