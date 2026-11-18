@@ -1,14 +1,14 @@
 part of '../pairing_page.dart';
 
-class _WebsiteBeeSwarm extends HookWidget {
+class _WelcomeCellSwarm extends HookWidget {
   final Size size;
   final ObjectRef<Offset?> pointer;
 
-  const _WebsiteBeeSwarm({required this.size, required this.pointer});
+  const _WelcomeCellSwarm({required this.size, required this.pointer});
 
   @override
   Widget build(BuildContext context) {
-    final motion = useMemoized(() => _WebsiteBeeMotion(size));
+    final motion = useMemoized(() => _WelcomeCellMotion(size));
     if (motion.size != size) {
       motion.resize(size);
       pointer.value = null;
@@ -45,14 +45,14 @@ class _WebsiteBeeSwarm extends HookWidget {
     }, [clock, motion, playing]);
 
     return ClipRect(
-      key: const Key('welcome-bee-flight-area'),
+      key: const Key('welcome-cell-flight-area'),
       child: Stack(
         children: [
-          for (var index = 0; index < motion.bees.length; index++)
+          for (var index = 0; index < motion.cells.length; index++)
             AnimatedBuilder(
               animation: clock,
               child: SvgPicture.asset(
-                'assets/images/welcome-bee.svg',
+                'assets/images/welcome-cell.svg',
                 width: 46,
                 height: 31,
                 colorFilter: ColorFilter.mode(
@@ -63,20 +63,20 @@ class _WebsiteBeeSwarm extends HookWidget {
                 ),
               ),
               builder: (context, child) {
-                final bee = motion.bees[index];
+                final cell = motion.cells[index];
                 final progress = (motion.elapsed / 1.05).clamp(0.0, 1.0);
                 final entrance = reducedMotion
                     ? 1.0
                     : 1 - math.pow(1 - progress, 3).toDouble();
                 final position = Offset.lerp(
-                  bee.entrance,
-                  bee.position,
+                  cell.entrance,
+                  cell.position,
                   entrance,
                 )!;
                 return Transform.translate(
-                  key: ValueKey('welcome-bee-$index'),
+                  key: ValueKey('welcome-cell-$index'),
                   offset: position,
-                  child: Transform.rotate(angle: bee.rotation, child: child),
+                  child: Transform.rotate(angle: cell.rotation, child: child),
                 );
               },
             ),

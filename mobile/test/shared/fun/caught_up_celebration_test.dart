@@ -50,7 +50,7 @@ void main() {
         reason: 'only the moment of catching up is announced',
       );
       // The bee is decoration; screen readers hear the words, not "bee".
-      expect(find.bySemanticsLabel('🐝'), findsNothing);
+      expect(find.bySemanticsLabel('🍯'), findsNothing);
     });
   }
 }

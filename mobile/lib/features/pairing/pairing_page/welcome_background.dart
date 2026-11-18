@@ -1,7 +1,7 @@
 part of '../pairing_page.dart';
 
-// Colours and bee silhouette from https://buzz.xyz (2026-10-31).
-// The bee layer uses the website’s flight model and remains decorative.
+// Welcome-screen background: drifting honeycomb cells.
+// The cell layer is decorative.
 class _WebsiteWelcomeBackground extends HookWidget {
   final Widget child;
   final ValueListenable<double> scannerProgress;
@@ -36,10 +36,10 @@ class _WebsiteWelcomeBackground extends HookWidget {
                       child: ValueListenableBuilder<double>(
                         valueListenable: scannerProgress,
                         builder: (context, progress, child) => Opacity(
-                          key: const Key('scanner-bees-opacity'),
+                          key: const Key('scanner-cells-opacity'),
                           opacity: 1 - progress,
                           child: Transform.scale(
-                            key: const Key('scanner-bees-scale'),
+                            key: const Key('scanner-cells-scale'),
                             scale: MediaQuery.disableAnimationsOf(context)
                                 ? 1
                                 : 1 - 0.04 * progress,
@@ -51,7 +51,7 @@ class _WebsiteWelcomeBackground extends HookWidget {
                         ),
                         child: LayoutBuilder(
                           builder: (context, constraints) => RepaintBoundary(
-                            child: _WebsiteBeeSwarm(
+                            child: _WelcomeCellSwarm(
                               size: constraints.biggest,
                               pointer: pointer,
                             ),

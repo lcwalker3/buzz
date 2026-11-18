@@ -10,7 +10,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../shared/profile/user_cache_provider.dart';
 import '../../../shared/widgets/concentric_sheet_surface.dart';
-import '../../../shared/widgets/bee_refresh_indicator.dart';
+import '../../../shared/widgets/hive_refresh_indicator.dart';
 import 'me_section.dart';
 import 'me_working_provider.dart';
 import 'solo_working_dots.dart';
@@ -341,7 +341,7 @@ class MePage extends HookConsumerWidget {
             ),
         ];
         if (sliver) return SliverMainAxisGroup(slivers: inventorySlivers);
-        return BeeRefreshIndicator(
+        return HiveRefreshIndicator(
           edgeOffset: topSectionHeight,
           onRefresh: () async {
             ref.invalidate(meGroupsProvider);

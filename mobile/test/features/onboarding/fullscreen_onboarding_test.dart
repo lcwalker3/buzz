@@ -1,4 +1,5 @@
 import 'package:buzz/shared/widgets/ios_navigation_bar.dart';
+
 import '../../helpers/two_finger_double_tap.dart';
 
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -19,7 +20,7 @@ import 'package:buzz/shared/hosted/hosted_flow.dart';
 import 'package:buzz/shared/hosted/hosted_flow_provider.dart';
 import 'package:buzz/shared/deeplink/pending_deep_link_provider.dart';
 import 'package:buzz/shared/widgets/onboarding_step_page.dart';
-import 'package:buzz/shared/widgets/bee_loading_mark.dart';
+import 'package:buzz/shared/widgets/hive_loading_mark.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -216,7 +217,7 @@ void main() {
       await tester.tap(find.byKey(const Key('community-switcher-add')));
       await tester.pump();
       expect(find.text('Joining your community'), findsNothing);
-      expect(find.byType(BeeLoadingMark), findsNothing);
+      expect(find.byType(HiveLoadingMark), findsNothing);
       await tester.pumpAndSettle();
       expect(fixture.admitted, isEmpty);
       expect(find.byType(OnboardingAppEntry), findsOneWidget);
@@ -229,7 +230,7 @@ void main() {
       await tester.pump();
       expect(find.text('Getting ready…'), findsNothing);
       expect(find.text('Joining your community'), findsNothing);
-      expect(find.byType(BeeLoadingMark), findsNothing);
+      expect(find.byType(HiveLoadingMark), findsNothing);
       await tester.pumpAndSettle();
       expect(fixture.requests, requestsBeforeBack);
       expect(find.byType(OnboardingAppEntry), findsNothing);
@@ -263,17 +264,17 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsNothing);
       expect(find.byTooltip('Back').hitTestable(), findsNothing);
       expect(
-        tester.getBottomLeft(find.byType(BeeLoadingMark)).dy,
+        tester.getBottomLeft(find.byType(HiveLoadingMark)).dy,
         lessThan(tester.getTopLeft(find.text('Joining your community')).dy),
       );
-      final bee = tester.widget<CustomPaint>(
+      final painter = tester.widget<CustomPaint>(
         find.descendant(
-          of: find.byType(BeeLoadingMark),
+          of: find.byType(HiveLoadingMark),
           matching: find.byType(CustomPaint),
         ),
       );
-      expect(bee.size.width, 80);
-      final mark = tester.getRect(find.byType(BeeLoadingMark));
+      expect(painter.size.width, 80);
+      final mark = tester.getRect(find.byType(HiveLoadingMark));
       expect(
         mark.center.dx,
         tester.view.physicalSize.width / tester.view.devicePixelRatio / 2,
@@ -294,7 +295,7 @@ void main() {
       );
       expect(
         MediaQuery.disableAnimationsOf(
-          tester.element(find.byType(BeeLoadingMark)),
+          tester.element(find.byType(HiveLoadingMark)),
         ),
         reduced,
       );

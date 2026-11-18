@@ -31,7 +31,7 @@ void main() {
       );
       Offset beePosition() {
         final transform = tester
-            .widget<Transform>(find.byKey(const ValueKey('welcome-bee-0')))
+            .widget<Transform>(find.byKey(const ValueKey('welcome-cell-0')))
             .transform;
         return Offset(transform.storage[12], transform.storage[13]);
       }
@@ -47,9 +47,9 @@ void main() {
       await tester.tap(find.text('Enter a community link').hitTestable());
       expect(communityLinks, 1);
 
-      expect(find.byKey(const ValueKey('welcome-bee-11')), findsOneWidget);
+      expect(find.byKey(const ValueKey('welcome-cell-11')), findsOneWidget);
       Size flightSize() =>
-          tester.getSize(find.byKey(const Key('welcome-bee-flight-area')));
+          tester.getSize(find.byKey(const Key('welcome-cell-flight-area')));
       final portraitSize = flightSize();
       final portrait = beePosition();
       tester.view.physicalSize = const Size(874, 402);
@@ -62,7 +62,7 @@ void main() {
         beePosition().dy,
         closeTo(portrait.dy / portraitSize.height * flightSize().height, 0.001),
       );
-      expect(find.byKey(const ValueKey('welcome-bee-11')), findsOneWidget);
+      expect(find.byKey(const ValueKey('welcome-cell-11')), findsOneWidget);
       final landscapeSize = flightSize();
       final landscape = beePosition();
       await tester.pump(const Duration(milliseconds: 50));
@@ -95,7 +95,7 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       expect(beePosition(), still);
       expect(find.bySemanticsLabel('The Hive'), findsOneWidget);
-      expect(find.bySemanticsLabel('Animated bee'), findsNothing);
+      expect(find.bySemanticsLabel('Animated cell'), findsNothing);
 
       reducedMotion.value = false;
       await tester.pump();

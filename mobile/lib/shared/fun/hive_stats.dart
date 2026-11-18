@@ -120,7 +120,7 @@ WeeklyStats computeWeeklyStats(
 
 /// Badges a user can earn. Ids are persisted, so never rename one.
 enum HiveBadge {
-  firstBuzz('first_buzz', '🐝', 'First buzz', 'Send your first message'),
+  firstMessage('first_buzz', '💬', 'First message', 'Send your first message'),
   chatterbox('chatterbox', '💬', 'Chatterbox', 'Send 50 messages'),
   helpful('helpful', '🤝', 'Helpful', 'Reply in 10 threads'),
   emojiEnthusiast(
@@ -195,7 +195,7 @@ Set<HiveBadge> qualifyingBadges(List<NostrEvent> events) {
   }
 
   return {
-    if (messages >= 1) HiveBadge.firstBuzz,
+    if (messages >= 1) HiveBadge.firstMessage,
     if (messages >= 50) HiveBadge.chatterbox,
     if (replies >= 10) HiveBadge.helpful,
     if (reactions >= 25) HiveBadge.emojiEnthusiast,

@@ -1,8 +1,8 @@
 part of '../pairing_page.dart';
 
-// Port of buzz.xyz's BeeSwarm flight model (2026-10-31): wandering heading,
+// Drifting honeycomb cells for the welcome screen: wandering heading,
 // periodic darting, separation, home attraction, and soft edge turns.
-class _WebsiteBee {
+class _WelcomeCell {
   Offset position;
   Offset velocity = Offset.zero;
   Offset home;
@@ -11,7 +11,7 @@ class _WebsiteBee {
   double heading;
   double rotation;
 
-  _WebsiteBee(Size size, int index)
+  _WelcomeCell(Size size, int index)
     : seed = ((index + 1) * 0.7548776662) % 1,
       position = Offset(
         (0.5 + (index + 1) / 1.324717957244746) % 1 * size.width,
@@ -41,14 +41,14 @@ class _WebsiteBee {
       rotation = ((index + 1) * 0.7548776662 % 1) * math.pi * 2 + math.pi / 2;
 }
 
-class _WebsiteBeeMotion {
+class _WelcomeCellMotion {
   Size size;
-  late final bees = List.generate(12, (index) => _WebsiteBee(size, index));
+  late final cells = List.generate(12, (index) => _WelcomeCell(size, index));
   double elapsed = 0;
 
-  _WebsiteBeeMotion(this.size);
+  _WelcomeCellMotion(this.size);
 
-  // Preserve each bee and the flight clock across rotation/window resizing.
+  // Preserve each cell and the flight clock across rotation/window resizing.
   // Mapping positions to the new bounds avoids replaying the entrance or
   // leaving a portrait swarm outside a shorter landscape viewport.
   void resize(Size nextSize) {
@@ -57,24 +57,24 @@ class _WebsiteBeeMotion {
       point.dx / size.width * nextSize.width,
       point.dy / size.height * nextSize.height,
     );
-    for (final bee in bees) {
-      bee.position = remap(bee.position);
-      bee.home = remap(bee.home);
-      bee.entrance = remap(bee.entrance);
+    for (final cell in cells) {
+      cell.position = remap(cell.position);
+      cell.home = remap(cell.home);
+      cell.entrance = remap(cell.entrance);
     }
     size = nextSize;
   }
 
   void advance(double dt, Offset? pointer) {
     elapsed += dt;
-    final positions = bees.map((bee) => bee.position).toList();
-    for (var index = 0; index < bees.length; index++) {
-      final bee = bees[index];
-      final p = bee.position;
-      final seed = bee.seed;
+    final positions = cells.map((cell) => cell.position).toList();
+    for (var index = 0; index < cells.length; index++) {
+      final cell = cells[index];
+      final p = cell.position;
+      final seed = cell.seed;
       const tau = math.pi * 2;
       var heading =
-          bee.heading +
+          cell.heading +
           (math.sin(elapsed * (0.27 + seed * 0.4) + seed * tau) +
                   0.6 * math.sin(elapsed * (0.13 + seed * 0.11) + seed * 7)) *
               1.15 *
@@ -101,7 +101,7 @@ class _WebsiteBeeMotion {
       );
       final target = Offset(math.cos(heading), math.sin(heading)) * speed;
       var velocity =
-          bee.velocity + (target - bee.velocity) * (2.4 + 11 * burst) * dt;
+          cell.velocity + (target - cell.velocity) * (2.4 + 11 * burst) * dt;
       for (var other = 0; other < positions.length; other++) {
         if (other == index) continue;
         final delta = p - positions[other];
@@ -117,7 +117,7 @@ class _WebsiteBeeMotion {
           velocity += delta * (1600 * (1 - distance / 380) / distance) * dt;
         }
       }
-      velocity += (bee.home - p) * 0.18 * dt;
+      velocity += (cell.home - p) * 0.18 * dt;
       velocity += turn * 900 * dt;
       velocity *= 0.97;
       var next = p + velocity * dt;
@@ -131,15 +131,15 @@ class _WebsiteBeeMotion {
         next.dx.clamp(0, size.width),
         next.dy.clamp(0, size.height),
       );
-      bee.position = next;
-      bee.velocity = velocity;
-      bee.heading = heading;
+      cell.position = next;
+      cell.velocity = velocity;
+      cell.heading = heading;
       if (velocity.distance > 6) {
         final delta =
-            (velocity.direction + math.pi / 2 - bee.rotation + math.pi * 3) %
+            (velocity.direction + math.pi / 2 - cell.rotation + math.pi * 3) %
                 tau -
             math.pi;
-        bee.rotation += delta * 0.18;
+        cell.rotation += delta * 0.18;
       }
     }
   }

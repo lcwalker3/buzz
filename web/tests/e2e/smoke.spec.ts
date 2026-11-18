@@ -298,11 +298,11 @@ test("invite swarm follows width and height changes with reduced motion", async 
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/invite/resize-preview");
   const positions = () =>
-    page.locator(".bee-sprite").evaluateAll((sprites) =>
+    page.locator(".cell-sprite").evaluateAll((sprites) =>
       sprites.map((sprite) => {
         const node = sprite.parentElement;
         const field = node?.parentElement;
-        if (!node || !field) throw new Error("Missing bee field");
+        if (!node || !field) throw new Error("Missing cell field");
         const transform = new DOMMatrix(getComputedStyle(node).transform);
         return {
           x: transform.m41 / field.clientWidth,
@@ -310,7 +310,7 @@ test("invite swarm follows width and height changes with reduced motion", async 
         };
       }),
     );
-  await expect(page.locator(".bee-sprite")).toHaveCount(24);
+  await expect(page.locator(".cell-sprite")).toHaveCount(24);
   const original = await positions();
   for (const viewport of [
     { width: 700, height: 1000 },
@@ -331,6 +331,6 @@ test("invite swarm follows width and height changes with reduced motion", async 
         );
       })
       .toBeLessThan(0.001);
-    await expect(page.locator(".bee-sprite")).toHaveCount(24);
+    await expect(page.locator(".cell-sprite")).toHaveCount(24);
   }
 });
