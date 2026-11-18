@@ -59,6 +59,11 @@ RELAY_OPERATOR_PUBKEYS=<operator public key, 64 hex>
 RELAY_OPERATOR_API_ORIGIN=http://127.0.0.1:3000
 ```
 
+Note: once `RELAY_OPERATOR_PUBKEYS` is set, the owner key no longer counts
+as an operator automatically. If you also want your own key to have
+operator powers (for example in the admin console), list both, separated by
+a comma.
+
 ### Create the community
 
 1. Expose the second address over Tailscale (same relay, new port):
@@ -78,8 +83,9 @@ RELAY_OPERATOR_API_ORIGIN=http://127.0.0.1:3000
    ```
 
    It prints the new community's ID and `"status": "created"`. Running it
-   again for the same host is refused (`host_conflict`), so nothing is
-   overwritten by accident.
+   again with the same owner is harmless (`"status": "existed"`). Running it
+   for an existing host with a *different* owner is refused ("community
+   already exists"), so nobody can take over a community this way.
 
 3. In the iPhone app, add a community and enter
    `wss://<mac>.<tailnet>.ts.net:8443`. The app keeps both communities and
