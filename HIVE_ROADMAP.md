@@ -74,7 +74,7 @@ Scope at start: ~45k occurrences in 3,324 files, 30 crates, ~1,400 paths.
 One step per PR; build + tests green before ticking. Never rename the
 iOS keychain access group / app group VALUES (that would lose the identity
 stored on the phone) — only names in code.
-- [ ] R1 Settings: `HIVE_*` env vars → `HIVE_*` (relay, admin, scripts,
+- [x] R1 Settings: `BUZZ_*` env vars → `HIVE_*` (relay, admin, scripts,
       launchd scripts, .env.example, docs). Update the owner's local .env in
       the same step and restart the relay.
 - [ ] R2 Rust: crates `buzz-*` → `hive-*` (package names, dirs, `buzz_*` →
@@ -115,7 +115,9 @@ stored on the phone) — only names in code.
       ~/Library/Application Support/TheHive, keep 14 days; keep a copy of
       .env (relay signing key is irreplaceable) in an encrypted disk image;
       test one restore.
-- [ ] Log rotation for ~/Library/Logs/TheHive (10 MB × 5).
+- [x] Log rotation for ~/Library/Logs/TheHive (10 MB × 5):
+      `scripts/hive/rotate-logs.sh`, run hourly by the launchd agent
+      `com.thehive.logrotate` (`scripts/hive/install-logrotate-agent.sh`).
 - [ ] Run an installed copy of the relay (~/Library/Application
       Support/TheHive/bin) instead of the working checkout, so edits and
       renames can't break the running service mid-change.
@@ -135,7 +137,10 @@ stored on the phone) — only names in code.
 - [ ] Ideas backlog lives here; pick, build, test, PR
 
 ## Next steps (in order)
-1. Commit + PR `hive/self-host` (rebrand, self-host scripts, icon, README).
+1. ~~Commit + PR `hive/self-host`~~ Done: PR #4 (open, not merged).
+   Owner: run `scripts/hive/install-logrotate-agent.sh` once to turn on
+   hourly log rotation (no admin password; the auto task does not install
+   new background agents on its own).
 2. Owner: install Tailscale on Mac + iPhone, log in, enable MagicDNS and
    HTTPS certificates (needs the owner's admin password and account).
 3. `tailscale serve --bg 3000` (HTTPS → 127.0.0.1:3000); seed the
@@ -162,3 +167,12 @@ stored on the phone) — only names in code.
   invite tests pass in system Chrome. Pre-existing, unrelated failure: "home
   page shows repositories section" (`getByText('Repositories')` matches 2
   elements). Playwright's bundled browsers are not installed on the Mac.
+- 2026-11-18: Phase 6 R1 done (commit 7922eb13a): every `BUZZ_*` setting is
+  now `HIVE_*` outside the deprecated desktop/ app; owner's .env updated and
+  relay restarted on the new names.
+- 2026-11-18 (auto): Log rotation: `scripts/hive/rotate-logs.sh` rotates any
+  ~/Library/Logs/TheHive/*.log over 10 MiB, keeping 5 copies
+  (copy-then-truncate, because launchd keeps the log open in append mode);
+  `install-logrotate-agent.sh` runs it hourly. Tested on a temp folder with
+  macOS /bin/bash and a writer held open across rotations; shellcheck clean.
+  Not yet installed on the Mac: waiting on the owner to run the installer.
