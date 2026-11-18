@@ -12,6 +12,25 @@ use url::{Host, Url};
 /// Reversible community lifecycle actions.
 #[derive(Debug, Subcommand)]
 pub enum CommunitiesCommand {
+    /// Create a new community at a hostname (or host:port) with an owner.
+    ///
+    /// Calls the relay operator API, signed with an operator key. The relay
+    /// must list that key in RELAY_OPERATOR_PUBKEYS and set
+    /// RELAY_OPERATOR_API_ORIGIN to the same --origin.
+    Create {
+        /// Relay origin for the operator API, e.g. http://127.0.0.1:3000.
+        #[arg(long)]
+        origin: String,
+        /// File holding the operator secret key (nsec or 64-char hex).
+        #[arg(long)]
+        key_file: std::path::PathBuf,
+        /// Hostname or host:port people will use to reach the community.
+        #[arg(long)]
+        host: String,
+        /// Owner public key: npub or 64-character hex.
+        #[arg(long)]
+        owner: String,
+    },
     /// Archive a community and disconnect its live clients.
     Archive {
         /// Exact community hostname or authority.
@@ -51,6 +70,12 @@ pub enum CommunitiesCommand {
 /// Run a reversible community lifecycle action.
 pub async fn run(command: CommunitiesCommand) -> anyhow::Result<i32> {
     match command {
+        CommunitiesCommand::Create {
+            origin,
+            key_file,
+            host,
+            owner,
+        } => crate::community_create::run(&origin, &key_file, &host, &owner).await,
         CommunitiesCommand::Archive {
             host,
             owner_pubkey,
