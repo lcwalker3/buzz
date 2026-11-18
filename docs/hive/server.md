@@ -9,6 +9,9 @@ Everything runs on your Mac as background services that start at login.
 | Storage (versitygw) | Files, photos, git objects, at `127.0.0.1:9000` | `launchctl print gui/$UID/com.thehive.storage` |
 | Relay | The Hive server and web app, at `127.0.0.1:3000` | `curl -s http://127.0.0.1:3000/ -o /dev/null -w '%{http_code}\n'` |
 
+Check everything at once with `scripts/hive/doctor.sh`: it lists each
+service and setting and says what to fix.
+
 Only `127.0.0.1` is used, so nothing is open to your Wi-Fi or the internet.
 Your phone reaches the relay through Tailscale (see
 [Phone and remote access](remote-access.md)).

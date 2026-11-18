@@ -190,7 +190,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(actions.mintRequests, [(defaultCommunityInviteTtlSeconds, null)]);
+    expect(actions.mintRequests, [
+      (defaultCommunityInviteTtlSeconds, defaultCommunityInviteMaxUses),
+    ]);
     expect(
       find.text('Add someone directly or share a link they can use to join.'),
       findsNothing,
@@ -487,7 +489,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(actions.mintRequests, [
-      (defaultCommunityInviteTtlSeconds, null),
+      (defaultCommunityInviteTtlSeconds, defaultCommunityInviteMaxUses),
       (defaultCommunityInviteTtlSeconds, 5),
     ]);
 

@@ -1,10 +1,11 @@
 # The Hive knowledge base
 
 Plain-language guides for running and using The Hive on your own Mac. Start
-with **Concepts**, then follow the guide for what you want to do.
+with **How to**, then use the other guides when you need more detail.
 
 | Guide | What it answers |
 |---|---|
+| [How to](how-to.md) | Start here: open the app, first-time setup, everyday use |
 | [Concepts](concepts.md) | What a community, channel, thread, forum, agent and role are |
 | [Communities and workspaces](communities.md) | How to create a community, add a second one, archive one |
 | [Running the server](server.md) | The services on the Mac, logs, restarts, updates |

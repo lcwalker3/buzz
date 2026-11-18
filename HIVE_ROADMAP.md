@@ -134,6 +134,26 @@ stored on the phone) — only names in code.
       or read both); flush or dual-read Redis `buzz:` keys; keep accepting
       `buzz://` links as an alias; update `RUST_LOG` targets with R2.
 
+## Owner tools and safer defaults
+- [x] `scripts/hive/doctor.sh`: plain-language health check of every service
+      and setting (owner key, operator settings, Tailscale reachability,
+      disk, logs, backup age)
+- [x] `scripts/hive/backup.sh` + `install-backup-agent.sh`: database, files,
+      git repos and secrets into ~/HiveBackups nightly, 14-day retention;
+      restore verified into a scratch database (2026-11-18)
+- [x] `scripts/hive/set-owner.sh <npub>`: converts the phone's npub to hex,
+      saves RELAY_OWNER_PUBKEY, restarts the relay
+- [x] Private by default: new channels default to Private; invite links
+      default to one use and 7 days
+- [x] Calm theme: cream welcome screen with one bee and a still honeycomb,
+      warm neutrals, honey accent and default chat colour; web palette to
+      match
+- [x] `scripts/hive/make-desktop-app.sh`: "The Hive" on the Desktop opens the
+      iPhone app in the iOS Simulator
+- [x] How-to guide: docs/hive/how-to.md
+- [ ] NEEDS OWNER: run `scripts/hive/set-owner.sh <your npub>` and
+      `scripts/hive/install-backup-agent.sh`
+
 ## Communities and knowledge base
 - [x] `buzz-admin communities create` (operator-signed call to the relay's
       existing `POST /operator/communities`) so a second community can be

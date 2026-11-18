@@ -13,7 +13,10 @@ import '../../shared/utils/string_utils.dart';
 import '../../shared/relay/relay.dart';
 
 /// The default lifetime of a newly minted community invite link.
-const defaultCommunityInviteTtlSeconds = 3 * 24 * 60 * 60;
+const defaultCommunityInviteTtlSeconds = 7 * 24 * 60 * 60;
+
+/// New invites work once by default: an invite is for one person.
+const defaultCommunityInviteMaxUses = 1;
 
 /// A labeled value shown in a community invite settings sheet.
 @immutable

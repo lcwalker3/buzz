@@ -9213,64 +9213,67 @@ void main() {
       expect(relaySession.publishedKinds, isEmpty);
     });
 
-    testWidgets('shows the pulsing honeycomb instead of an avatar while joining', (
-      tester,
-    ) async {
-      final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      final connectGate = Completer<void>();
-      final transport = _HuddleTestTransport(connectGate: connectGate.future);
+    testWidgets(
+      'shows the pulsing honeycomb instead of an avatar while joining',
+      (tester) async {
+        final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+        final connectGate = Completer<void>();
+        final transport = _HuddleTestTransport(connectGate: connectGate.future);
 
-      await tester.pumpWidget(
-        _buildTestable(
-          messages: [
-            _huddleMsg(
-              id: 'loading-call-layout',
-              kind: EventKind.huddleStarted,
-              pubkey: 'desktop',
-              createdAt: now,
-            ),
-          ],
-          users: const {
-            'desktop': UserProfile(pubkey: 'desktop'),
-            'self': UserProfile(pubkey: 'self'),
-          },
-          relayConfigNotifier: _HuddleRelayConfigNotifier(),
-          huddleCurrentPubkey: 'self',
-          huddleMediaFactory: _HuddleTestMedia.new,
-          huddleTransportFactory: (_) => transport,
-        ),
-      );
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          _buildTestable(
+            messages: [
+              _huddleMsg(
+                id: 'loading-call-layout',
+                kind: EventKind.huddleStarted,
+                pubkey: 'desktop',
+                createdAt: now,
+              ),
+            ],
+            users: const {
+              'desktop': UserProfile(pubkey: 'desktop'),
+              'self': UserProfile(pubkey: 'self'),
+            },
+            relayConfigNotifier: _HuddleRelayConfigNotifier(),
+            huddleCurrentPubkey: 'self',
+            huddleMediaFactory: _HuddleTestMedia.new,
+            huddleTransportFactory: (_) => transport,
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(FilledButton, 'Join'));
-      await tester.pump();
-      await tester.pump();
+        await tester.tap(find.widgetWithText(FilledButton, 'Join'));
+        await tester.pump();
+        await tester.pump();
 
-      final loadingMark = find.byKey(const ValueKey('huddle-loading-mark'));
-      expect(loadingMark, findsOneWidget);
-      expect(find.byType(HoneycombMark), findsOneWidget);
-      expect(tester.widget<HoneycombMark>(loadingMark).width, 60);
-      expect(find.bySemanticsLabel('Joining Huddle'), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('huddle-participant-avatar-self')),
-        findsNothing,
-      );
-      final initialPulse = tester.widget<HoneycombMark>(loadingMark).pulseAmount;
-      await tester.pump(const Duration(milliseconds: 120));
-      expect(
-        tester.widget<HoneycombMark>(loadingMark).pulseAmount,
-        isNot(initialPulse),
-      );
+        final loadingMark = find.byKey(const ValueKey('huddle-loading-mark'));
+        expect(loadingMark, findsOneWidget);
+        expect(find.byType(HoneycombMark), findsOneWidget);
+        expect(tester.widget<HoneycombMark>(loadingMark).width, 60);
+        expect(find.bySemanticsLabel('Joining Huddle'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('huddle-participant-avatar-self')),
+          findsNothing,
+        );
+        final initialPulse = tester
+            .widget<HoneycombMark>(loadingMark)
+            .pulseAmount;
+        await tester.pump(const Duration(milliseconds: 120));
+        expect(
+          tester.widget<HoneycombMark>(loadingMark).pulseAmount,
+          isNot(initialPulse),
+        );
 
-      connectGate.complete();
-      await tester.pumpAndSettle();
+        connectGate.complete();
+        await tester.pumpAndSettle();
 
-      expect(loadingMark, findsNothing);
-      expect(
-        find.byKey(const ValueKey('huddle-participant-avatar-self')),
-        findsOneWidget,
-      );
-    });
+        expect(loadingMark, findsNothing);
+        expect(
+          find.byKey(const ValueKey('huddle-participant-avatar-self')),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets('shows response dots only until the agent starts speaking', (
       tester,

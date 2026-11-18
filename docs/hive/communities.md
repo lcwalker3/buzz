@@ -11,11 +11,16 @@ a community exists for the address in `RELAY_URL` (in `.env`) and makes
 `RELAY_OWNER_PUBKEY` its owner.
 
 1. Set `RELAY_URL=wss://<mac>.<tailnet>.ts.net` in `.env`.
-2. Set `RELAY_OWNER_PUBKEY` to your public key as **64 hex characters** (not
-   `npub`; the relay refuses to start with an `npub` here). Get it in the
-   iPhone app: Settings → Connection → copy public key, then convert it, or
-   read the hex from the relay log line that names your denied pubkey.
-3. Restart the relay (see [Running the server](server.md)).
+2. Make yourself the owner. In the iPhone app, copy your public key
+   (Settings → Connection), then on the Mac run:
+
+   ```bash
+   scripts/hive/set-owner.sh npub1...
+   ```
+
+   It converts the key to the 64-hex form the relay needs, saves
+   `RELAY_OWNER_PUBKEY` in `.env` and restarts the relay.
+3. Run `scripts/hive/doctor.sh` to confirm everything is working.
 4. In the iPhone app, join `wss://<mac>.<tailnet>.ts.net`. You are the owner.
 
 **Most people only need this one community.** Use channels to separate

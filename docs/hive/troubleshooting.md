@@ -1,6 +1,12 @@
 # Troubleshooting
 
-Always look at the relay log first:
+Run the health check first; it says what to fix:
+
+```bash
+scripts/hive/doctor.sh
+```
+
+Then look at the relay log:
 
 ```bash
 tail -n 100 ~/Library/Logs/TheHive/relay.log
@@ -9,7 +15,7 @@ tail -n 100 ~/Library/Logs/TheHive/relay.log
 | Problem | Likely cause | Fix |
 |---|---|---|
 | Relay keeps restarting; log says a setting "must be set" | `.env` uses new setting names but the relay binary is old | Rebuild: `cargo build --release -p buzz-relay`, then restart |
-| Relay will not start; owner key error | `RELAY_OWNER_PUBKEY` is an `npub` | Use the 64-hex form |
+| Relay will not start; owner key error | `RELAY_OWNER_PUBKEY` is an `npub` | Run `scripts/hive/set-owner.sh <npub>`; it converts it |
 | Phone says it cannot connect | Not on Tailscale, or address uses `ws://` or an IP | Turn Tailscale on; use `wss://<mac>.<tailnet>.ts.net` |
 | Web page shows "not found" for a new address | No community for that address | Create it (see [Communities](communities.md)) |
 | `communities create` says "not a relay operator" | Key not in `RELAY_OPERATOR_PUBKEYS` | Add its public key, restart the relay |
