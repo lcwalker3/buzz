@@ -47,6 +47,8 @@ until it is merged; then branch new work from `main`.
       gateway, release/download links, invite APIs)
       - [x] Web invite page: Block release/App Store/Play links and the
             GitHub releases API call removed
+      - [x] Mobile avatars CDN: a self-hosted (Nostr-only) build no longer
+            resolves agent cards to Builderlab's CloudFront CDN
 
 ## Phase 3 — Rebrand to The Hive (user-facing)
 - [x] Mobile app display name, iOS bundle id (com.lcwalker3.thehive), team,
@@ -187,3 +189,17 @@ stored on the phone) — only names in code.
   postcss / nanoid (web, admin-web dev tooling) and the deprecated desktop/
   app (tiptap, markdown-it, prosemirror, zod); take them one package per run.
   Next items (Tailscale, phone install, owner pubkey) still wait on the owner.
+- 2026-11-18 (auto): Phase 2 audit, avatars CDN. Found a real leak: in a
+  build with no Builderlab defines (ours), `HostedEnvironment.avatarsCdnOrigin`
+  fell back to `app.builderlab.xyz` and returned Builderlab's CloudFront CDN,
+  so opening an agent-card link fetched from a hosted Block service. It is now
+  null unless the build is a public Builderlab build; tests use a
+  `debugAvatarsCdnOriginOverride`. New test proves a Nostr-only build makes no
+  request (and fails against the old code). dart format (changed files),
+  flutter analyze, and tests in test/shared/hosted, test/shared/deeplink and
+  test/features/agents pass. Not verified on the phone. Remaining audit hits
+  are tests/docs or behind build defines (push gateway is off unless
+  `HIVE_PUSH_GATEWAY_URL` is set). Pre-existing on this branch, untouched:
+  `dart format` flags onboarding_wordmark.dart and
+  channel_detail_page_test.dart. Tailscale, phone install and owner pubkey
+  still wait on the owner.

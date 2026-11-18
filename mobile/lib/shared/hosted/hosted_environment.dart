@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'builderlab_build.dart';
 
 /// The public Builderlab account of a public build. Trusted build
@@ -16,20 +18,27 @@ abstract final class HostedEnvironment {
 
   /// Public CDN serving each published Builderlab agent card's
   /// `<id>/agent.json` and images, for this build's account environment.
-  /// Null for an internal build or a Builderlab without a known CDN, which
-  /// have no agent cards.
+  /// Null unless this is a public build of a Builderlab with a known CDN:
+  /// internal and Nostr-only (self-hosted) builds have no agent cards and
+  /// never contact a hosted CDN.
   static Uri? get avatarsCdnOrigin =>
-      BuilderlabBuild.distribution == BuilderlabDistribution.internal
-      ? null
-      : switch (origin.host) {
-          'app.builderlab.xyz' => Uri.parse(
-            'https://d2z0pbxrxbsiz5.cloudfront.net',
-          ),
-          'app.builderlabstaging.xyz' => Uri.parse(
-            'https://d10hx6rb3fdt3l.cloudfront.net',
-          ),
-          _ => null,
-        };
+      debugAvatarsCdnOriginOverride ??
+      (!enabled
+          ? null
+          : switch (origin.host) {
+              'app.builderlab.xyz' => Uri.parse(
+                'https://d2z0pbxrxbsiz5.cloudfront.net',
+              ),
+              'app.builderlabstaging.xyz' => Uri.parse(
+                'https://d10hx6rb3fdt3l.cloudfront.net',
+              ),
+              _ => null,
+            });
+
+  /// Replaces [avatarsCdnOrigin] in tests, so a plain `flutter test` (a
+  /// Nostr-only build) can exercise agent-card fetching.
+  @visibleForTesting
+  static Uri? debugAvatarsCdnOriginOverride;
 
   /// Shortens hostname fallbacks for display without changing relay identity.
   static String communityDisplayName(String name, String relayUrl) {

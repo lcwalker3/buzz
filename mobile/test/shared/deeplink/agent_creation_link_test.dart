@@ -149,6 +149,13 @@ void main() {
     const link = AgentCreationDeepLink('av_1');
     final big = 'x' * (maxAgentCardBytes + 1);
 
+    setUp(
+      () => HostedEnvironment.debugAvatarsCdnOriginOverride = Uri.parse(
+        'https://cdn.example',
+      ),
+    );
+    tearDown(() => HostedEnvironment.debugAvatarsCdnOriginOverride = null);
+
     Future<Object> outcome(MockClientStreamHandler handler) async {
       try {
         return await AgentCreationDraft.fetch(
@@ -169,6 +176,18 @@ void main() {
       status,
       contentLength: length,
     );
+
+    test('a Nostr-only build has no CDN and makes no request', () async {
+      HostedEnvironment.debugAvatarsCdnOriginOverride = null;
+      expect(HostedEnvironment.avatarsCdnOrigin, isNull);
+      var requests = 0;
+      final result = await outcome((_, _) async {
+        requests++;
+        return respond(200);
+      });
+      expect(result, 'Agent cards aren’t available in this build.');
+      expect(requests, 0);
+    });
 
     test('requests the build CDN without following redirects', () async {
       late http.BaseRequest seen;
