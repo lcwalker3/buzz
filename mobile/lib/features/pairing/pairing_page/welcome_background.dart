@@ -92,7 +92,7 @@ class _HoneycombLatticePainter extends CustomPainter {
     final stroke = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
-      ..color = _welcomeHoney.withValues(alpha: 0.35);
+      ..color = _welcomeHoney.withValues(alpha: 0.24);
     final width = math.sqrt(3) * _radius;
     final rowStep = _radius * 1.5;
     var row = 0;

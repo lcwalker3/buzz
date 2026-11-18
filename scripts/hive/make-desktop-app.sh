@@ -19,8 +19,9 @@ launcher="${HIVE_LAUNCHER_PATH:-$HOME/Desktop/The Hive.app}"
 
 echo "1/4 Building the app for the Simulator (a few minutes the first time)"
 (cd "$repo_root/mobile" && flutter build ios --simulator --debug)
-built="$repo_root/mobile/build/ios/iphonesimulator/Runner.app"
-[[ -d "$built" ]] || { echo "build did not produce $built" >&2; exit 1; }
+# The bundle's file name follows the Xcode product name, so find it.
+built="$(find "$repo_root/mobile/build/ios/iphonesimulator" -maxdepth 1 -name '*.app' -type d | head -1)"
+[[ -n "$built" ]] || { echo "build did not produce an app in mobile/build/ios/iphonesimulator" >&2; exit 1; }
 bundle_id="$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$built/Info.plist")"
 
 echo "2/4 Copying it to $app_home"
