@@ -68,6 +68,9 @@ Homebrew services; S3 → local MinIO.
 - [ ] Library review, one at a time with tests (never bulk-bump): 134 Flutter
       packages have newer versions; check web/npm and Rust advisories too
       (`cargo deny`, `pnpm audit`)
+      - [x] `seroval` 1.5.4 → 1.8.1 (web router runtime; fixes 1 critical +
+            4 high advisories). Lockfile-only; still within router-core's
+            `^1.5.4` range.
 
 ## Phase 6 — Remove every "buzz" (owner decision 2026-11-18)
 Scope at start: ~45k occurrences in 3,324 files, 30 crates, ~1,400 paths.
@@ -176,3 +179,11 @@ stored on the phone) — only names in code.
   `install-logrotate-agent.sh` runs it hourly. Tested on a temp folder with
   macOS /bin/bash and a writer held open across rotations; shellcheck clean.
   Not yet installed on the Mac: waiting on the owner to run the installer.
+- 2026-11-18 (auto): Phase 4, first advisory fix: `seroval` 1.5.4 → 1.8.1
+  (pulled in by `@tanstack/router-core`; critical GHSA for <=1.6.0 plus 4
+  high). Lockfile-only change. Web tsc, biome, vite build pass; the rebuilt
+  web app loads at http://localhost:3000 (home and invite pages, no console
+  errors). `pnpm audit` still lists 22 advisories, mostly in vite 8.0.16 /
+  postcss / nanoid (web, admin-web dev tooling) and the deprecated desktop/
+  app (tiptap, markdown-it, prosemirror, zod); take them one package per run.
+  Next items (Tailscale, phone install, owner pubkey) still wait on the owner.
