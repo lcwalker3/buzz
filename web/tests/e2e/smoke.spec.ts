@@ -37,13 +37,22 @@ test("invite requires age and legal consent before opening The Hive", async ({
   });
   await page.goto("/invite/demo-code");
 
-  // No public download is configured for this build: show guidance, never a
-  // link to someone else's releases, and never call GitHub.
+  // No VITE_HIVE_* install target is configured for this build: show
+  // guidance, no install buttons, no hosted store links, no GitHub calls.
   await expect(
-    page.getByText("Ask the person who invited you how to get The Hive."),
+    page.getByText("Ask the person who invited you how to install The Hive."),
   ).toBeVisible();
+  for (const name of [
+    "Download The Hive",
+    "Get it for iPhone",
+    "Get it for Android",
+  ]) {
+    await expect(page.getByRole("link", { name })).toHaveCount(0);
+  }
   await expect(
-    page.getByRole("link", { name: "Download The Hive" }),
+    page.locator(
+      'a[href*="github.com"], a[href*="apps.apple.com"], a[href*="play.google.com"]',
+    ),
   ).toHaveCount(0);
   expect(githubRequests).toEqual([]);
 

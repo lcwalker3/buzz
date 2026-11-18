@@ -87,8 +87,10 @@ stored on the phone) — only names in code.
 - [ ] R4 Mobile: Dart package `buzz` → `the_hive`; Swift `Buzz*` types,
       plist key NAMES, log subsystems/queue labels; Android applicationId;
       `BuzzIcons` → `HiveIcons`; relay User-Agent → `Hive-Mobile`.
-- [ ] R5 Web: package name, `buzz-download` module/types, storage keys
-      (migrate `buzz-web-theme` → `hive-web-theme`).
+- [ ] R5 Web: done — download module is `hive-download.ts` (`Hive*` names);
+      theme key `buzz-web-theme` → `hive-web-theme` with one-time migration.
+      LEFT: package name `buzz-web` → `hive-web`; `Dockerfile` and
+      `.github/workflows/hive-ci.yml` filter on it, so rename all three together.
 - [ ] R6 Desktop (deprecated 0.X app, ~3k files): OWNER DECISION needed —
       delete it, or rename it. Recommendation: delete.
 - [ ] R7 Remaining file/dir names and docs (README upstream section,
@@ -101,7 +103,7 @@ stored on the phone) — only names in code.
 - [ ] Invites: create an invite as owner, join from a second identity/device
 - [ ] Channels, DMs, threads, reactions, edits, deletes, search
 - [ ] Media: turn on `*_MEDIA_READ_MODE`, upload/view photos, files, voice
-- [ ] Web invite page: replace Block GitHub-releases download button
+- [x] Web invite page: replace Block GitHub-releases download button
 - [ ] Huddles (audio) over Tailscale
 - [ ] Agents: run the agent harness on the Mac against the relay
 - [ ] Push notifications: self-host the push gateway crate; NEEDS OWNER:
@@ -127,7 +129,8 @@ stored on the phone) — only names in code.
    with the `wss://` link; read the phone's pubkey from the relay log; set
    `RELAY_OWNER_PUBKEY` in .env; restart relay.
 5. ~~Web invite page: replace the Block GitHub-releases download button.~~
-   Done 2026-11-18 (optional `VITE_APP_DOWNLOAD_URL`; guidance text when unset).
+   Done 2026-11-18 (optional `VITE_HIVE_DOWNLOAD_URL` / `VITE_HIVE_IOS_URL` /
+   `VITE_HIVE_ANDROID_URL`; guidance text when none is set).
 
 ## Log
 - 2026-11-18: Web repo browser rounds 1–2 (PRs #1, #2) and iOS fun features
@@ -144,3 +147,8 @@ stored on the phone) — only names in code.
   invite tests pass in system Chrome. Pre-existing, unrelated failure: "home
   page shows repositories section" (`getByText('Repositories')` matches 2
   elements). Playwright's bundled browsers are not installed on the Mac.
+- 2026-11-18: Web invite install buttons are configurable per build with
+  `VITE_HIVE_DOWNLOAD_URL`, `VITE_HIVE_IOS_URL`, `VITE_HIVE_ANDROID_URL`
+  (older `VITE_APP_DOWNLOAD_URL` still read); each button hides when unset,
+  and with none set the page says to ask the inviter. R5 web rename done
+  except the `buzz-web` package name (blocked on Dockerfile + CI filters).

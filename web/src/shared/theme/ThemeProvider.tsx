@@ -21,7 +21,9 @@ function getSystemDark(): boolean {
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
-const STORAGE_KEY = "buzz-web-theme";
+const STORAGE_KEY = "hive-web-theme";
+/** Pre-rename key; read once so existing choices survive, then removed. */
+const LEGACY_STORAGE_KEY = "buzz-web-theme";
 
 function isTheme(value: unknown): value is Theme {
   return value === "light" || value === "dark" || value === "system";
@@ -30,7 +32,12 @@ function isTheme(value: unknown): value is Theme {
 function readStoredTheme(): Theme | null {
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    return isTheme(stored) ? stored : null;
+    if (isTheme(stored)) return stored;
+    const legacy = window.localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!isTheme(legacy)) return null;
+    window.localStorage.setItem(STORAGE_KEY, legacy);
+    window.localStorage.removeItem(LEGACY_STORAGE_KEY);
+    return legacy;
   } catch {
     return null;
   }

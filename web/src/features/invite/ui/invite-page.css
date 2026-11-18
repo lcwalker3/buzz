@@ -85,6 +85,16 @@
   text-align: center;
   color: #565656;
 }
+.invite-download p {
+  margin: 0;
+}
+.invite-download-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 20px;
+  margin-top: 8px;
+}
 .invite-download a {
   color: #111;
   text-decoration: underline;

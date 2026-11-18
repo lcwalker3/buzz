@@ -3,7 +3,10 @@ import buzzMark from "@/assets/invite/mark.svg";
 import "./invite-page.css";
 import { InviteCommunity } from "./InviteCommunity";
 import { claimInviteInBrowser } from "@/features/invite/invite-api";
-import { appDownloadUrl } from "@/shared/lib/app-download";
+import {
+  hasHiveDownloadLinks,
+  hiveDownloadLinks,
+} from "@/shared/lib/hive-download";
 import { hasNip07Provider } from "@/shared/lib/nostr-signer";
 import { relayWsUrl } from "@/shared/lib/relay-url";
 import { Button } from "@/shared/ui/button";
@@ -58,7 +61,7 @@ export function InvitePage({ code }: { code: string }) {
   const [browserJoinError, setBrowserJoinError] = React.useState<string | null>(
     null,
   );
-  const downloadUrl = appDownloadUrl();
+  const downloadLinks = hiveDownloadLinks();
 
   React.useEffect(() => {
     fetch("/api/join-policy")
@@ -208,21 +211,36 @@ export function InvitePage({ code }: { code: string }) {
             ) : null}
           </div>
         </div>
-        <p className="invite-download">
-          Don&apos;t have the app?{" "}
-          {downloadUrl ? (
-            <a
-              className="ml-1 font-medium text-black underline-offset-4 hover:text-black/70 hover:underline focus-visible:underline"
-              href={downloadUrl}
-              rel="noreferrer"
-              target="_blank"
-            >
-              Download {APP_NAME}
-            </a>
+        <div className="invite-download">
+          {hasHiveDownloadLinks(downloadLinks) ? (
+            <>
+              <p>Don&apos;t have the app?</p>
+              <div className="invite-download-links">
+                {(
+                  [
+                    ["download", `Download ${APP_NAME}`],
+                    ["ios", "Get it for iPhone"],
+                    ["android", "Get it for Android"],
+                  ] as const
+                ).map(([key, label]) =>
+                  downloadLinks[key] ? (
+                    <a
+                      key={key}
+                      className="font-medium text-black underline-offset-4 hover:text-black/70 hover:underline focus-visible:underline"
+                      href={downloadLinks[key]}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      {label}
+                    </a>
+                  ) : null,
+                )}
+              </div>
+            </>
           ) : (
-            <>Ask the person who invited you how to get {APP_NAME}.</>
+            <p>Ask the person who invited you how to install {APP_NAME}.</p>
           )}
-        </p>
+        </div>
       </div>
 
       {document && (
