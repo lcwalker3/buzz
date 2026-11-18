@@ -46,9 +46,9 @@ import 'pairing_qr_scanner.dart';
 import '../../shared/brand.dart';
 
 part 'pairing_page/onboarding_background.dart';
-part 'pairing_page/website_welcome_background.dart';
-part 'pairing_page/website_bee_swarm.dart';
-part 'pairing_page/website_bee_motion.dart';
+part 'pairing_page/welcome_background.dart';
+part 'pairing_page/welcome_cell_swarm.dart';
+part 'pairing_page/welcome_cell_motion.dart';
 part 'pairing_page/onboarding_colors.dart';
 part 'pairing_page/onboarding_glass_button.dart';
 part 'pairing_page/pairing_welcome_view.dart';

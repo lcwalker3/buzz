@@ -73,7 +73,7 @@ class _HuddleCallParticipants extends StatelessWidget {
     }
 
     if (!connected) {
-      return const Center(child: _HuddleLoadingBee());
+      return const Center(child: _HuddleLoadingMark());
     }
 
     final reducedMotion = MediaQuery.disableAnimationsOf(context);
@@ -168,39 +168,39 @@ class _HuddleCallParticipants extends StatelessWidget {
   }
 }
 
-class _HuddleLoadingBee extends HookWidget {
-  const _HuddleLoadingBee();
+class _HuddleLoadingMark extends HookWidget {
+  const _HuddleLoadingMark();
 
   @override
   Widget build(BuildContext context) {
     final reducedMotion = MediaQuery.disableAnimationsOf(context);
-    final flapController = useAnimationController(
+    final pulseController = useAnimationController(
       duration: const Duration(milliseconds: 480),
     );
-    final flapProgress = useAnimation(flapController);
+    final pulseProgress = useAnimation(pulseController);
     useEffect(() {
       if (reducedMotion) {
-        flapController
+        pulseController
           ..stop()
           ..reset();
       } else {
-        flapController.repeat();
+        pulseController.repeat();
       }
       return null;
-    }, [flapController, reducedMotion]);
-    final flapAmount = reducedMotion
+    }, [pulseController, reducedMotion]);
+    final pulseAmount = reducedMotion
         ? 0.0
-        : 0.5 - (0.5 * cos(flapProgress * 4 * pi));
+        : 0.5 - (0.5 * cos(pulseProgress * 4 * pi));
 
     return Semantics(
       label: 'Joining Huddle',
       liveRegion: true,
       child: ExcludeSemantics(
-        child: FlappingBee(
-          key: const ValueKey('huddle-loading-bee'),
+        child: HoneycombMark(
+          key: const ValueKey('huddle-loading-mark'),
           width: 60,
           color: context.colors.primary,
-          flapAmount: flapAmount,
+          pulseAmount: pulseAmount,
         ),
       ),
     );

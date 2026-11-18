@@ -3,7 +3,7 @@ import 'dart:math' show max;
 import 'package:flutter/material.dart';
 
 import '../theme/theme.dart';
-import 'bee_loading_mark.dart';
+import 'hive_loading_mark.dart';
 
 /// Centers the loading mark and heading together as one block.
 class OnboardingLoadingPage extends StatelessWidget {
@@ -41,7 +41,7 @@ class OnboardingLoadingPage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const Center(child: BeeLoadingMark()),
+                            const Center(child: HiveLoadingMark()),
                             const SizedBox(height: Grid.sm),
                             Semantics(
                               header: true,

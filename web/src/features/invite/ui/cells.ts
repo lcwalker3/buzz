@@ -1,10 +1,10 @@
-// Free-roaming bee swarm. Each bee wanders the WHOLE viewport on a slowly-curving
-// per-bee heading, while a boids-style separation force keeps neighbours apart so
+// Free-roaming cell swarm. Each cell wanders the WHOLE viewport on a slowly-curving
+// per-cell heading, while a boids-style separation force keeps neighbours apart so
 // the field never collapses into clumps (the failure mode of the old position-
-// based velocity field). Soft edge containment steers bees back inward, and a
+// based velocity field). Soft edge containment steers cells back inward, and a
 // final hard clamp guarantees they never leave the frame. `seed` decorrelates
-// each bee's heading drift so the swarm fans out instead of marching in lockstep.
-export type Bee = {
+// each cell's heading drift so the swarm fans out instead of marching in lockstep.
+export type Cell = {
   x: number;
   y: number;
   vx: number;
@@ -20,7 +20,7 @@ export type Bee = {
 const REPEL_RADIUS = 380;
 const REPEL_FORCE = 1600;
 
-// Wander: bees cruise at ~SPEED px/s; velocity steers toward the heading-aligned
+// Wander: cells cruise at ~SPEED px/s; velocity steers toward the heading-aligned
 // target at rate STEER (1/s). TURN_RATE is the heading's angular drift amplitude.
 const SPEED = 58;
 const STEER = 2.4;
@@ -36,19 +36,19 @@ const DART_STEER = 11;
 const SEP_RADIUS = 66;
 const SEP_FORCE = 1300;
 
-// Edge avoidance: within MARGIN of any edge we both turn the bee's HEADING
+// Edge avoidance: within MARGIN of any edge we both turn the cell's HEADING
 // inward (EDGE_TURN, rad/s — so it actually leaves the boundary instead of
 // parking against it) and add a gentle inward velocity nudge (EDGE_FORCE) as a
 // backstop. Heading steering is the important half: a velocity-only push left
-// bees whose heading pointed outward standing off in the corners, which read as
+// cells whose heading pointed outward standing off in the corners, which read as
 // a clump.
 const MARGIN = 110;
 const EDGE_FORCE = 900;
 const EDGE_TURN = 3.2;
 
-// Recovery/home force: bees still wander freely, but they gently prefer a
+// Recovery/home force: cells still wander freely, but they gently prefer a
 // center-biased resting scatter inside the visible viewport. The pull ramps up
-// in the bleed area so cursor-repelled bees recover instead of loitering
+// in the bleed area so cursor-repelled cells recover instead of loitering
 // off-screen.
 const HOME_PULL = 0.18;
 const OFFSCREEN_HOME_PULL = 0.9;
@@ -68,13 +68,13 @@ const A1 = 1 / G;
 const A2 = 1 / (G * G);
 const frac = (n: number) => n - Math.floor(n);
 
-export function spawnBees(
+export function spawnCells(
   n: number,
   w: number,
   h: number,
   visibleInset = 0,
-): Bee[] {
-  const bees: Bee[] = [];
+): Cell[] {
+  const cells: Cell[] = [];
   const inset = Math.max(0, Math.min(visibleInset, w / 2, h / 2));
   const visibleW = Math.max(1, w - inset * 2);
   const visibleH = Math.max(1, h - inset * 2);
@@ -86,7 +86,7 @@ export function spawnBees(
       inset + (HOME_PADDING_X + gx * (1 - HOME_PADDING_X * 2)) * visibleW;
     const homeY =
       inset + (HOME_PADDING_Y + gy * (1 - HOME_PADDING_Y * 2)) * visibleH;
-    bees.push({
+    cells.push({
       x: gx * w,
       y: gy * h,
       vx: 0,
@@ -98,11 +98,11 @@ export function spawnBees(
       homeY,
     });
   }
-  return bees;
+  return cells;
 }
 
-export function stepBees(
-  bees: Bee[],
+export function stepCells(
+  cells: Cell[],
   pointer: { x: number; y: number } | null,
   dt: number,
   w: number,
@@ -110,8 +110,8 @@ export function stepBees(
   repel: boolean,
   time = 0,
   visibleInset = 0,
-): Bee[] {
-  return bees.map((b, i) => {
+): Cell[] {
+  return cells.map((b, i) => {
     let { x, y, vx, vy, heading } = b;
     const { seed } = b;
     const homeX = b.homeX ?? w / 2;
@@ -123,7 +123,7 @@ export function stepBees(
     const visibleBottom = h - inset;
 
     // Heading curves smoothly over time. Two incommensurate low-frequency terms
-    // make the turn rate itself drift, so a bee traces big slow loops across the
+    // make the turn rate itself drift, so a cell traces big slow loops across the
     // frame rather than wobbling around one fixed bearing (which biased the swarm
     // toward whatever direction it spawned facing).
     heading +=
@@ -133,8 +133,8 @@ export function stepBees(
       dt;
 
     // Edge avoidance — turn the heading toward the inward direction near any
-    // edge so the bee curves away from the wall (proportional to how deep into
-    // the margin it is). This is what keeps bees from piling into the corners.
+    // edge so the cell curves away from the wall (proportional to how deep into
+    // the margin it is). This is what keeps cells from piling into the corners.
     let inX = 0,
       inY = 0;
     if (x < MARGIN) inX = 1 - x / MARGIN;
@@ -150,7 +150,7 @@ export function stepBees(
 
     // Steer velocity toward the heading-aligned cruise velocity. The target
     // speed swells slowly, with short seeded burst windows layered in, so some
-    // bees occasionally dart and then settle back down.
+    // cells occasionally dart and then settle back down.
     const speedSwell =
       1 + Math.sin(time * (0.42 + seed * 0.28) + seed * TAU) * SPEED_SWELL;
     const dartPhase = (time * (0.24 + seed * 0.2) + seed * 5.37) % 1;
@@ -171,9 +171,9 @@ export function stepBees(
     vy += (desiredVy - vy) * steer * dt;
 
     // Separation — push away from every neighbour inside SEP_RADIUS.
-    for (let j = 0; j < bees.length; j++) {
+    for (let j = 0; j < cells.length; j++) {
       if (j === i) continue;
-      const o = bees[j];
+      const o = cells[j];
       const dx = x - o.x,
         dy = y - o.y;
       const d = Math.hypot(dx, dy);
@@ -196,7 +196,7 @@ export function stepBees(
       }
     }
 
-    // Home recovery — subtle while on-screen, more decisive once a bee has been
+    // Home recovery — subtle while on-screen, more decisive once a cell has been
     // pushed into the bleed area outside the visible viewport.
     const outside =
       Math.max(visibleLeft - x, 0) +
@@ -219,8 +219,8 @@ export function stepBees(
     x += vx * dt;
     y += vy * dt;
 
-    // Hard clamp as a final safety so bees never leave the frame; bounce the
-    // outward velocity so a clamped bee turns back in rather than sticking.
+    // Hard clamp as a final safety so cells never leave the frame; bounce the
+    // outward velocity so a clamped cell turns back in rather than sticking.
     if (x < 0) {
       x = 0;
       if (vx < 0) vx = -vx * 0.5;

@@ -6,7 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../shared/hosted/hosted_flow.dart';
 import '../../shared/hosted/hosted_environment.dart';
 import '../../shared/widgets/onboarding_step_page.dart';
-import '../../shared/widgets/bee_loading_mark.dart';
+import '../../shared/widgets/hive_loading_mark.dart';
 import '../../shared/widgets/onboarding_loading_page.dart';
 import '../../shared/identity_transfer/nsec_import_sheet.dart';
 import '../../shared/hosted/hosted_flow_problem_message.dart';
@@ -296,7 +296,7 @@ class HostedConnectSheet extends HookConsumerWidget {
           '${flow.addedCommunityCount == 1 ? "community" : "communities"} added and kept.'
           '${flow.canRetry && stage == HostedFlowStage.blocked ? " Retry continues the remaining additions." : ""}',
         ),
-      if (working && !fullScreen) const Center(child: BeeLoadingMark()),
+      if (working && !fullScreen) const Center(child: HiveLoadingMark()),
       if (!working &&
           stage != HostedFlowStage.profile &&
           stage != HostedFlowStage.acceptPolicy &&

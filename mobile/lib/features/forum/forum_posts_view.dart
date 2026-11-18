@@ -10,7 +10,7 @@ import '../../shared/theme/theme.dart';
 import '../../shared/widgets/buzz_loading_indicator.dart';
 import '../../shared/widgets/frosted_app_bar.dart';
 import '../../shared/widgets/load_error_view.dart';
-import '../../shared/widgets/bee_refresh_indicator.dart';
+import '../../shared/widgets/hive_refresh_indicator.dart';
 import '../channels/channel.dart';
 import '../channels/compose_bar.dart';
 import 'forum_models.dart';
@@ -117,7 +117,7 @@ class ForumPostsView extends HookConsumerWidget {
                     isArchived: channel.isArchived,
                   );
                 }
-                return BeeRefreshIndicator(
+                return HiveRefreshIndicator(
                   onRefresh: () async {
                     ref.invalidate(forumPostsProvider(channel.id));
                     await ref.read(forumPostsProvider(channel.id).future);

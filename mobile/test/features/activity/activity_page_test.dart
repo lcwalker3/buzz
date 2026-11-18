@@ -1,7 +1,9 @@
 import 'package:buzz/shared/widgets/adaptive_conversation_pane.dart';
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
+
 import 'package:flutter/rendering.dart';
 import 'package:buzz/shared/widgets/ios_message_create_button.dart';
 import 'package:buzz/shared/widgets/ios_glass_navigation_button.dart';
@@ -681,7 +683,7 @@ void main() {
 
     expect(find.byKey(const ValueKey('inbox-unread-dot-dm-r2')), findsNothing);
     // That was the last unread row: clearing it is celebrated, once.
-    expect(find.text('🐝  All caught up!'), findsOneWidget);
+    expect(find.text('🍯  All caught up!'), findsOneWidget);
   });
 
   testWidgets(

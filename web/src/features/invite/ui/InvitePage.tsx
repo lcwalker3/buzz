@@ -1,5 +1,5 @@
-import { BeeField } from "./BeeField";
-import buzzMark from "@/assets/invite/mark.svg";
+import { CellField } from "./CellField";
+import hiveMark from "@/assets/invite/mark.svg";
 import "./invite-page.css";
 import { InviteCommunity } from "./InviteCommunity";
 import { claimInviteInBrowser } from "@/features/invite/invite-api";
@@ -134,8 +134,8 @@ export function InvitePage({ code }: { code: string }) {
     setDocument({ title, markdown });
   return (
     <div className="invite-page">
-      <BeeField count={24} sizeScale={0.75} zIndex={-1} />
-      <img className="invite-mark" src={buzzMark} alt={APP_NAME} />
+      <CellField count={24} sizeScale={0.75} zIndex={-1} />
+      <img className="invite-mark" src={hiveMark} alt={APP_NAME} />
       <div className="invite-stack">
         <div className="invite-card">
           <h1>You're invited</h1>
