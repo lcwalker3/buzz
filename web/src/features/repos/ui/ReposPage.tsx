@@ -1,64 +1,74 @@
-import { BookMarked, GitBranch } from "lucide-react";
+import { ArrowDownUp, Search, SearchX, X } from "lucide-react";
 import { toast } from "sonner";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import buzzAppIcon from "@/assets/app-icon@3x.png";
-import { Input } from "@/shared/ui/input";
+import { truncatePubkey } from "@/shared/lib/pubkey";
+import { useDocumentTitle } from "@/shared/lib/use-document-title";
+import { useBrowseState } from "../browse-search";
 import { mockRepos } from "../mock-repos";
 import { useRepos } from "../use-repos";
 import { ConnectButton } from "./ConnectButton";
-import { OrgSidebar } from "./OrgSidebar";
+import { OrgSidebar, usePeople } from "./OrgSidebar";
 import { RepoListItem } from "./RepoListItem";
+import { RepoShell } from "./RepoShell";
 
 type SortOrder = "newest" | "oldest" | "name";
 
+const SORT_LABELS: Record<SortOrder, string> = {
+  newest: "Recently updated",
+  oldest: "Oldest first",
+  name: "Name",
+};
+
 function ListItemSkeleton() {
   return (
-    <div className="py-6">
-      <div className="flex items-center gap-2">
-        <div className="h-4 w-4 shrink-0 animate-pulse rounded bg-black/10 dark:bg-white/10" />
-        <div className="h-5 w-48 animate-pulse rounded bg-black/10 dark:bg-white/10" />
-        <div className="h-5 w-14 animate-pulse rounded bg-black/10 dark:bg-white/10" />
-      </div>
-      <div className="mt-2 h-4 w-3/4 animate-pulse rounded bg-black/10 dark:bg-white/10" />
-      <div className="mt-2 flex gap-4">
-        <div className="h-3 w-24 animate-pulse rounded bg-black/10 dark:bg-white/10" />
-        <div className="h-3 w-20 animate-pulse rounded bg-black/10 dark:bg-white/10" />
+    <div className="flex gap-4 px-5 py-4">
+      <div className="repo-skeleton h-9 w-9 shrink-0 rounded-lg" />
+      <div className="flex-1">
+        <div className="repo-skeleton h-4 w-48" />
+        <div className="repo-skeleton mt-2.5 h-3.5 w-3/4" />
+        <div className="repo-skeleton mt-3 h-3 w-40" />
       </div>
     </div>
   );
 }
 
-function SearchEmptyState() {
+function SearchEmptyState({ onReset }: { onReset: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-black/5 dark:bg-white/10">
-        <GitBranch className="h-7 w-7 text-black/50 dark:text-white/50" />
+    <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-hover">
+        <SearchX className="h-5 w-5 text-ink-faint" aria-hidden />
       </div>
-      <h2 className="mt-4 text-lg font-semibold text-black dark:text-white">
-        No matching repositories
-      </h2>
-      <p className="mt-1 max-w-sm text-sm text-black/60 dark:text-white/60">
-        Try adjusting your search term.
+      <h2 className="mt-4 text-base font-semibold">No matching repositories</h2>
+      <p className="mt-1 max-w-sm text-sm text-ink-muted">
+        Nothing matches those filters.
       </p>
+      <button
+        type="button"
+        onClick={onReset}
+        className="mt-4 rounded-md px-3 py-1.5 text-sm font-medium text-ink underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-honey"
+      >
+        Clear filters
+      </button>
     </div>
   );
 }
 
 function CommunityEmptyState() {
   return (
-    <div className="flex flex-1 items-center justify-center bg-[#F3F3F3] px-4 py-16 text-center dark:bg-[#171717]">
-      <div className="flex w-full max-w-xl flex-col items-center px-6 py-10 sm:px-12 sm:py-12">
+    <div className="flex flex-1 items-center justify-center py-16 text-center">
+      <div className="repo-card flex w-full max-w-xl flex-col items-center px-6 py-12 sm:px-12">
         <div
-          className="h-16 w-16 overflow-hidden bg-black"
+          className="h-16 w-16 overflow-hidden bg-black shadow-lg"
           style={{ borderRadius: "22.37%" }}
         >
           <img alt="Buzz" className="h-full w-full" src={buzzAppIcon} />
         </div>
-        <h1 className="mt-6 text-2xl font-semibold tracking-tight text-black dark:text-white">
+        <h1 className="mt-6 text-2xl font-semibold tracking-tight">
           This community is empty
         </h1>
-        <p className="mt-2 max-w-md text-sm leading-relaxed text-black/60 dark:text-white/60">
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-muted">
           Repositories pushed to this community will show up here. Open this
           community in the Buzz desktop app to start pushing code.
         </p>
@@ -68,25 +78,45 @@ function CommunityEmptyState() {
   );
 }
 
+/** Focus `ref` when "/" is pressed outside a text field (GitHub-style). */
+function useSlashToFocus(ref: React.RefObject<HTMLInputElement | null>) {
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target?.closest("input, textarea, select, [contenteditable='true']")
+      ) {
+        return;
+      }
+      e.preventDefault();
+      ref.current?.focus();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [ref]);
+}
+
 export function ReposPage() {
-  const preview = import.meta.env.DEV
-    ? new URLSearchParams(window.location.search).get("preview")
-    : null;
-  const showMockRepos = preview === "repositories";
-  const showMockEmptyState = preview === "empty";
+  const browse = useBrowseState();
+  const previewEmpty =
+    import.meta.env.DEV &&
+    new URLSearchParams(window.location.search).get("preview") === "empty";
+  const usingMock = browse.preview || previewEmpty;
   const {
     data: fetchedRepos,
     isLoading: isLoadingRepos,
     error,
-  } = useRepos({ enabled: !showMockRepos && !showMockEmptyState });
-  const repos = showMockRepos
-    ? mockRepos
-    : showMockEmptyState
-      ? []
-      : fetchedRepos;
-  const isLoading = preview ? false : isLoadingRepos;
+  } = useRepos({ enabled: !usingMock });
+  const repos = browse.preview ? mockRepos : previewEmpty ? [] : fetchedRepos;
+  const isLoading = usingMock ? false : isLoadingRepos;
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortOrder>("newest");
+  const [person, setPerson] = useState<string | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  useSlashToFocus(searchRef);
+  useDocumentTitle("Repositories");
+  const people = usePeople(repos ?? []);
 
   useEffect(() => {
     if (error) {
@@ -96,104 +126,182 @@ export function ReposPage() {
     }
   }, [error]);
 
+  const term = search.trim();
   const filteredRepos = useMemo(() => {
     if (!repos) return [];
-
-    const term = search.toLowerCase();
-    let result = repos.filter(
+    const needle = term.toLowerCase();
+    const result = repos.filter(
       (r) =>
-        r.name.toLowerCase().includes(term) ||
-        r.description.toLowerCase().includes(term),
+        (r.name.toLowerCase().includes(needle) ||
+          r.description.toLowerCase().includes(needle)) &&
+        (!person || r.owner === person || r.contributors.includes(person)),
     );
-
+    const sorted = [...result];
     switch (sort) {
       case "newest":
-        result = result.sort((a, b) => b.createdAt - a.createdAt);
+        sorted.sort((a, b) => b.createdAt - a.createdAt);
         break;
       case "oldest":
-        result = result.sort((a, b) => a.createdAt - b.createdAt);
+        sorted.sort((a, b) => a.createdAt - b.createdAt);
         break;
       case "name":
-        result = result.sort((a, b) =>
+        sorted.sort((a, b) =>
           a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
         );
         break;
     }
+    return sorted;
+  }, [repos, term, sort, person]);
 
-    return result;
-  }, [repos, search, sort]);
+  function resetFilters() {
+    setSearch("");
+    setPerson(null);
+    searchRef.current?.focus();
+  }
 
-  if (isLoading) {
+  if (!isLoading && (!repos || repos.length === 0)) {
     return (
-      <div className="flex w-full flex-1 gap-8 bg-[#F3F3F3] px-4 py-8 dark:bg-[#171717]">
-        <div className="min-w-0 flex-1">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-black dark:text-white">
-            <BookMarked className="h-4 w-4" /> Repositories
-          </h2>
-          <div className="divide-y">
-            {["a", "b", "c", "d", "e"].map((key) => (
-              <ListItemSkeleton key={key} />
-            ))}
-          </div>
-        </div>
-        <aside className="hidden w-72 shrink-0 lg:block" />
-      </div>
+      <RepoShell browse={browse}>
+        <CommunityEmptyState />
+      </RepoShell>
     );
   }
 
-  if (!repos || repos.length === 0) {
-    return <CommunityEmptyState />;
-  }
+  const total = repos?.length ?? 0;
+  const filtered = Boolean(term) || Boolean(person);
 
   return (
-    <div className="flex w-full flex-1 gap-8 bg-[#F3F3F3] px-4 py-8 dark:bg-[#171717]">
-      {/* Main content */}
-      <div className="min-w-0 flex-1">
-        {/* Mobile-only connect button */}
-        <div className="mb-4 lg:hidden">
-          <ConnectButton className="w-full" />
+    <RepoShell
+      browse={browse}
+      sidebar={
+        repos && (
+          <OrgSidebar
+            repos={repos}
+            person={person}
+            onPersonChange={setPerson}
+          />
+        )
+      }
+    >
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Repositories
+          </h1>
+          <p className="mt-1 text-sm text-ink-muted">
+            {isLoading
+              ? "Loading this community's code…"
+              : `${total} ${total === 1 ? "repository" : "repositories"} · ${people.length} ${people.length === 1 ? "person" : "people"}`}
+          </p>
         </div>
+        <ConnectButton className="lg:hidden" />
+      </div>
 
-        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-black dark:text-white">
-          <BookMarked className="h-4 w-4" /> Repositories
-        </h2>
-
-        {/* Search + Sort bar */}
-        <div className="mb-4 flex gap-3">
-          <Input
-            placeholder="Find a repository..."
+      {/* Search + sort */}
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row">
+        <label className="relative flex-1">
+          <span className="sr-only">Find a repository</span>
+          <Search
+            className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-ink-faint"
+            aria-hidden
+          />
+          <input
+            ref={searchRef}
+            type="search"
+            placeholder="Find a repository…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 border-black/10 bg-white text-black placeholder:text-black/40 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/40"
+            onKeyDown={(e) => {
+              if (e.key === "Escape" && search) {
+                e.preventDefault();
+                setSearch("");
+              }
+            }}
+            className="h-10 w-full rounded-lg border border-line bg-panel pr-16 pl-9 text-sm text-ink shadow-xs outline-none transition-shadow placeholder:text-ink-faint focus:border-honey focus:ring-3 focus:ring-honey-soft [&::-webkit-search-cancel-button]:hidden"
+          />
+          {search ? (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("");
+                searchRef.current?.focus();
+              }}
+              aria-label="Clear search"
+              className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 text-ink-faint hover:text-ink focus-visible:outline-2 focus-visible:outline-honey"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          ) : (
+            <kbd
+              aria-hidden
+              className="pointer-events-none absolute top-1/2 right-3 hidden -translate-y-1/2 rounded border border-line px-1.5 font-mono text-[11px] text-ink-faint sm:block"
+            >
+              /
+            </kbd>
+          )}
+        </label>
+        <label className="relative">
+          <span className="sr-only">Sort repositories</span>
+          <ArrowDownUp
+            className="pointer-events-none absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-ink-faint"
+            aria-hidden
           />
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as SortOrder)}
             aria-label="Sort repositories"
-            className="rounded-md border border-black/10 bg-white px-3 py-1 text-sm text-black shadow-xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-black dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus-visible:ring-white"
+            className="h-10 w-full appearance-none rounded-lg border border-line bg-panel pr-4 pl-8 text-sm text-ink shadow-xs outline-none focus:border-honey focus:ring-3 focus:ring-honey-soft sm:w-auto"
           >
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-            <option value="name">Name</option>
-          </select>
-        </div>
-
-        {/* Repo list */}
-        {filteredRepos.length > 0 ? (
-          <div className="divide-y divide-black/10 dark:divide-white/10">
-            {filteredRepos.map((repo) => (
-              <RepoListItem key={repo.id} repo={repo} preview={showMockRepos} />
+            {(Object.keys(SORT_LABELS) as SortOrder[]).map((key) => (
+              <option key={key} value={key}>
+                {SORT_LABELS[key]}
+              </option>
             ))}
-          </div>
-        ) : (
-          <SearchEmptyState />
-        )}
+          </select>
+        </label>
       </div>
 
-      {/* Sidebar */}
-      <aside className="hidden w-72 shrink-0 border-l border-black/10 pl-8 dark:border-white/10 lg:block">
-        <OrgSidebar repos={repos} />
-      </aside>
-    </div>
+      {filtered && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-ink-muted">
+          <span aria-live="polite">
+            {filteredRepos.length} of {total} shown
+          </span>
+          {person && (
+            <button
+              type="button"
+              onClick={() => setPerson(null)}
+              className="flex items-center gap-1 rounded-full bg-honey-soft px-2.5 py-0.5 font-mono text-xs text-ink hover:bg-honey/30 focus-visible:outline-2 focus-visible:outline-honey"
+              aria-label={`Remove filter for ${truncatePubkey(person)}`}
+            >
+              {truncatePubkey(person)}
+              <X className="h-3 w-3" aria-hidden />
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="repo-card overflow-hidden">
+        {isLoading ? (
+          <div className="divide-y divide-line">
+            {["a", "b", "c", "d"].map((key) => (
+              <ListItemSkeleton key={key} />
+            ))}
+          </div>
+        ) : filteredRepos.length > 0 ? (
+          <ul className="divide-y divide-line">
+            {filteredRepos.map((repo) => (
+              <RepoListItem
+                key={repo.id}
+                repo={repo}
+                browse={browse}
+                highlight={term}
+              />
+            ))}
+          </ul>
+        ) : (
+          <SearchEmptyState onReset={resetFilters} />
+        )}
+      </div>
+    </RepoShell>
   );
 }

@@ -1,27 +1,30 @@
 import { BookOpen } from "lucide-react";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+
+import type { BrowseState } from "../browse-search";
 import type { ReadmeResult } from "../git-client";
+import { proseClass, RepoMarkdown } from "./RepoMarkdown";
 
 export function RepoReadmeSection({
   readme,
   isLoading,
+  repoId,
+  path = "",
+  browse,
 }: {
   readme: ReadmeResult | null | undefined;
   isLoading: boolean;
+  repoId: string;
+  /** Folder the README lives in ("" for the repo root). */
+  path?: string;
+  browse: BrowseState;
 }) {
   if (isLoading) {
     return (
-      <div className="mt-8">
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-black dark:text-white">
-          <BookOpen className="h-4 w-4" />
-          README
-        </h2>
-        <div className="space-y-2 rounded-lg border border-black/10 p-4 dark:border-white/10">
-          <div className="h-4 w-3/4 animate-pulse rounded bg-black/10 dark:bg-white/10" />
-          <div className="h-4 w-1/2 animate-pulse rounded bg-black/10 dark:bg-white/10" />
-          <div className="h-4 w-5/6 animate-pulse rounded bg-black/10 dark:bg-white/10" />
-        </div>
+      <div className="repo-card mt-6 space-y-3 p-6">
+        <div className="repo-skeleton h-6 w-1/3" />
+        <div className="repo-skeleton h-4 w-3/4" />
+        <div className="repo-skeleton h-4 w-1/2" />
+        <div className="repo-skeleton h-4 w-5/6" />
       </div>
     );
   }
@@ -29,14 +32,19 @@ export function RepoReadmeSection({
   if (!readme) return null;
 
   return (
-    <div className="mt-8">
-      <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-black dark:text-white">
-        <BookOpen className="h-4 w-4" />
+    <section className="repo-card mt-6 overflow-hidden">
+      <h2 className="flex items-center gap-2 border-b border-line px-5 py-3 text-sm font-semibold">
+        <BookOpen className="h-4 w-4 text-ink-faint" aria-hidden />
         {readme.filename}
       </h2>
-      <div className="prose prose-sm dark:prose-invert max-w-none rounded-lg border border-black/10 bg-white/50 p-4 dark:border-white/10 dark:bg-white/5">
-        <Markdown remarkPlugins={[remarkGfm]}>{readme.content}</Markdown>
+      <div className={`${proseClass} px-6 py-5 sm:pl-8`}>
+        <RepoMarkdown
+          content={readme.content}
+          repoId={repoId}
+          baseDir={path}
+          browse={browse}
+        />
       </div>
-    </div>
+    </section>
   );
 }

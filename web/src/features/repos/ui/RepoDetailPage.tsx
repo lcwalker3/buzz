@@ -1,411 +1,360 @@
 import {
   ArrowLeft,
   BookMarked,
-  Check,
-  Copy,
-  ExternalLink,
-  MessageSquare,
-  Users,
+  Code2,
+  GitBranch,
+  GitCommitHorizontal,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Link, useParams } from "@tanstack/react-router";
+import { type KeyboardEvent, type ReactNode, useEffect, useRef } from "react";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useRouterState,
+} from "@tanstack/react-router";
 import { toast } from "sonner";
 
-import { Badge } from "@/shared/ui/badge";
-import { Button } from "@/shared/ui/button";
-import { relativeTime } from "@/shared/lib/relative-time";
-import { useRepoRefs } from "../use-repo-refs";
-import { useRepo } from "../use-repos";
-import {
-  getMockRepo,
-  mockRepoCommits,
-  mockRepoReadme,
-  mockRepoTree,
-} from "../mock-repos";
-import type { CommitInfo, ReadmeResult, TreeEntry } from "../git-client";
-import { useGitTree, useGitLog, useGitReadme } from "../use-git-browse";
-import { ConnectButton } from "./ConnectButton";
-import { PubkeyAvatar } from "./PubkeyAvatar";
-import { RepoRefsSection } from "./RepoRefsSection";
-import { RepoTreeSection } from "./RepoTreeSection";
+import { cn } from "@/shared/lib/cn";
+import { useDocumentTitle } from "@/shared/lib/use-document-title";
+import { browseSearch } from "../browse-search";
+import { getMockReadme, getMockTree, mockRepoCommits } from "../mock-repos";
+import { useGitLog, useGitReadme, useGitTree } from "../use-git-browse";
+import { FileFinder } from "./FileFinder";
+import { RepoBranchesSection } from "./RepoBranchesSection";
 import { RepoCommitsSection } from "./RepoCommitsSection";
+import { BranchPicker, RepoBreadcrumbs, useRepoBrowse } from "./RepoNav";
 import { RepoReadmeSection } from "./RepoReadmeSection";
+import { RepoShell } from "./RepoShell";
+import { RepoSidebar } from "./RepoSidebar";
+import { RepoTreeSection } from "./RepoTreeSection";
 
-function CopyableUrl({ url }: { url: string }) {
-  const [copied, setCopied] = useState(false);
-
-  async function handleCopy() {
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      toast.success("Copied to clipboard");
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error("Failed to copy to clipboard");
-    }
-  }
-
-  return (
-    <div className="flex items-center gap-2 rounded-md border border-black/10 bg-white px-3 py-2 dark:border-white/10 dark:bg-white/5">
-      <code className="min-w-0 flex-1 truncate text-sm text-black dark:text-white">
-        {url}
-      </code>
-      <button
-        type="button"
-        onClick={handleCopy}
-        className="shrink-0 text-black/50 hover:text-black dark:text-white/50 dark:hover:text-white"
-        aria-label="Copy clone URL"
-      >
-        {copied ? (
-          <Check className="h-4 w-4 text-green-500" />
-        ) : (
-          <Copy className="h-4 w-4" />
-        )}
-      </button>
-    </div>
-  );
-}
+type RepoBrowse = ReturnType<typeof useRepoBrowse>;
 
 function DetailSkeleton() {
   return (
-    <div className="flex w-full flex-1 gap-8 bg-[#F3F3F3] px-4 py-8 dark:bg-[#171717]">
-      <div className="min-w-0 flex-1">
-        <div className="h-5 w-24 animate-pulse rounded bg-black/10 dark:bg-white/10" />
-        <div className="mt-6 h-8 w-64 animate-pulse rounded bg-black/10 dark:bg-white/10" />
-        <div className="mt-3 h-5 w-96 animate-pulse rounded bg-black/10 dark:bg-white/10" />
-        <div className="mt-8 space-y-3">
-          <div className="h-4 w-32 animate-pulse rounded bg-black/10 dark:bg-white/10" />
-          <div className="h-10 w-full animate-pulse rounded bg-black/10 dark:bg-white/10" />
-        </div>
-      </div>
-      <aside className="hidden w-72 shrink-0 lg:block" />
+    <div className="space-y-4">
+      <div className="repo-skeleton h-8 w-64" />
+      <div className="repo-skeleton h-4 w-96 max-w-full" />
+      <div className="repo-skeleton mt-8 h-64 w-full rounded-xl" />
     </div>
   );
 }
 
-function BackToRepositories({
-  mockPreview = false,
-}: {
-  mockPreview?: boolean;
-}) {
-  const className =
-    "inline-flex items-center gap-1 text-sm text-black/60 hover:text-black dark:text-white/60 dark:hover:text-white";
-  const content = (
-    <>
-      <ArrowLeft className="h-4 w-4" />
-      Back to repositories
-    </>
-  );
-
-  return mockPreview ? (
-    <a href="/?preview=repositories" className={className}>
-      {content}
-    </a>
-  ) : (
-    <Link to="/" className={className}>
-      {content}
-    </Link>
+function RepoNotFound({ ctx }: { ctx: RepoBrowse }) {
+  return (
+    <RepoShell browse={ctx.browse}>
+      <div className="repo-card mx-auto mt-8 max-w-lg px-6 py-12 text-center">
+        <BookMarked className="mx-auto h-10 w-10 text-ink-faint" aria-hidden />
+        <h1 className="mt-4 text-xl font-semibold">Repository not found</h1>
+        <p className="mt-1 text-sm text-ink-muted">
+          This repository may have been removed or doesn't exist on this relay.
+        </p>
+        <Link
+          to="/"
+          search={browseSearch(ctx.browse, { ref: null })}
+          className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium underline decoration-honey underline-offset-4"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          Back to repositories
+        </Link>
+      </div>
+    </RepoShell>
   );
 }
 
-type Tab = "code" | "commits";
-
-function RepoTabs({
-  repoId,
-  treeEntries,
-  treeLoading,
-  commits,
-  commitsLoading,
-  readme,
-  readmeLoading,
-  preview,
+/**
+ * Shared frame for repo-scoped pages: shell, sidebar, loading/not-found,
+ * error toast, and the breadcrumb + branch picker header row.
+ */
+export function RepoFrame({
+  ctx,
+  path,
+  children,
+  wide = false,
 }: {
-  repoId: string;
-  treeEntries: TreeEntry[] | undefined;
-  treeLoading: boolean;
-  commits: CommitInfo[] | undefined;
-  commitsLoading: boolean;
-  readme: ReadmeResult | null | undefined;
-  readmeLoading: boolean;
-  preview: boolean;
+  ctx: RepoBrowse;
+  path: string;
+  children: ReactNode;
+  /** Full-width content (file viewer): no sidebar. */
+  wide?: boolean;
 }) {
-  const [tab, setTab] = useState<Tab>("code");
+  const { repo, repoError } = ctx;
+  useDocumentTitle(path || null, repo?.name);
+
+  useEffect(() => {
+    if (repoError) {
+      toast.error("Failed to load repository", {
+        description: repoError.message,
+      });
+    }
+  }, [repoError]);
+
+  if (ctx.repoLoading) {
+    return (
+      <RepoShell browse={ctx.browse}>
+        <DetailSkeleton />
+      </RepoShell>
+    );
+  }
+  if (!repo) return <RepoNotFound ctx={ctx} />;
 
   return (
-    <div className="mt-6">
-      {/* Tab bar */}
-      <div className="flex gap-1 border-b border-black/10 dark:border-white/10">
-        <button
-          type="button"
-          onClick={() => setTab("code")}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            tab === "code"
-              ? "border-b-2 border-black text-black dark:border-white dark:text-white"
-              : "text-black/50 hover:text-black dark:text-white/50 dark:hover:text-white"
-          }`}
-        >
-          Code
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("commits")}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${
-            tab === "commits"
-              ? "border-b-2 border-black text-black dark:border-white dark:text-white"
-              : "text-black/50 hover:text-black dark:text-white/50 dark:hover:text-white"
-          }`}
-        >
-          Commits
-        </button>
-      </div>
-
-      {/* Tab content */}
-      {tab === "code" && (
-        <>
-          <RepoTreeSection
-            entries={treeEntries}
-            isLoading={treeLoading}
-            repoId={repoId}
-            preview={preview}
+    <RepoShell
+      browse={ctx.browse}
+      sidebar={wide ? undefined : <RepoSidebar repo={repo} refs={ctx.refs} />}
+    >
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        {path ? (
+          <RepoBreadcrumbs repoId={repo.id} path={path} browse={ctx.browse} />
+        ) : (
+          <h1 className="flex min-w-0 items-center gap-2.5 text-2xl font-semibold tracking-tight">
+            <BookMarked
+              className="h-5 w-5 shrink-0 text-ink-faint"
+              aria-hidden
+            />
+            <span className="truncate">{repo.name}</span>
+          </h1>
+        )}
+        <div className="flex items-center gap-2">
+          <FileFinder
+            repoId={repo.id}
+            owner={ctx.owner}
+            repoName={ctx.repoName}
+            gitRef={ctx.ref}
+            mock={ctx.mock}
+            browse={ctx.browse}
           />
-          <RepoReadmeSection readme={readme} isLoading={readmeLoading} />
-        </>
+          {ctx.refs && ctx.refs.branches.length > 0 && (
+            <BranchPicker
+              branches={ctx.refs.branches}
+              current={ctx.ref}
+              headRef={ctx.headRef}
+              browse={ctx.browse}
+            />
+          )}
+        </div>
+      </div>
+      {children}
+      {/* Sidebar content stacks below on narrow screens */}
+      {!wide && (
+        <div className="mt-10 lg:hidden">
+          <RepoSidebar repo={repo} refs={ctx.refs} />
+        </div>
       )}
-      {tab === "commits" && (
-        <RepoCommitsSection commits={commits} isLoading={commitsLoading} />
-      )}
+    </RepoShell>
+  );
+}
+
+function useBrowseError(error: unknown) {
+  useEffect(() => {
+    if (error) console.error("[git-browse]", error);
+  }, [error]);
+}
+
+function BrowseError({ error }: { error: unknown }) {
+  if (!error) return null;
+  return (
+    <div
+      role="alert"
+      className="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+    >
+      Failed to load repository contents:{" "}
+      {error instanceof Error ? error.message : String(error)}
+    </div>
+  );
+}
+
+type Tab = "code" | "commits" | "branches";
+const TABS: { id: Tab; label: string; icon: typeof Code2 }[] = [
+  { id: "code", label: "Code", icon: Code2 },
+  { id: "commits", label: "Commits", icon: GitCommitHorizontal },
+  { id: "branches", label: "Branches", icon: GitBranch },
+];
+
+function parseTab(value: unknown): Tab {
+  return value === "commits" || value === "branches" ? value : "code";
+}
+
+function RepoTabs({
+  tab,
+  onChange,
+  commitCount,
+  branchCount,
+}: {
+  tab: Tab;
+  onChange: (tab: Tab) => void;
+  commitCount: number | undefined;
+  branchCount: number | undefined;
+}) {
+  const refs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  function onKeyDown(e: KeyboardEvent, index: number) {
+    const delta = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+    const jump = e.key === "Home" ? 0 : e.key === "End" ? TABS.length - 1 : -1;
+    if (!delta && jump < 0) return;
+    e.preventDefault();
+    const next = jump >= 0 ? jump : (index + delta + TABS.length) % TABS.length;
+    onChange(TABS[next].id);
+    refs.current[next]?.focus();
+  }
+
+  return (
+    <div
+      role="tablist"
+      aria-label="Repository views"
+      className="mb-4 flex gap-1 border-b border-line"
+    >
+      {TABS.map(({ id, label, icon: Icon }, i) => {
+        const selected = tab === id;
+        return (
+          <button
+            key={id}
+            ref={(el) => {
+              refs.current[i] = el;
+            }}
+            type="button"
+            role="tab"
+            id={`repo-tab-${id}`}
+            aria-selected={selected}
+            aria-controls={`repo-panel-${id}`}
+            tabIndex={selected ? 0 : -1}
+            onClick={() => onChange(id)}
+            onKeyDown={(e) => onKeyDown(e, i)}
+            className={cn(
+              "-mb-px flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors focus-visible:rounded-t-md focus-visible:outline-2 focus-visible:outline-honey",
+              selected
+                ? "border-honey text-ink"
+                : "border-transparent text-ink-muted hover:text-ink",
+            )}
+          >
+            <Icon className="h-4 w-4" aria-hidden />
+            {label}
+            {(id === "commits"
+              ? commitCount
+              : id === "branches"
+                ? branchCount
+                : undefined) !== undefined && (
+              <span className="rounded-full bg-hover px-1.5 text-xs tabular-nums text-ink-muted">
+                {id === "commits" ? commitCount : branchCount}
+              </span>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
 export function RepoDetailPage() {
   const { repoId } = useParams({ from: "/repos/$repoId" });
-  const preview =
-    import.meta.env.DEV &&
-    new URLSearchParams(window.location.search).get("preview") ===
-      "repositories";
-  const mockRepo = preview ? getMockRepo(repoId) : undefined;
-  const showMockRepo = Boolean(mockRepo);
-  const {
-    data: repo,
-    isLoading,
-    error,
-  } = useRepo(repoId, {
-    preview: showMockRepo,
-  });
-  const { data: refs, isLoading: refsLoading } = useRepoRefs(repoId, {
-    preview: showMockRepo,
+  const ctx = useRepoBrowse(repoId);
+  const navigate = useNavigate();
+  const tab = useRouterState({
+    select: (s): Tab =>
+      parseTab((s.location.search as Record<string, unknown>).tab),
   });
 
-  const defaultRef = refs?.head?.ref ?? "main";
-  const owner = repo?.owner ?? "";
-  const repoName = repo?.id ?? "";
-  const browseOwner = showMockRepo ? "" : owner;
-
-  const {
-    data: fetchedTreeEntries,
-    isLoading: isTreeLoading,
-    error: treeError,
-  } = useGitTree(browseOwner, repoName, defaultRef);
-  const {
-    data: fetchedCommits,
-    isLoading: areCommitsLoading,
-    error: commitsError,
-  } = useGitLog(browseOwner, repoName, defaultRef);
-  const { data: fetchedReadme, isLoading: isReadmeLoading } = useGitReadme(
-    browseOwner,
-    repoName,
-    defaultRef,
-  );
-  const treeEntries = showMockRepo ? mockRepoTree : fetchedTreeEntries;
-  const commits = showMockRepo ? mockRepoCommits : fetchedCommits;
-  const readme = showMockRepo ? mockRepoReadme : fetchedReadme;
-  const treeLoading = showMockRepo ? false : isTreeLoading;
-  const commitsLoading = showMockRepo ? false : areCommitsLoading;
-  const readmeLoading = showMockRepo ? false : isReadmeLoading;
-
-  // Surface clone/browse errors — these are otherwise silent
-  const browseError = treeError || commitsError;
-  useEffect(() => {
-    if (browseError) {
-      console.error("[git-browse]", browseError);
-    }
-  }, [browseError]);
-
-  useEffect(() => {
-    if (error) {
-      toast.error("Failed to load repository", {
-        description: error.message,
-      });
-    }
-  }, [error]);
-
-  if (isLoading) return <DetailSkeleton />;
-
-  if (!repo) {
-    return (
-      <div className="flex w-full flex-1 gap-8 bg-[#F3F3F3] px-4 py-8 text-black dark:bg-[#171717] dark:text-white">
-        <div className="min-w-0 flex-1">
-          <BackToRepositories />
-          <div className="mt-12 text-center">
-            <BookMarked className="mx-auto h-10 w-10 text-black/50 dark:text-white/50" />
-            <h1 className="mt-4 text-xl font-semibold text-black dark:text-white">
-              Repository not found
-            </h1>
-            <p className="mt-1 text-sm text-black/60 dark:text-white/60">
-              This repository may have been removed or doesn't exist on this
-              relay.
-            </p>
-          </div>
-        </div>
-        <aside className="hidden w-72 shrink-0 lg:block" />
-      </div>
-    );
-  }
+  const tree = useGitTree(ctx.owner, ctx.repoName, ctx.ref);
+  const log = useGitLog(ctx.owner, ctx.repoName, ctx.ref);
+  const readme = useGitReadme(ctx.owner, ctx.repoName, ctx.ref);
+  const treeEntries = ctx.mock ? getMockTree("") : tree.data;
+  const commits = ctx.mock ? mockRepoCommits : log.data;
+  const readmeData = ctx.mock ? getMockReadme("") : readme.data;
+  const browseError = ctx.mock ? null : tree.error || log.error;
+  useBrowseError(browseError);
 
   return (
-    <div className="flex w-full flex-1 gap-8 bg-[#F3F3F3] px-4 py-8 text-black dark:bg-[#171717] dark:text-white">
-      {/* Main content */}
-      <div className="min-w-0 flex-1">
-        {/* Back link */}
-        <BackToRepositories mockPreview={preview} />
-
-        {/* Mobile-only connect button */}
-        <div className="mt-4 lg:hidden">
-          <ConnectButton className="w-full" />
-        </div>
-
-        {/* Header */}
-        <div className="mt-6">
-          <div className="flex items-center gap-3">
-            <BookMarked className="h-6 w-6 shrink-0 text-black/50 dark:text-white/50" />
-            <h1 className="text-2xl font-semibold tracking-tight text-black dark:text-white">
-              {repo.name}
-            </h1>
-            <Badge
-              variant="outline"
-              className="border-black/15 text-black/60 dark:border-white/15 dark:text-white/60"
-            >
-              Public
-            </Badge>
-          </div>
-          {repo.description && (
-            <p className="mt-2 text-sm leading-relaxed text-black/60 dark:text-white/60">
-              {repo.description}
-            </p>
-          )}
-          <p className="mt-2 text-xs text-black/50 dark:text-white/50">
-            Updated {relativeTime(repo.createdAt)}
-          </p>
-        </div>
-
-        {/* Refs & HEAD */}
-        <RepoRefsSection refs={refs} isLoading={refsLoading} />
-
-        {/* Clone/browse error banner */}
-        {browseError && (
-          <div className="mt-6 rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            Failed to load repository contents:{" "}
-            {browseError instanceof Error
-              ? browseError.message
-              : String(browseError)}
-          </div>
-        )}
-
-        {/* Tabs */}
-        <RepoTabs
-          repoId={repoId}
-          treeEntries={treeEntries}
-          treeLoading={treeLoading}
-          commits={commits}
-          commitsLoading={commitsLoading}
-          readme={readme}
-          readmeLoading={readmeLoading}
-          preview={showMockRepo}
-        />
-
-        {/* Clone URLs */}
-        {repo.cloneUrls.length > 0 && (
-          <div className="mt-8">
-            <h2 className="mb-3 text-sm font-semibold text-black dark:text-white">
-              Clone
-            </h2>
-            <div className="space-y-2">
-              {repo.cloneUrls.map((url) => (
-                <CopyableUrl key={url} url={url} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* External link — validate scheme to prevent javascript: XSS */}
-        {(() => {
-          if (!repo.webUrl) return null;
-          let safe: string | null = null;
-          try {
-            safe = /^https?:/.test(new URL(repo.webUrl).protocol)
-              ? repo.webUrl
-              : null;
-          } catch {
-            safe = null;
-          }
-          if (!safe) return null;
-          return (
-            <div className="mt-6">
-              <Button
-                variant="outline"
-                className="border-black/10 bg-white text-black hover:bg-black/5 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-                asChild
-              >
-                <a href={safe} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4" />
-                  View on web
-                </a>
-              </Button>
-            </div>
-          );
-        })()}
-
-        {/* Channel link */}
-        {repo.channelId && (
-          <div className="mt-8">
-            <Button
-              variant="outline"
-              className="border-black/10 bg-white text-black hover:bg-black/5 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-              asChild
-            >
-              <a href={`/channels/${repo.channelId}`}>
-                <MessageSquare className="h-4 w-4" />
-                View channel
-              </a>
-            </Button>
-          </div>
+    <RepoFrame ctx={ctx} path="">
+      {ctx.repo?.description && (
+        <p className="-mt-2 mb-6 max-w-2xl text-sm leading-relaxed text-ink-muted">
+          {ctx.repo.description}
+        </p>
+      )}
+      <BrowseError error={browseError} />
+      <RepoTabs
+        tab={tab}
+        commitCount={commits?.length}
+        branchCount={ctx.refs?.branches.length}
+        onChange={(next) =>
+          navigate({
+            to: ".",
+            search: {
+              ...browseSearch(ctx.browse),
+              ...(next === "code" ? {} : { tab: next }),
+            },
+            replace: true,
+          })
+        }
+      />
+      <div
+        role="tabpanel"
+        id={`repo-panel-${tab}`}
+        aria-labelledby={`repo-tab-${tab}`}
+      >
+        {tab === "code" ? (
+          <>
+            <RepoTreeSection
+              entries={treeEntries}
+              isLoading={!ctx.mock && tree.isLoading}
+              repoId={repoId}
+              browse={ctx.browse}
+              latestCommit={commits?.[0]}
+            />
+            <RepoReadmeSection
+              readme={readmeData}
+              isLoading={!ctx.mock && readme.isLoading}
+              repoId={repoId}
+              browse={ctx.browse}
+            />
+          </>
+        ) : tab === "commits" ? (
+          <RepoCommitsSection
+            commits={commits}
+            isLoading={!ctx.mock && log.isLoading}
+          />
+        ) : (
+          <RepoBranchesSection
+            repoId={repoId}
+            refs={ctx.refs}
+            current={ctx.ref}
+            headRef={ctx.headRef}
+            browse={ctx.browse}
+          />
         )}
       </div>
+    </RepoFrame>
+  );
+}
 
-      {/* Sidebar */}
-      <aside className="hidden w-72 shrink-0 border-l border-black/10 pl-8 dark:border-white/10 lg:block">
-        <div className="space-y-6">
-          {/* Open in Buzz */}
-          <ConnectButton className="w-full" />
+/** A sub-folder listing: `/repos/:repoId/tree/some/dir`. */
+export function RepoTreePage() {
+  const { repoId, _splat } = useParams({ from: "/repos/$repoId/tree/$" });
+  const path = (_splat ?? "").replace(/^\/+|\/+$/g, "");
+  const ctx = useRepoBrowse(repoId);
+  const tree = useGitTree(ctx.owner, ctx.repoName, ctx.ref, path);
+  const readme = useGitReadme(ctx.owner, ctx.repoName, ctx.ref, path);
+  const entries = ctx.mock ? getMockTree(path) : tree.data;
+  const readmeData = ctx.mock ? getMockReadme(path) : readme.data;
+  const error = ctx.mock ? null : tree.error;
+  useBrowseError(error);
 
-          {/* People */}
-          <div>
-            <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-black dark:text-white">
-              <Users className="h-4 w-4" />
-              People
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              <PubkeyAvatar pubkey={repo.owner} />
-              {repo.contributors
-                .filter((c) => c !== repo.owner)
-                .map((c) => (
-                  <PubkeyAvatar key={c} pubkey={c} />
-                ))}
-            </div>
-          </div>
-        </div>
-      </aside>
-    </div>
+  return (
+    <RepoFrame ctx={ctx} path={path}>
+      <BrowseError error={error} />
+      <RepoTreeSection
+        entries={entries}
+        isLoading={!ctx.mock && tree.isLoading}
+        repoId={repoId}
+        browse={ctx.browse}
+        path={path}
+      />
+      <RepoReadmeSection
+        readme={readmeData}
+        isLoading={!ctx.mock && readme.isLoading}
+        repoId={repoId}
+        path={path}
+        browse={ctx.browse}
+      />
+    </RepoFrame>
   );
 }

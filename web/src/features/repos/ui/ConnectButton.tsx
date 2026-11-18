@@ -1,5 +1,6 @@
 import { ExternalLink } from "lucide-react";
 
+import { cn } from "@/shared/lib/cn";
 import { relayWsUrl } from "@/shared/lib/relay-url";
 import { Button } from "@/shared/ui/button";
 
@@ -9,7 +10,10 @@ export function ConnectButton({ className }: { className?: string }) {
   return (
     <Button
       asChild
-      className={`bg-black text-white hover:bg-black/90 focus-visible:ring-black dark:bg-white dark:text-black dark:hover:bg-white/90 dark:focus-visible:ring-white ${className ?? ""}`}
+      className={cn(
+        "bg-ink text-page shadow-none hover:bg-ink/85 focus-visible:ring-2 focus-visible:ring-honey",
+        className,
+      )}
     >
       <a href={deepLink}>
         <ExternalLink className="h-4 w-4" />

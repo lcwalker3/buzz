@@ -3,6 +3,10 @@
 @plugin "@tailwindcss/typography";
 @config "../../../tailwind.config.js";
 
+/* `dark:` follows the app theme (html.dark), not the OS setting, so the
+   theme toggle wins over prefers-color-scheme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     /* Catppuccin Latte (mauve accent) */
@@ -40,6 +44,21 @@
     --sidebar-accent-foreground: 234 16.02% 35.49%;
     --sidebar-border: 225 13.56% 76.86%;
     --sidebar-ring: 225 13.56% 76.86%;
+
+    /* Repo browser surfaces (neutral, with Buzz honey accent) */
+    --page: #f4f4f2;
+    --panel: #ffffff;
+    --panel-muted: #f9f9f7;
+    --line: rgb(15 15 15 / 0.09);
+    --ink: #111111;
+    --ink-muted: rgb(17 17 17 / 0.62);
+    --ink-faint: rgb(17 17 17 / 0.45);
+    --hover: rgb(15 15 15 / 0.04);
+    --honey: #d7d72e;
+    --honey-ink: #6b6b00;
+    --honey-soft: rgb(215 215 46 / 0.22);
+    --shadow-card:
+      0 1px 2px rgb(16 16 16 / 0.04), 0 4px 16px rgb(16 16 16 / 0.04);
   }
 
   .dark {
@@ -78,6 +97,19 @@
     --sidebar-accent-foreground: 227 68.25% 87.65%;
     --sidebar-border: 231 15.61% 33.92%;
     --sidebar-ring: 231 15.61% 33.92%;
+
+    --page: #121212;
+    --panel: #1b1b1b;
+    --panel-muted: #171717;
+    --line: rgb(255 255 255 / 0.08);
+    --ink: #f4f4f2;
+    --ink-muted: rgb(244 244 242 / 0.64);
+    --ink-faint: rgb(244 244 242 / 0.44);
+    --hover: rgb(255 255 255 / 0.04);
+    --honey: #e3e34a;
+    --honey-ink: #e3e34a;
+    --honey-soft: rgb(227 227 74 / 0.14);
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3);
   }
 
   * {
@@ -96,5 +128,36 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: "Inter Variable", Inter, "Avenir Next", "Segoe UI", sans-serif;
+  }
+}
+
+@layer components {
+  .repo-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .repo-skeleton {
+    background: var(--hover);
+    border-radius: 6px;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Syntax tokens carry both theme colours as variables (see highlight.ts). */
+  .code-token {
+    color: var(--shiki-light);
+    font-style: var(--shiki-light-font-style);
+    font-weight: var(--shiki-light-font-weight);
+  }
+  .dark .code-token {
+    color: var(--shiki-dark);
+    font-style: var(--shiki-dark-font-style);
+    font-weight: var(--shiki-dark-font-weight);
+  }
+
+  .code-line[data-active="true"] {
+    background: var(--honey-soft);
   }
 }

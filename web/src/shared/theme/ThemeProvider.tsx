@@ -21,15 +21,39 @@ function getSystemDark(): boolean {
   return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
-function getInitialTheme(): Theme {
-  if (!import.meta.env.DEV) return "system";
+const STORAGE_KEY = "buzz-web-theme";
 
-  const previewTheme = new URLSearchParams(window.location.search).get(
-    "previewTheme",
-  );
-  return previewTheme === "light" || previewTheme === "dark"
-    ? previewTheme
-    : "system";
+function isTheme(value: unknown): value is Theme {
+  return value === "light" || value === "dark" || value === "system";
+}
+
+function readStoredTheme(): Theme | null {
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    return isTheme(stored) ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+function storeTheme(theme: Theme) {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, theme);
+  } catch {
+    // Storage blocked (private mode, sandbox): the choice lasts this visit.
+  }
+}
+
+function getInitialTheme(): Theme {
+  if (import.meta.env.DEV) {
+    const previewTheme = new URLSearchParams(window.location.search).get(
+      "previewTheme",
+    );
+    if (previewTheme === "light" || previewTheme === "dark") {
+      return previewTheme;
+    }
+  }
+  return readStoredTheme() ?? "system";
 }
 
 function applyClass(isDark: boolean) {
@@ -67,6 +91,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme]);
 
   const setTheme = useCallback((t: Theme) => {
+    storeTheme(t);
     setThemeState(t);
   }, []);
 

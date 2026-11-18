@@ -17,6 +17,23 @@ export default {
         ],
       },
       colors: {
+        page: "var(--page)",
+        panel: {
+          DEFAULT: "var(--panel)",
+          muted: "var(--panel-muted)",
+        },
+        line: "var(--line)",
+        ink: {
+          DEFAULT: "var(--ink)",
+          muted: "var(--ink-muted)",
+          faint: "var(--ink-faint)",
+        },
+        hover: "var(--hover)",
+        honey: {
+          DEFAULT: "var(--honey)",
+          ink: "var(--honey-ink)",
+          soft: "var(--honey-soft)",
+        },
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {

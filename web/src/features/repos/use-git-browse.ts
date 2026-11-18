@@ -6,13 +6,14 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { resolveRef } from "isomorphic-git";
 import {
   ensureClone,
   findReadme,
   getCommitLog,
+  listAllFiles,
   readBlobView,
   readTreeEntries,
+  resolveBrowseOid,
   resolveHtmlAssets,
 } from "./git-client";
 
@@ -44,7 +45,7 @@ export function useGitTree(
     queryFn: async () => {
       if (!cloneQuery.data) throw new Error("unreachable: enabled guards data");
       const { fs, dir } = cloneQuery.data;
-      const oid = await resolveRef({ fs, dir, ref });
+      const oid = await resolveBrowseOid(fs, dir, ref);
       const entries = await readTreeEntries(fs, dir, oid, path || undefined);
 
       // Sort: directories first, then files, alphabetical within each group
@@ -75,18 +76,44 @@ export function useGitLog(owner: string, repoName: string, ref: string) {
   });
 }
 
-/** Find and read the README from the repo root. */
-export function useGitReadme(owner: string, repoName: string, ref: string) {
+/** Find and read the README in `path` (repo root by default). */
+export function useGitReadme(
+  owner: string,
+  repoName: string,
+  ref: string,
+  path = "",
+) {
   const cloneQuery = useGitClone(owner, repoName, ref);
 
   return useQuery({
-    queryKey: ["git-readme", owner, repoName, ref],
+    queryKey: ["git-readme", owner, repoName, ref, path],
     queryFn: async () => {
       if (!cloneQuery.data) throw new Error("unreachable: enabled guards data");
       const { fs, dir } = cloneQuery.data;
-      return findReadme(fs, dir, ref);
+      return findReadme(fs, dir, ref, path);
     },
     enabled: !!cloneQuery.data,
+    staleTime: 5 * 60_000,
+  });
+}
+
+/** Every file path on `ref`, for the "Go to file" finder. Lazy via `enabled`. */
+export function useGitFileList(
+  owner: string,
+  repoName: string,
+  ref: string,
+  enabled: boolean,
+) {
+  const cloneQuery = useGitClone(owner, repoName, ref);
+
+  return useQuery({
+    queryKey: ["git-file-list", owner, repoName, ref],
+    queryFn: async () => {
+      if (!cloneQuery.data) throw new Error("unreachable: enabled guards data");
+      const { fs, dir } = cloneQuery.data;
+      return listAllFiles(fs, dir, ref);
+    },
+    enabled: enabled && !!cloneQuery.data,
     staleTime: 5 * 60_000,
   });
 }
@@ -105,7 +132,7 @@ export function useGitBlob(
     queryFn: async () => {
       if (!cloneQuery.data) throw new Error("unreachable: enabled guards data");
       const { fs, dir } = cloneQuery.data;
-      const oid = await resolveRef({ fs, dir, ref });
+      const oid = await resolveBrowseOid(fs, dir, ref);
       return readBlobView(fs, dir, oid, filepath);
     },
     enabled: !!cloneQuery.data && !!filepath,
@@ -134,7 +161,7 @@ export function useGitHtmlDoc(
     queryFn: async () => {
       if (!cloneQuery.data) throw new Error("unreachable: enabled guards data");
       const { fs, dir } = cloneQuery.data;
-      const oid = await resolveRef({ fs, dir, ref });
+      const oid = await resolveBrowseOid(fs, dir, ref);
       return resolveHtmlAssets(fs, dir, oid, filepath, html);
     },
     enabled: enabled && !!cloneQuery.data && !!filepath,
