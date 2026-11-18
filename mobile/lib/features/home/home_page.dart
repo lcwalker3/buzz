@@ -30,6 +30,7 @@ import 'home_screen_shortcut_host.dart';
 import 'messages_filters.dart';
 import 'messages_navigation_bar.dart';
 import '../../shared/widgets/covered_route_keyboard_insets.dart';
+import '../../shared/brand.dart';
 
 class HomePage extends HookConsumerWidget {
   const HomePage({
@@ -431,7 +432,7 @@ class HomePage extends HookConsumerWidget {
                           width: 80,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                           colorBlendMode: BlendMode.srcIn,
-                          semanticLabel: 'Buzz',
+                          semanticLabel: appName,
                         ),
                   list: wide && strip != null
                       ? Builder(

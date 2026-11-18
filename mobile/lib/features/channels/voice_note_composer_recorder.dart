@@ -11,6 +11,7 @@ import '../../shared/relay/app_lifecycle_provider.dart';
 import '../../shared/theme/theme.dart';
 import 'voice_note_recording.dart';
 import 'voice_note_waveform.dart';
+import '../../shared/brand.dart';
 
 class _VoiceNoteRouteAware extends RouteAware {
   _VoiceNoteRouteAware(this.onCovered);
@@ -95,7 +96,7 @@ class VoiceNoteComposerRecorder extends HookConsumerWidget {
         }
       } catch (_) {
         if (context.mounted) {
-          error.value = 'Buzz could not finish the voice note.';
+          error.value = '$appName could not finish the voice note.';
           isStopping.value = false;
         }
       }
@@ -129,7 +130,7 @@ class VoiceNoteComposerRecorder extends HookConsumerWidget {
         } catch (_) {
           if (active) {
             error.value =
-                'Buzz could not start recording. Check microphone access.';
+                '$appName could not start recording. Check microphone access.';
           }
         }
       }());

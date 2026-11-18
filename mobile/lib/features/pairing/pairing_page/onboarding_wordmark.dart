@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../shared/brand.dart';
 
 /// The website's animated noise/displacement treatment over the shared artwork.
 class OnboardingWordmark extends StatefulWidget {
@@ -105,7 +106,7 @@ class _OnboardingWordmarkState extends State<OnboardingWordmark>
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Buzz',
+      label: appName,
       image: true,
       child: ExcludeSemantics(
         child: RepaintBoundary(

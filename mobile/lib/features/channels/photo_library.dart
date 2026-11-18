@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
+import '../../shared/brand.dart';
 
 const _recentPhotoCount = 30;
 const _photoPermissionRequest = PermissionRequestOption(
@@ -46,7 +47,7 @@ class PhotoLibraryAccessException implements Exception {
   const PhotoLibraryAccessException();
 
   @override
-  String toString() => 'Photo access is turned off for Buzz.';
+  String toString() => 'Photo access is turned off for $appName.';
 }
 
 /// Provides the device photo library. Tests can override this with fixtures.

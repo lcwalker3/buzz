@@ -14,6 +14,7 @@ import 'bestie_conversation.dart';
 import 'channel.dart';
 import 'channel_management_provider.dart';
 import 'send_message_provider.dart';
+import '../../shared/brand.dart';
 
 const _quickSendChannel = MethodChannel('buzz/quick_send');
 
@@ -59,7 +60,7 @@ class QuickSendHost extends HookConsumerWidget {
           debugPrint('Quick send failed: $failure');
           throw PlatformException(
             code: 'failed',
-            message: "Buzz couldn't send that. Open Buzz to try again.",
+            message: "$appName couldn't send that. Open $appName to try again.",
           );
         }
       });
@@ -85,7 +86,7 @@ Future<Map<String, String?>> _bestie(WidgetRef ref) async {
       .read(defaultAgentProvider.future)
       .timeout(const Duration(seconds: 10));
   if (bestie == null) {
-    throw const _QuickSendRefused('Choose a Bestie in Buzz first.');
+    throw const _QuickSendRefused('Choose a Bestie in $appName first.');
   }
   if (ref.read(userCacheProvider)[bestie] == null) {
     // Briefly: Siri can say "your Bestie" rather than keep the person waiting.
@@ -110,7 +111,7 @@ String _scope(WidgetRef ref) =>
 void _ensureScope(WidgetRef ref, String scope) {
   if (_scope(ref) != scope) {
     throw const _QuickSendRefused(
-      'Buzz switched communities. Try again to confirm the new Bestie.',
+      '$appName switched communities. Try again to confirm the new Bestie.',
     );
   }
 }
@@ -147,13 +148,13 @@ Future<void> _quickSend(
     if (!await _connected(ref)) {
       if (dm == null) {
         throw const _QuickSendRefused(
-          "Buzz couldn't reach your community, so your message wasn't saved.",
+          "$appName couldn't reach your community, so your message wasn't saved.",
         );
       }
       _ensureScope(ref, scope);
       _keepDraft(drafts, dm, content);
       throw const _QuickSendRefused(
-        "Buzz couldn't reach your community. Your message is a draft in "
+        "$appName couldn't reach your community. Your message is a draft in "
         'your Bestie DM.',
       );
     }
@@ -163,7 +164,7 @@ Future<void> _quickSend(
     } catch (failure) {
       debugPrint('Quick send lookup failed: $failure');
       throw const _QuickSendRefused(
-        "Buzz couldn't open your Bestie DM, so your message wasn't saved.",
+        "$appName couldn't open your Bestie DM, so your message wasn't saved.",
       );
     }
     for (var attempt = 1; ; attempt++) {
@@ -182,9 +183,9 @@ Future<void> _quickSend(
         _keepDraft(drafts, dm, content);
         throw _QuickSendRefused(
           limited
-              ? "Buzz couldn't send that yet. Your message is a draft in your "
+              ? "$appName couldn't send that yet. Your message is a draft in your "
                     'Bestie DM.'
-              : "Buzz isn't sure that sent. Check your Bestie DM before "
+              : "$appName isn't sure that sent. Check your Bestie DM before "
                     'trying again.',
         );
       }

@@ -255,7 +255,7 @@ void main() {
 
     expect(pairing.resetCalls, 1);
     expect(find.text('Identity recovery'), findsNothing);
-    expect(find.text('Couldn’t resume Buzz. Try again.'), findsOneWidget);
+    expect(find.text('Couldn’t resume The Hive. Try again.'), findsOneWidget);
   });
 
   testWidgets('clears authorization when disposed during authentication', (

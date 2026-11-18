@@ -270,7 +270,7 @@ void main() {
 
     final (_, noBestie) = await siri('bestie');
     expect(noBestie?.code, 'failed');
-    expect(noBestie?.message, 'Choose a Bestie in Buzz first.');
+    expect(noBestie?.message, 'Choose a Bestie in The Hive first.');
 
     chosenBestie = bestie.public;
     container.invalidate(defaultAgentProvider);
@@ -360,7 +360,7 @@ void main() {
     });
     expect(
       unsure?.message,
-      "Buzz isn't sure that sent. Check your Bestie DM before trying again.",
+      "The Hive isn't sure that sent. Check your Bestie DM before trying again.",
     );
     final kept = drafts.draftFor(_Relay.dmId)!;
     expect(kept.text, 'Half a @Sam\n\nCall back');

@@ -12,6 +12,7 @@ import 'package:record/record.dart';
 
 import '../../shared/relay/media_image.dart';
 import '../../shared/widgets/app_route_observer.dart';
+import '../../shared/brand.dart';
 
 /// Maximum duration accepted for a recorded voice note.
 const voiceNoteMaxDuration = Duration(minutes: 5);
@@ -220,7 +221,7 @@ class DeviceVoiceNoteRecorder implements VoiceNoteRecorder {
     final recordedPath = await _recorder.stop() ?? _path;
     _nativeEnded = true;
     if (recordedPath == null || recordedPath.isEmpty) {
-      throw StateError('Buzz could not finish the voice note.');
+      throw StateError('$appName could not finish the voice note.');
     }
     final startedAt = _startedAt;
     final duration = startedAt == null

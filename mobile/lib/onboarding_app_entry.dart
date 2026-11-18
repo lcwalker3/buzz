@@ -17,6 +17,7 @@ import 'shared/hosted/organization_environment.dart';
 import 'shared/hosted/hosted_community_creation.dart';
 import 'shared/hosted/hosted_flow_problem_message.dart';
 import 'shared/widgets/confirmation_dialog.dart';
+import 'shared/brand.dart';
 
 /// Navigation over the existing branded welcome surface.
 class OnboardingAppEntry extends HookConsumerWidget {
@@ -148,7 +149,7 @@ class OnboardingAppEntry extends HookConsumerWidget {
           title: 'Sign out of BuilderLab?',
           message:
               '${email != null && email.isNotEmpty ? 'You’re signed in as $email. ' : ''}'
-              'Your saved Buzz identities will stay on this device.',
+              'Your saved $appName identities will stay on this device.',
           confirmLabel: 'Sign out',
         );
         if (!context.mounted ||

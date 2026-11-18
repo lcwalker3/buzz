@@ -1,15 +1,10 @@
 import { createHash } from "node:crypto";
 import { expect, test } from "@playwright/test";
-import {
-  BUZZ_ANDROID_PLAY_STORE_URL,
-  BUZZ_IOS_APP_STORE_URL,
-  BUZZ_RELEASES_URL,
-} from "../../src/shared/lib/buzz-download";
 
-test("home page loads with Buzz branding", async ({ page }) => {
+test("home page loads with The Hive branding", async ({ page }) => {
   await page.goto("/");
   await expect(
-    page.getByRole("main").getByRole("img", { name: "Buzz" }),
+    page.getByRole("main").getByRole("img", { name: "The Hive" }),
   ).toBeVisible();
 });
 
@@ -18,7 +13,7 @@ test("home page shows repositories section", async ({ page }) => {
   await expect(page.getByText("Repositories")).toBeVisible();
 });
 
-test("invite requires age and legal consent before opening Buzz", async ({
+test("invite requires age and legal consent before opening The Hive", async ({
   page,
 }) => {
   await page.route("**/api/join-policy", async (route) => {
@@ -35,55 +30,38 @@ test("invite requires age and legal consent before opening Buzz", async ({
       }),
     });
   });
-  await page.route("https://api.github.com/**", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify([
-        { draft: false, prerelease: true, assets: [] },
-        {
-          draft: false,
-          prerelease: true,
-          assets: [
-            {
-              name: "Buzz_0.4.9_aarch64.dmg",
-              browser_download_url:
-                "https://github.com/block/buzz-app/releases/download/v0.4.9/Buzz_0.4.9_aarch64.dmg",
-            },
-            {
-              name: "Buzz_0.4.9_x86_64.AppImage",
-              browser_download_url:
-                "https://github.com/block/buzz-app/releases/download/v0.4.9/Buzz_0.4.9_x86_64.AppImage",
-            },
-            {
-              name: "Buzz_0.4.9_x64_unsigned.exe",
-              browser_download_url:
-                "https://github.com/block/buzz-app/releases/download/v0.4.9/Buzz_0.4.9_x64_unsigned.exe",
-            },
-          ],
-        },
-      ]),
-    });
+  const githubRequests: string[] = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).hostname.endsWith("github.com"))
+      githubRequests.push(request.url());
   });
   await page.goto("/invite/demo-code");
 
+  // No VITE_HIVE_* install target is configured for this build: show
+  // guidance, no install buttons, no hosted store links, no GitHub calls.
   await expect(
-    page.getByRole("link", { name: "Download Buzz" }),
-  ).toHaveAttribute(
-    "href",
-    "https://github.com/block/buzz-app/releases/download/v0.4.9/Buzz_0.4.9_x64_unsigned.exe",
-  );
-  await expect(page.getByRole("link", { name: "Browse releases" })).toHaveCount(
-    0,
-  );
+    page.getByText("Ask the person who invited you how to install The Hive."),
+  ).toBeVisible();
+  for (const name of [
+    "Download The Hive",
+    "Get it for iPhone",
+    "Get it for Android",
+  ]) {
+    await expect(page.getByRole("link", { name })).toHaveCount(0);
+  }
+  await expect(
+    page.locator(
+      'a[href*="github.com"], a[href*="apps.apple.com"], a[href*="play.google.com"]',
+    ),
+  ).toHaveCount(0);
+  expect(githubRequests).toEqual([]);
 
   const ageConfirmation = page.getByLabel("I am 18 years of age or older.");
   const agreementConfirmation = page.getByLabel(
-    "I agree to the Buzz Terms of Service and Privacy Policy.",
+    "I agree to the Terms of Service and Privacy Policy.",
   );
   const acceptInvite = page.getByRole("button", {
-    name: "Accept invite in Buzz",
+    name: "Accept invite in The Hive",
   });
 
   await expect(ageConfirmation).toBeVisible();
@@ -109,7 +87,7 @@ test("invite requires age and legal consent before opening Buzz", async ({
   await page
     .locator("label")
     .filter({
-      hasText: "I agree to the Buzz Terms of Service and Privacy Policy.",
+      hasText: "I agree to the Terms of Service and Privacy Policy.",
     })
     .click({ position: { x: 8, y: 8 } });
   await expect(agreementConfirmation).toBeChecked();
@@ -264,225 +242,11 @@ for (const [sentinel, guidance] of [
   });
 }
 
-for (const architecture of ["unknown", "x64"]) {
-  test(`invite explains Mac support for ${architecture} architecture`, async ({
-    browser,
-  }) => {
-    const context = await browser.newContext({
-      userAgent:
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Version/26.5 Safari/605.1.15",
-    });
-    await context.addInitScript((architecture) => {
-      Object.defineProperties(navigator, {
-        platform: { configurable: true, value: "MacIntel" },
-        maxTouchPoints: { configurable: true, value: 0 },
-        userAgentData: {
-          configurable: true,
-          value:
-            architecture === "unknown"
-              ? undefined
-              : {
-                  platform: "macOS",
-                  getHighEntropyValues: async () => ({
-                    architecture: "x86",
-                    bitness: "64",
-                  }),
-                },
-        },
-      });
-    }, architecture);
-    await context.route(
-      "https://github.com/block/buzz-app/releases/download/**",
-      (route) =>
-        route.fulfill({
-          contentType: "text/html",
-          body: "Installer destination",
-        }),
-    );
-    const page = await context.newPage();
-    await page.route("**/api/join-policy", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ policy: null }),
-      });
-    });
-    await page.route("https://api.github.com/**", async (route) => {
-      await route.fulfill({
-        json: [
-          {
-            draft: false,
-            prerelease: true,
-            assets: [
-              {
-                name: "Buzz_0.4.9_aarch64.dmg",
-                browser_download_url:
-                  "https://github.com/block/buzz-app/releases/download/v0.4.9/Buzz_0.4.9_aarch64.dmg",
-              },
-            ],
-          },
-        ],
-      });
-    });
-
-    await page.goto("/invite/demo-code");
-    const download = page.getByRole("link", { name: "Download Buzz" });
-    await expect(download).toHaveAttribute("aria-haspopup", "dialog");
-    await download.click();
-
-    const chooser = page.getByRole("dialog", {
-      name: "Which Mac do you have?",
-    });
-    await expect(chooser).toBeVisible();
-    await expect(
-      chooser.getByRole("link", { name: /Apple Silicon Mac/ }),
-    ).toContainText("Mac with an Apple M-series chip");
-    await expect(chooser.getByRole("link", { name: /Older Mac/ })).toHaveCount(
-      0,
-    );
-    await expect(
-      chooser.getByText(
-        "Buzz for Mac requires Apple Silicon. Intel Macs are not supported.",
-      ),
-    ).toBeVisible();
-    await expect(chooser.getByText("About This Mac")).toBeVisible();
-
-    const openedPagePromise = context.waitForEvent("page");
-    await chooser.getByRole("link", { name: /Apple Silicon Mac/ }).click();
-    const openedPage = await openedPagePromise;
-    await expect(chooser).toBeHidden();
-    await expect(openedPage).toHaveURL(
-      "https://github.com/block/buzz-app/releases/download/v0.4.9/Buzz_0.4.9_aarch64.dmg",
-    );
-    await expect(page).toHaveURL(/\/invite\/demo-code$/);
-    await openedPage.close();
-
-    await download.click();
-    await expect(chooser).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(chooser).toBeHidden();
-    await expect(download).toBeFocused();
-    await context.close();
-  });
-}
-
-test("invite download links to the appropriate platform destination", async ({
-  browser,
-}) => {
-  const devices = [
-    {
-      name: "iPhone Safari",
-      expectedUrl: BUZZ_IOS_APP_STORE_URL,
-      platform: "iPhone",
-      userAgent:
-        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15",
-      maxTouchPoints: 5,
-    },
-    {
-      name: "iPadOS desktop mode",
-      expectedUrl: BUZZ_IOS_APP_STORE_URL,
-      platform: "MacIntel",
-      userAgent:
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15",
-      maxTouchPoints: 5,
-    },
-    {
-      name: "Android phone",
-      expectedUrl: BUZZ_ANDROID_PLAY_STORE_URL,
-      platform: "Linux armv8l",
-      userAgent:
-        "Mozilla/5.0 (Linux; Android 15; Pixel 9 Pro) AppleWebKit/537.36 Mobile",
-      maxTouchPoints: 5,
-    },
-    {
-      name: "Fire tablet",
-      expectedUrl: BUZZ_RELEASES_URL,
-      platform: "Linux armv8l",
-      userAgent:
-        "Mozilla/5.0 (Linux; Android 9; KFMAWI) AppleWebKit/537.36 Silk/126.0 like Chrome/126.0.0.0 Safari/537.36",
-      maxTouchPoints: 5,
-    },
-    {
-      name: "ChromeOS",
-      expectedUrl: BUZZ_RELEASES_URL,
-      platform: "Linux x86_64",
-      userAgent: "Mozilla/5.0 (X11; CrOS x86_64 16093.68.0) AppleWebKit/537.36",
-      maxTouchPoints: 0,
-    },
-  ];
-
-  for (const device of devices) {
-    const context = await browser.newContext({ userAgent: device.userAgent });
-    await context.addInitScript(({ platform, maxTouchPoints }) => {
-      Object.defineProperties(navigator, {
-        platform: { configurable: true, value: platform },
-        maxTouchPoints: { configurable: true, value: maxTouchPoints },
-        userAgentData: {
-          configurable: true,
-          value: {
-            platform,
-            mobile: maxTouchPoints > 0,
-            // Store routing must not wait for desktop architecture hints.
-            getHighEntropyValues: () => new Promise(() => {}),
-          },
-        },
-      });
-    }, device);
-    const page = await context.newPage();
-    await page.route("**/api/join-policy", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ policy: null }),
-      });
-    });
-    await page.route("https://api.github.com/**", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        headers: { "Access-Control-Allow-Origin": "*" },
-        body: JSON.stringify([
-          {
-            draft: false,
-            prerelease: true,
-            assets: [
-              {
-                name: "Buzz_0.4.9_x86_64.AppImage",
-                browser_download_url:
-                  "https://github.com/block/buzz-app/releases/download/v0.4.9/Buzz_0.4.9_x86_64.AppImage",
-              },
-            ],
-          },
-        ]),
-      });
-    });
-
-    await page.goto("/invite/demo-code");
-    await expect(
-      page.getByRole("link", { name: "Download Buzz" }),
-      device.name,
-    ).toHaveAttribute("href", device.expectedUrl);
-    await expect(
-      page.getByRole("link", { name: "Browse releases" }),
-    ).toHaveCount(0);
-    await context.route(device.expectedUrl, (route) =>
-      route.fulfill({ contentType: "text/html", body: "Store destination" }),
-    );
-    const destination = context.waitForEvent("page");
-    await page.getByRole("link", { name: "Download Buzz" }).click();
-    await expect(await destination).toHaveURL(device.expectedUrl);
-    await context.close();
-  }
-});
-
 test("invite shows community artwork and name with a text-only fallback", async ({
   page,
 }) => {
   await page.route("**/api/join-policy", (route) =>
     route.fulfill({ json: { policy: null } }),
-  );
-  await page.route("https://api.github.com/**", (route) =>
-    route.fulfill({ json: [] }),
   );
   let metadata: { name: string; icon?: string } = {
     name: "Honeycomb Studios",
@@ -505,7 +269,7 @@ test("invite shows community artwork and name with a text-only fallback", async 
     );
     await expect(page.locator(".invite-community-icon")).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Accept invite in Buzz" }),
+      page.getByRole("link", { name: "Accept invite in The Hive" }),
     ).toHaveAttribute(
       "href",
       "buzz://join?relay=ws%3A%2F%2F127.0.0.1%3A4173&code=visual-preview",

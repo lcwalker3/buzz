@@ -258,7 +258,9 @@ void main() {
       expect(tester.widget<FrostedAppBar>(bar).nativeLargeTitle, isFalse);
       expect(tester.getSize(bar).width, 375);
       expect(
-        find.byWidgetPredicate((w) => w is Image && w.semanticLabel == 'Buzz'),
+        find.byWidgetPredicate(
+          (w) => w is Image && w.semanticLabel == 'The Hive',
+        ),
         findsOneWidget,
       );
       expect(tester.getTopLeft(bar).dy, 0);
