@@ -3,12 +3,7 @@ import buzzMark from "@/assets/invite/mark.svg";
 import "./invite-page.css";
 import { InviteCommunity } from "./InviteCommunity";
 import { claimInviteInBrowser } from "@/features/invite/invite-api";
-import {
-  BUZZ_RELEASES_URL,
-  type BuzzDownloadPlatform,
-  detectBuzzDownloadPlatform,
-  resolveBuzzDownloadUrlForPlatform,
-} from "@/shared/lib/buzz-download";
+import { appDownloadUrl } from "@/shared/lib/app-download";
 import { hasNip07Provider } from "@/shared/lib/nostr-signer";
 import { relayWsUrl } from "@/shared/lib/relay-url";
 import { Button } from "@/shared/ui/button";
@@ -63,31 +58,7 @@ export function InvitePage({ code }: { code: string }) {
   const [browserJoinError, setBrowserJoinError] = React.useState<string | null>(
     null,
   );
-  const [downloadUrl, setDownloadUrl] = React.useState(BUZZ_RELEASES_URL);
-  const [needsMacChoice, setNeedsMacChoice] = React.useState(false);
-  const [showMacChoice, setShowMacChoice] = React.useState(false);
-  const [choosingMacDownload, setChoosingMacDownload] = React.useState(false);
-  const choosingMacDownloadRef = React.useRef(false);
-  const downloadTriggerRef = React.useRef<HTMLAnchorElement>(null);
-
-  React.useEffect(() => {
-    let active = true;
-    detectBuzzDownloadPlatform(navigator).then(async (platform) => {
-      if (!active) return;
-      if (
-        platform.operatingSystem === "macos" &&
-        platform.architecture !== "arm64"
-      ) {
-        setNeedsMacChoice(true);
-        return;
-      }
-      const url = await resolveBuzzDownloadUrlForPlatform(platform);
-      if (active) setDownloadUrl(url);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
+  const downloadUrl = appDownloadUrl();
 
   React.useEffect(() => {
     fetch("/api/join-policy")
@@ -161,39 +132,6 @@ export function InvitePage({ code }: { code: string }) {
   );
   const showDocument = (title: string, markdown: string) =>
     setDocument({ title, markdown });
-  const closeMacChoice = React.useCallback(() => {
-    setShowMacChoice(false);
-    window.setTimeout(() => downloadTriggerRef.current?.focus());
-  }, []);
-  const chooseMacDownload = async (
-    event: React.MouseEvent<HTMLAnchorElement>,
-    platform: BuzzDownloadPlatform,
-  ) => {
-    event.preventDefault();
-    if (choosingMacDownloadRef.current) return;
-    choosingMacDownloadRef.current = true;
-    setChoosingMacDownload(true);
-    const downloadWindow = window.open("about:blank", "_blank");
-    if (downloadWindow) downloadWindow.opener = null;
-    setShowMacChoice(false);
-    try {
-      const url = await resolveBuzzDownloadUrlForPlatform(platform);
-      downloadWindow?.location.replace(url);
-    } finally {
-      choosingMacDownloadRef.current = false;
-      setChoosingMacDownload(false);
-    }
-  };
-
-  React.useEffect(() => {
-    if (!showMacChoice) return;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closeMacChoice();
-    };
-    window.document.addEventListener("keydown", closeOnEscape);
-    return () => window.document.removeEventListener("keydown", closeOnEscape);
-  }, [closeMacChoice, showMacChoice]);
-
   return (
     <div className="invite-page">
       <BeeField count={24} sizeScale={0.75} zIndex={-1} />
@@ -272,81 +210,20 @@ export function InvitePage({ code }: { code: string }) {
         </div>
         <p className="invite-download">
           Don&apos;t have the app?{" "}
-          <a
-            aria-expanded={needsMacChoice ? showMacChoice : undefined}
-            aria-haspopup={needsMacChoice ? "dialog" : undefined}
-            className="ml-1 font-medium text-black underline-offset-4 hover:text-black/70 hover:underline focus-visible:underline"
-            href={downloadUrl}
-            ref={downloadTriggerRef}
-            rel="noreferrer"
-            target="_blank"
-            onClick={(event) => {
-              if (!needsMacChoice) return;
-              event.preventDefault();
-              setShowMacChoice(true);
-            }}
-          >
-            Download {APP_NAME}
-          </a>
+          {downloadUrl ? (
+            <a
+              className="ml-1 font-medium text-black underline-offset-4 hover:text-black/70 hover:underline focus-visible:underline"
+              href={downloadUrl}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Download {APP_NAME}
+            </a>
+          ) : (
+            <>Ask the person who invited you how to get {APP_NAME}.</>
+          )}
         </p>
       </div>
-
-      {showMacChoice && (
-        <div
-          aria-label="Which Mac do you have?"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 text-left"
-          role="dialog"
-          onMouseDown={(event) => {
-            if (event.currentTarget === event.target) closeMacChoice();
-          }}
-        >
-          <div className="w-full max-w-lg rounded-3xl bg-white p-7 text-black shadow-xl sm:p-9">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-semibold tracking-tight">
-                  Which Mac do you have?
-                </h2>
-                <p className="mt-2 text-sm text-black/60">
-                  {APP_NAME} for Mac requires Apple Silicon. Intel Macs are not
-                  supported.
-                </p>
-              </div>
-              <button
-                aria-label="Close"
-                className="text-2xl leading-none text-black/60 hover:text-black"
-                type="button"
-                onClick={closeMacChoice}
-              >
-                ×
-              </button>
-            </div>
-            <div className="mt-6 grid gap-3">
-              <a
-                aria-disabled={choosingMacDownload}
-                className="rounded-2xl border border-black p-5 text-black no-underline hover:bg-black hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black aria-disabled:pointer-events-none aria-disabled:opacity-50"
-                href={BUZZ_RELEASES_URL}
-                onClick={(event) =>
-                  void chooseMacDownload(event, {
-                    operatingSystem: "macos",
-                    architecture: "arm64",
-                  })
-                }
-              >
-                <strong className="block text-lg">Apple Silicon Mac</strong>
-                <span className="mt-1 block text-sm">
-                  Mac with an Apple M-series chip
-                </span>
-              </a>
-            </div>
-            <p className="mt-5 text-sm leading-5">
-              <strong>Not sure?</strong> Open the Apple menu and choose{" "}
-              <strong>About This Mac</strong>. “Chip: Apple M…” means Apple
-              Silicon Mac. “Processor: Intel” means this Mac is not supported.
-            </p>
-          </div>
-        </div>
-      )}
 
       {document && (
         <div

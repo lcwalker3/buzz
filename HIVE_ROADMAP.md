@@ -43,6 +43,8 @@ until it is merged; then branch new work from `main`.
 - [ ] Create the owner's community on the Mac relay; join via community link
 - [ ] Audit and remove/disable remaining hosted endpoints (avatars CDN, push
       gateway, release/download links, invite APIs)
+      - [x] Web invite page: Block release/App Store/Play links and the
+            GitHub releases API call removed
 
 ## Phase 3 — Rebrand to The Hive (user-facing)
 - [x] Mobile app display name, iOS bundle id (com.lcwalker3.thehive), team,
@@ -78,7 +80,8 @@ Homebrew services; S3 → local MinIO.
 4. Build iOS without Builderlab defines; install on the iPhone; owner joins
    with the `wss://` link; read the phone's pubkey from the relay log; set
    `RELAY_OWNER_PUBKEY` in .env; restart relay.
-5. Web invite page: replace the Block GitHub-releases download button.
+5. ~~Web invite page: replace the Block GitHub-releases download button.~~
+   Done 2026-11-18 (optional `VITE_APP_DOWNLOAD_URL`; guidance text when unset).
 
 ## Log
 - 2026-11-18: Web repo browser rounds 1–2 (PRs #1, #2) and iOS fun features
@@ -88,3 +91,10 @@ Homebrew services; S3 → local MinIO.
   launchd); web app served at http://localhost:3000 as The Hive. User-facing
   rebrand of web + iOS, new icon, README. Auto-resume task
   `the-hive-continue-work` runs every 4 h while the Claude app is open.
+- 2026-11-18 (auto): Web invite page no longer links to Block's GitHub
+  releases, App Store or Play Store, and no longer calls the GitHub API. A
+  download link appears only if `VITE_APP_DOWNLOAD_URL` is set at build time;
+  otherwise it says to ask the inviter. tsc, biome, vite build pass; smoke
+  invite tests pass in system Chrome. Pre-existing, unrelated failure: "home
+  page shows repositories section" (`getByText('Repositories')` matches 2
+  elements). Playwright's bundled browsers are not installed on the Mac.
