@@ -17,8 +17,20 @@ launcher="${HIVE_LAUNCHER_PATH:-$HOME/Desktop/The Hive.app}"
 # shellcheck disable=SC1091
 . "$repo_root/bin/activate-hermit" >/dev/null 2>&1 || true
 
+# Build your community's address into the app so the welcome screen offers a
+# one-tap "Join" button. Defaults to RELAY_URL from .env; set
+# HIVE_DEFAULT_COMMUNITY_URL to use another, or to "" for none.
+if [[ -z "${HIVE_DEFAULT_COMMUNITY_URL+set}" && -f "$repo_root/.env" ]]; then
+  HIVE_DEFAULT_COMMUNITY_URL="$(grep -E '^RELAY_URL=' "$repo_root/.env" | tail -1 | cut -d= -f2- | tr -d "\"'")"
+fi
+defines=()
+if [[ -n "${HIVE_DEFAULT_COMMUNITY_URL:-}" ]]; then
+  defines+=(--dart-define="HIVE_DEFAULT_COMMUNITY_URL=$HIVE_DEFAULT_COMMUNITY_URL")
+  echo "Built-in community: $HIVE_DEFAULT_COMMUNITY_URL"
+fi
+
 echo "1/4 Building the app for the Simulator (a few minutes the first time)"
-(cd "$repo_root/mobile" && flutter build ios --simulator --debug)
+(cd "$repo_root/mobile" && flutter build ios --simulator --debug "${defines[@]}")
 # The bundle's file name follows the Xcode product name, so find it.
 built="$(find "$repo_root/mobile/build/ios/iphonesimulator" -maxdepth 1 -name '*.app' -type d | head -1)"
 [[ -n "$built" ]] || { echo "build did not produce an app in mobile/build/ios/iphonesimulator" >&2; exit 1; }

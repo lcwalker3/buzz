@@ -30,6 +30,15 @@ class _CommunityLinkForm extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final localController = useTextEditingController();
     final controller = this.controller ?? localController;
+    // Start the address field filled with the built-in community, if any.
+    useEffect(() {
+      if (onCreate == null &&
+          builtInCommunityUrl.isNotEmpty &&
+          controller.text.isEmpty) {
+        controller.text = builtInCommunityUrl;
+      }
+      return null;
+    }, [controller]);
     final error = useState<String?>(null);
 
     final flow = HostedEnvironment.enabled
@@ -133,6 +142,9 @@ class _CommunityLinkForm extends HookConsumerWidget {
                   ?.copyWith(color: context._onboardingInk),
           cursorColor: context._onboardingInk,
           decoration: InputDecoration(
+            // Keep the label inside the box: a floating label sits above the
+            // field's top edge, where the onboarding layout clips it.
+            floatingLabelBehavior: FloatingLabelBehavior.never,
             labelText: onCreate != null
                 ? 'Community address'
                 : 'Community link or address',

@@ -124,7 +124,7 @@ void main() {
       _setTheme(container, 'dracula');
       const local = CommunityThemePreference(
         theme: 'dracula',
-        accent: '#3b82f6',
+        accent: '#d7d72e',
         followSystem: true,
       );
       expect(container.read(communityThemeProvider), local);

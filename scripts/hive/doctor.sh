@@ -54,6 +54,11 @@ if [[ -n "${RELAY_OPERATOR_PUBKEYS:-}" && -z "${RELAY_OPERATOR_API_ORIGIN:-}" ]]
 elif [[ -n "${RELAY_OPERATOR_PUBKEYS:-}" ]]; then
   ok "Operator key set (communities can be created)"
 fi
+
+case "${HIVE_REQUIRE_RELAY_MEMBERSHIP:-false}" in
+  true | 1) ok "Invite-only: people need an invite to join" ;;
+  *) warn "Open to anyone who can reach it: HIVE_REQUIRE_RELAY_MEMBERSHIP is off, so anyone on your Tailscale network can join without an invite (turn it on after setting an owner)" ;;
+esac
 echo
 
 echo "Services"

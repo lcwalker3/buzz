@@ -8,7 +8,7 @@ the [knowledge base](README.md).
 | Where | How |
 |---|---|
 | **This Mac** | Double-click **The Hive** on your Desktop. An iPhone window opens with the full app. The first launch takes a few seconds. |
-| **Your iPhone** | Open The Hive app. The phone needs Tailscale switched on. |
+| **Your iPhone** | Open The Hive app. The phone needs Tailscale switched on. To update it, connect it to the Mac and run `scripts/hive/install-iphone-app.sh`. |
 | **A browser** | Go to `https://lowells-macbook-pro.tail45da68.ts.net`. The web app has the invite page and the code browser; chat is in the apps. |
 
 The Mac must be on (asleep is fine if "Prevent automatic sleeping" is on in
@@ -16,8 +16,9 @@ Battery/Energy settings) for the phone to reach The Hive.
 
 ## 2. First-time setup (once)
 
-1. **Join your community.** In the app, choose to enter a community link and
-   use `wss://lowells-macbook-pro.tail45da68.ts.net`.
+1. **Join your community.** In the Desktop app, tap **Join lowells-macbook-pro**
+   (your address is built in). On the phone, choose **Enter a community link**
+   and use `wss://lowells-macbook-pro.tail45da68.ts.net`.
 2. **Make yourself the owner.** In the app: Settings → Connection → copy your
    public key (it starts with `npub`). On the Mac, in Terminal:
 
@@ -36,7 +37,12 @@ Battery/Energy settings) for the phone to reach The Hive.
 
 4. **Check everything:** `scripts/hive/doctor.sh` should end with "All good".
 
-## 3. Everyday use
+## 3. Same account on phone and Mac
+
+Move your key from the phone to the Desktop app once, and both show the
+same you. Steps: [Phone and Mac in sync](devices.md).
+
+## 4. Everyday use
 
 - **Channels.** Tap **+** → New channel. New channels are **private** by
   default (only people you add can see them). Choose **Public** if everyone
@@ -53,7 +59,7 @@ Battery/Energy settings) for the phone to reach The Hive.
 - **Your colour.** Settings → Appearance → **Chat color** (Honey is the
   default), plus light or dark mode.
 
-## 4. Invite someone
+## 5. Invite someone
 
 1. Make sure they can reach your Mac: invite them to your Tailscale network
    (Tailscale admin console → Share or Invite).
@@ -61,18 +67,18 @@ Battery/Energy settings) for the phone to reach The Hive.
    **once** and last **7 days** by default; change that if you need to.
 3. Send them the link privately. When they open it, they join.
 
-## 5. Add a second community (optional)
+## 6. Add a second community (optional)
 
 Most people only need one community and use channels to separate topics. If
 you want a completely separate space (for example family and work), follow
 [Communities and workspaces](communities.md#adding-another-community).
 
-## 6. AI agents
+## 7. AI agents
 
 Agents are teammates with their own identity (CEO, CTO, Programmer). Setting
 one up needs an AI provider key from you. See [AI agents](agents.md).
 
-## 7. Keeping it healthy
+## 8. Keeping it healthy
 
 | Task | Command (in `~/Projects/Buzz/buzz`) |
 |---|---|
@@ -80,6 +86,7 @@ one up needs an AI provider key from you. See [AI agents](agents.md).
 | Back up now | `scripts/hive/backup.sh` (saved in `~/HiveBackups`) |
 | Restart the server | `launchctl kickstart -k gui/$(id -u)/com.thehive.relay` |
 | Update the Desktop app after new code | `scripts/hive/make-desktop-app.sh` |
+| Update the iPhone app | `scripts/hive/install-iphone-app.sh` |
 | See server errors | `tail -n 50 ~/Library/Logs/TheHive/relay.log` |
 
 If something is wrong, run the health check first: it says what to fix. More

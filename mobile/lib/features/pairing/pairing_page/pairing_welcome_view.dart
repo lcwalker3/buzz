@@ -73,7 +73,25 @@ class _PairingWelcomeView extends HookWidget {
         : existingUser
         ? 2
         : 1;
+    final builtInLink = builtInCommunityUrl.isEmpty
+        ? null
+        : parseCommunityLinkInput(builtInCommunityUrl);
+    // The parsed link is an in-app route, so name the button after the
+    // address itself: its first label, e.g. "my-mac" for my-mac.tailnet.ts.net.
+    final builtInName =
+        Uri.tryParse(builtInCommunityUrl)?.host.split('.').first ?? '';
     List<Widget> connectionActions() => [
+      if (builtInLink != null) ...[
+        const SizedBox(height: Grid.xxs),
+        FilledButton(
+          key: const Key('built-in-community-join'),
+          style: context._onboardingButtonStyle,
+          onPressed: isBusy ? null : () => onOpenCommunity(builtInLink),
+          child: Text(
+            builtInName.isEmpty ? 'Join your community' : 'Join $builtInName',
+          ),
+        ),
+      ],
       const SizedBox(height: Grid.xxs),
       FilledButton(
         style: context._onboardingGlassButtonStyle,

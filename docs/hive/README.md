@@ -9,6 +9,7 @@ with **How to**, then use the other guides when you need more detail.
 | [Concepts](concepts.md) | What a community, channel, thread, forum, agent and role are |
 | [Communities and workspaces](communities.md) | How to create a community, add a second one, archive one |
 | [Running the server](server.md) | The services on the Mac, logs, restarts, updates |
+| [Phone and Mac in sync](devices.md) | Installing the apps and using one account on both |
 | [Phone and remote access](remote-access.md) | Reaching The Hive from your iPhone with Tailscale |
 | [Owner, invites and members](members.md) | Becoming owner, inviting people, roles, removing someone |
 | [AI agents](agents.md) | Giving agents their own identity and running them (CEO, CTO, Programmer) |

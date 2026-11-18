@@ -66,7 +66,7 @@
     ""
   ],
   "baseReaders": {
-    "note": "v1 accents accepted by Mobile and Desktop before Chartreuse; anything a client publishes without a picker action must stay in this set",
+    "note": "v1 accents accepted by Mobile and Desktop before Chartreuse; anything a client publishes without a picker action must stay in this set. The Hive: every client reading a Hive community knows Honey (#d7d72e), so it is also accepted here and is the seeded default.",
     "accepted": [
       "neutral",
       "#3b82f6",
@@ -77,7 +77,8 @@
       "#ec4899",
       "#c0a2f1",
       "#a855f7",
-      "#6366f1"
+      "#6366f1",
+      "#d7d72e"
     ]
   }
 }

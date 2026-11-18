@@ -77,7 +77,9 @@ final class NativeCreateChannelViewController: UITableViewController, UITextView
   private let pageColor: UIColor
   private let rowColor: UIColor
   private var temporary = false
-  private var visibility = "open"
+  // The Hive is private by default: new channels are invite-only unless the
+  // creator picks Public (matches the Flutter sheet).
+  private var visibility = "private"
   private var ttl = 604800
   private var busy = false
   private let expiry: [(String, Int)] = [

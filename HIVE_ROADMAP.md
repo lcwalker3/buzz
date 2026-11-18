@@ -151,6 +151,17 @@ stored on the phone) — only names in code.
 - [x] `scripts/hive/make-desktop-app.sh`: "The Hive" on the Desktop opens the
       iPhone app in the iOS Simulator
 - [x] How-to guide: docs/hive/how-to.md
+- [x] Built-in community address (`HIVE_DEFAULT_COMMUNITY_URL`, set from
+      RELAY_URL by the build scripts): one-tap Join on the welcome screen
+- [x] `scripts/hive/install-iphone-app.sh`: release build installed on the
+      paired iPhone; docs/hive/devices.md for one account on both devices
+- [x] Onboarding fixes: link-field label no longer clipped, setup screens
+      use the cream theme, launch screen is the honeycomb (was the Buzz bee),
+      native channel sheet private by default, Honey seeded as chat colour
+- [x] Startup git storage self-test sized for one Mac (8x1, was 32x3):
+      372 -> 28 retry warnings per restart
+- [ ] NEEDS OWNER: turn on invite-only (HIVE_REQUIRE_RELAY_MEMBERSHIP) after
+      set-owner; add existing devices as members first
 - [ ] NEEDS OWNER: run `scripts/hive/set-owner.sh <your npub>` and
       `scripts/hive/install-backup-agent.sh`
 
