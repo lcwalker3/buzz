@@ -5,6 +5,7 @@ import buzzAppIcon from "@/assets/app-icon@3x.png";
 import { relayWsUrl } from "@/shared/lib/relay-url";
 import { ThemeToggle } from "@/shared/theme/ThemeToggle";
 import { type BrowseState, browseSearch } from "../browse-search";
+import { APP_NAME } from "@/shared/brand";
 
 function relayHost(): string {
   try {
@@ -40,7 +41,9 @@ export function RepoShell({
             >
               <img alt="" className="h-full w-full" src={buzzAppIcon} />
             </span>
-            <span className="text-sm font-semibold tracking-tight">Buzz</span>
+            <span className="text-sm font-semibold tracking-tight">
+              {APP_NAME}
+            </span>
           </Link>
           {host && (
             <>

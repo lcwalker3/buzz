@@ -6,10 +6,10 @@ import {
   BUZZ_RELEASES_URL,
 } from "../../src/shared/lib/buzz-download";
 
-test("home page loads with Buzz branding", async ({ page }) => {
+test("home page loads with The Hive branding", async ({ page }) => {
   await page.goto("/");
   await expect(
-    page.getByRole("main").getByRole("img", { name: "Buzz" }),
+    page.getByRole("main").getByRole("img", { name: "The Hive" }),
   ).toBeVisible();
 });
 
@@ -18,7 +18,7 @@ test("home page shows repositories section", async ({ page }) => {
   await expect(page.getByText("Repositories")).toBeVisible();
 });
 
-test("invite requires age and legal consent before opening Buzz", async ({
+test("invite requires age and legal consent before opening The Hive", async ({
   page,
 }) => {
   await page.route("**/api/join-policy", async (route) => {
@@ -69,7 +69,7 @@ test("invite requires age and legal consent before opening Buzz", async ({
   await page.goto("/invite/demo-code");
 
   await expect(
-    page.getByRole("link", { name: "Download Buzz" }),
+    page.getByRole("link", { name: "Download The Hive" }),
   ).toHaveAttribute(
     "href",
     "https://github.com/block/buzz-app/releases/download/v0.4.9/Buzz_0.4.9_x64_unsigned.exe",
@@ -80,10 +80,10 @@ test("invite requires age and legal consent before opening Buzz", async ({
 
   const ageConfirmation = page.getByLabel("I am 18 years of age or older.");
   const agreementConfirmation = page.getByLabel(
-    "I agree to the Buzz Terms of Service and Privacy Policy.",
+    "I agree to the Terms of Service and Privacy Policy.",
   );
   const acceptInvite = page.getByRole("button", {
-    name: "Accept invite in Buzz",
+    name: "Accept invite in The Hive",
   });
 
   await expect(ageConfirmation).toBeVisible();
@@ -109,7 +109,7 @@ test("invite requires age and legal consent before opening Buzz", async ({
   await page
     .locator("label")
     .filter({
-      hasText: "I agree to the Buzz Terms of Service and Privacy Policy.",
+      hasText: "I agree to the Terms of Service and Privacy Policy.",
     })
     .click({ position: { x: 8, y: 8 } });
   await expect(agreementConfirmation).toBeChecked();
@@ -326,7 +326,7 @@ for (const architecture of ["unknown", "x64"]) {
     });
 
     await page.goto("/invite/demo-code");
-    const download = page.getByRole("link", { name: "Download Buzz" });
+    const download = page.getByRole("link", { name: "Download The Hive" });
     await expect(download).toHaveAttribute("aria-haspopup", "dialog");
     await download.click();
 
@@ -342,7 +342,7 @@ for (const architecture of ["unknown", "x64"]) {
     );
     await expect(
       chooser.getByText(
-        "Buzz for Mac requires Apple Silicon. Intel Macs are not supported.",
+        "The Hive for Mac requires Apple Silicon. Intel Macs are not supported.",
       ),
     ).toBeVisible();
     await expect(chooser.getByText("About This Mac")).toBeVisible();
@@ -459,7 +459,7 @@ test("invite download links to the appropriate platform destination", async ({
 
     await page.goto("/invite/demo-code");
     await expect(
-      page.getByRole("link", { name: "Download Buzz" }),
+      page.getByRole("link", { name: "Download The Hive" }),
       device.name,
     ).toHaveAttribute("href", device.expectedUrl);
     await expect(
@@ -469,7 +469,7 @@ test("invite download links to the appropriate platform destination", async ({
       route.fulfill({ contentType: "text/html", body: "Store destination" }),
     );
     const destination = context.waitForEvent("page");
-    await page.getByRole("link", { name: "Download Buzz" }).click();
+    await page.getByRole("link", { name: "Download The Hive" }).click();
     await expect(await destination).toHaveURL(device.expectedUrl);
     await context.close();
   }
@@ -505,7 +505,7 @@ test("invite shows community artwork and name with a text-only fallback", async 
     );
     await expect(page.locator(".invite-community-icon")).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Accept invite in Buzz" }),
+      page.getByRole("link", { name: "Accept invite in The Hive" }),
     ).toHaveAttribute(
       "href",
       "buzz://join?relay=ws%3A%2F%2F127.0.0.1%3A4173&code=visual-preview",

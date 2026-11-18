@@ -904,7 +904,7 @@ void main() {
             const MeGroups(
               channels: [_channelId],
               groups: [
-                {'id': 'buzz', 'name': 'Buzz', 'defaultTemplateId': ''},
+                {'id': 'buzz', 'name': 'The Hive', 'defaultTemplateId': ''},
               ],
               assignments: {_channelId: 'buzz'},
             ),
@@ -925,7 +925,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Chat settings'), findsOneWidget);
     expect(find.text('Workspace'), findsOneWidget);
-    expect(find.text('Buzz'), findsOneWidget);
+    expect(find.text('The Hive'), findsOneWidget);
     expect(find.byType(ChannelDetailsPage), findsNothing);
     final settingsAvatar = find.descendant(
       of: find.byType(MeChatSettings),
@@ -977,7 +977,7 @@ void main() {
     await expectStableMask();
     await tester.pumpAndSettle();
     expect(find.text('No Workspace'), findsOneWidget);
-    expect(find.text('Buzz'), findsOneWidget);
+    expect(find.text('The Hive'), findsOneWidget);
     expect(
       find.ancestor(
         of: find.text('No Workspace'),

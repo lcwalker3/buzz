@@ -13,6 +13,7 @@ import '../../shared/deeplink/deep_link.dart';
 import '../../shared/relay/relay_provider.dart';
 import '../../shared/relay/relay_session.dart';
 import '../../shared/relay/relay_validation.dart';
+import '../../shared/brand.dart';
 
 final inviteJoinHttpClientProvider = Provider<http.Client>((ref) {
   final client = ref.watch(hostedHttpClientFactoryProvider)();
@@ -514,7 +515,7 @@ String _friendlyInviteError(Object error) {
   }
   if (message.contains('invite_invalid')) return 'This invite is not valid.';
   if (message.contains('join_policy_required')) {
-    return 'Review this community’s join requirements in your browser, then return to Buzz.';
+    return 'Review this community’s join requirements in your browser, then return to $appName.';
   }
   final failure = transportFailure(error);
   if (failure == TransportFailure.insecure) {

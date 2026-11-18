@@ -8,6 +8,7 @@ import 'hosted_environment.dart';
 import 'hosted_flow_provider.dart';
 import '../widgets/confirmation_dialog.dart';
 import '../widgets/feedback_snackbar.dart';
+import '../brand.dart';
 
 /// Signs this device out: removes every community, and in a public build ends
 /// the Builderlab session. Each community's key goes to this device's saved
@@ -27,7 +28,7 @@ Future<void> confirmSignOut(BuildContext context, WidgetRef ref) async {
       context: context,
       title: 'Sign out?',
       message:
-          'You’ll need to sign in again to use Buzz on this device. '
+          'You’ll need to sign in again to use $appName on this device. '
           'Your identities stay saved on this device.',
       confirmLabel: 'Sign out',
     );

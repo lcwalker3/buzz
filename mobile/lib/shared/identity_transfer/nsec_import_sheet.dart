@@ -9,6 +9,7 @@ import '../utils/string_utils.dart';
 import '../widgets/modal_presentation.dart';
 import '../widgets/onboarding_step_page.dart';
 import 'nsec_transfer.dart';
+import '../brand.dart';
 
 /// Lets the user inspect the public identity before explicitly importing it.
 /// [onImport] is the secure persistence boundary, not an observable UI store.
@@ -190,7 +191,7 @@ class NsecImportSheet extends HookWidget {
       return OnboardingStepPage(
         title: 'Import identity',
         subtitle:
-            'Bring your Buzz identity from another device. Check the public identity before continuing.',
+            'Bring your $appName identity from another device. Check the public identity before continuing.',
         onBack: () {
           if (cancelled.value || (onBack == null && busy.value)) return;
           cancelled.value = true;

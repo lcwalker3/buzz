@@ -12,6 +12,7 @@ import { ConnectButton } from "./ConnectButton";
 import { OrgSidebar, usePeople } from "./OrgSidebar";
 import { RepoListItem } from "./RepoListItem";
 import { RepoShell } from "./RepoShell";
+import { APP_NAME } from "@/shared/brand";
 
 type SortOrder = "newest" | "oldest" | "name";
 
@@ -63,14 +64,14 @@ function CommunityEmptyState() {
           className="h-16 w-16 overflow-hidden bg-black shadow-lg"
           style={{ borderRadius: "22.37%" }}
         >
-          <img alt="Buzz" className="h-full w-full" src={buzzAppIcon} />
+          <img alt={APP_NAME} className="h-full w-full" src={buzzAppIcon} />
         </div>
         <h1 className="mt-6 text-2xl font-semibold tracking-tight">
           This community is empty
         </h1>
         <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-muted">
           Repositories pushed to this community will show up here. Open this
-          community in the Buzz desktop app to start pushing code.
+          community in {APP_NAME} to start pushing code.
         </p>
         <ConnectButton className="mt-6" />
       </div>

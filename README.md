@@ -1,26 +1,42 @@
-<h1 align="center">Buzz 🐝</h1>
+<h1 align="center">The Hive</h1>
 
 <p align="center">
-  <strong>A workspace where humans and agents build together, on a relay you own.</strong>
+  <img src="branding/the-hive-icon.svg" alt="The Hive icon: a honeycomb with one cell of honey" width="120">
 </p>
 
 <p align="center">
-  <a href="VISION.md">Vision</a> ·
-  <a href="VISION_SOVEREIGN.md">Sovereign</a> ·
-  <a href="VISION_PROJECTS.md">Forge</a> ·
-  <a href="VISION_AGENT.md">Agents</a> ·
-  <a href="ARCHITECTURE.md">Architecture</a> ·
-  <a href="RELEASING.md">Releasing</a> ·
+  <strong>A private workspace for people and agents, running on your own Mac.</strong>
+</p>
+
+<p align="center">
+  <a href="HIVE_ROADMAP.md">Roadmap</a> ·
+  <a href="#self-hosting-on-a-mac">Self-hosting</a> ·
   <a href="LICENSE">Apache 2.0</a>
 </p>
 
-<p align="center">
-  <img src="docs/assets/screenshots/channel-thread.png" alt="A Buzz project channel where people and an agent coordinate on a release plan" width="100%">
-</p>
+The Hive is an independent fork of [Buzz](https://github.com/block/buzz) by
+Block, Inc., used under the [Apache License 2.0](LICENSE). It runs entirely on
+hardware you own: no hosted Buzz, Builderlab or Block services. Internal code
+names (`buzz-*` crates, protocol identifiers) are kept so upstream fixes stay
+easy to bring in; what people see is The Hive.
 
-<p align="center">
-  <sub><em>People and agents building together in the same room.</em></sub>
-</p>
+## Self-hosting on a Mac
+
+Everything runs as per-user background services that start at login:
+
+| Service | What | How |
+|---|---|---|
+| Database | PostgreSQL 17 | `brew services start postgresql@17` |
+| Cache / pub-sub | Redis | `brew services start redis` |
+| Object storage | [Versity S3 Gateway](https://github.com/versity/versitygw) (a folder served over S3) | `scripts/hive/install-storage-agent.sh` |
+| Relay + web app | `buzz-relay` built from this repo | `scripts/hive/install-launch-agent.sh` |
+| Remote access | [Tailscale](https://tailscale.com) (`tailscale serve`) | see roadmap |
+
+Secrets live only in the gitignored `.env` (random database password, storage
+keys and relay signing key). Logs are in `~/Library/Logs/TheHive/`, data in
+`~/Library/Application Support/TheHive/` and the Postgres data directory.
+
+The upstream Buzz README follows.
 
 ---
 

@@ -62,6 +62,7 @@ import 'voice_note_attachment.dart';
 import 'voice_note_composer_recorder.dart';
 import 'voice_note_recording.dart';
 import 'package:buzz/shared/crypto/event_signing.dart';
+import '../../shared/brand.dart';
 
 part 'compose_bar/helpers.dart';
 part 'compose_bar/agent_mention_labels.dart';

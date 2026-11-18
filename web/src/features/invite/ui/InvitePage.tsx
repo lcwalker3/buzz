@@ -17,6 +17,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { InviteJoinPolicyNotice } from "./InviteJoinPolicyNotice";
+import { APP_NAME } from "@/shared/brand";
 
 type JoinPolicy = {
   terms_markdown?: string;
@@ -196,11 +197,11 @@ export function InvitePage({ code }: { code: string }) {
   return (
     <div className="invite-page">
       <BeeField count={24} sizeScale={0.75} zIndex={-1} />
-      <img className="invite-mark" src={buzzMark} alt="Buzz" />
+      <img className="invite-mark" src={buzzMark} alt={APP_NAME} />
       <div className="invite-stack">
         <div className="invite-card">
           <h1>You're invited</h1>
-          <p className="invite-intro">Join your community on Buzz.</p>
+          <p className="invite-intro">Join your community on {APP_NAME}.</p>
           <InviteCommunity relay={relay} host={host} />
 
           <div
@@ -246,7 +247,7 @@ export function InvitePage({ code }: { code: string }) {
                 <a
                   href={`buzz://join?relay=${encodeURIComponent(relay)}&code=${encodeURIComponent(code)}`}
                 >
-                  Accept invite in Buzz
+                  Accept invite in {APP_NAME}
                 </a>
               </Button>
             ) : (
@@ -259,7 +260,7 @@ export function InvitePage({ code }: { code: string }) {
                 disabled={disabled}
                 onClick={openInvite}
               >
-                Accept invite in Buzz
+                Accept invite in {APP_NAME}
               </Button>
             )}
             {browserJoinError ? (
@@ -285,7 +286,7 @@ export function InvitePage({ code }: { code: string }) {
               setShowMacChoice(true);
             }}
           >
-            Download Buzz
+            Download {APP_NAME}
           </a>
         </p>
       </div>
@@ -307,7 +308,7 @@ export function InvitePage({ code }: { code: string }) {
                   Which Mac do you have?
                 </h2>
                 <p className="mt-2 text-sm text-black/60">
-                  Buzz for Mac requires Apple Silicon. Intel Macs are not
+                  {APP_NAME} for Mac requires Apple Silicon. Intel Macs are not
                   supported.
                 </p>
               </div>

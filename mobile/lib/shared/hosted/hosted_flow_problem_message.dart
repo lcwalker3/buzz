@@ -1,4 +1,5 @@
 import 'hosted_flow.dart';
+import '../brand.dart';
 
 String hostedFlowProblemMessage(
   HostedFlowProblem? problem,
@@ -8,7 +9,7 @@ String hostedFlowProblemMessage(
   HostedFlowProblem.unsupportedEnvironment =>
     'This community needs a different or unsupported Builderlab environment. Use an app build configured for this community.',
   HostedFlowProblem.accountSetupRequired =>
-    'This account is not eligible for Buzz yet.',
+    'This account is not eligible for $appName yet.',
   HostedFlowProblem.invitePolicyRequired =>
     'The community policy needs to be accepted again. Try again to review it.',
   HostedFlowProblem.inviteExpired =>

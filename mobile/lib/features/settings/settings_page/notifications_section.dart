@@ -45,7 +45,8 @@ class _NotificationsSection extends ConsumerWidget {
           AppListRow(
             key: const ValueKey('push-setup-retry'),
             title: 'Notification setup failed',
-            subtitle: 'You can keep using Buzz. Tap to retry notifications.',
+            subtitle:
+                'You can keep using $appName. Tap to retry notifications.',
             onTap: () => retryBuzzPushSetup(ref),
           ),
         MergeSemantics(

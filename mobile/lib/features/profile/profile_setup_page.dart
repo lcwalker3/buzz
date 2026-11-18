@@ -20,6 +20,7 @@ import 'profile_avatar_draft.dart';
 import '../../shared/widgets/playing_avatar_image.dart';
 import 'profile_setup_avatar_editor.dart';
 import 'profile_setup_empty_avatar.dart';
+import '../../shared/brand.dart';
 
 part 'profile_setup_page/form.dart';
 
