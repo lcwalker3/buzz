@@ -10,9 +10,13 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# The nightly job runs an installed copy of this script and names the .env
+# to use, so it keeps working whichever checkout installed it.
+env_file="${HIVE_ENV_FILE:-$repo_root/.env}"
+[[ -f "$env_file" ]] || { echo "backup: no .env at $env_file" >&2; exit 1; }
 set -o allexport
-# shellcheck disable=SC1091
-source "$repo_root/.env"
+# shellcheck disable=SC1090
+source "$env_file"
 set +o allexport
 
 data_dir="${HIVE_DATA_DIR:-$HOME/Library/Application Support/TheHive}"
@@ -49,7 +53,7 @@ done
 
 echo "backup: secrets"
 mkdir -p "$partial/secrets"
-cp -p "$repo_root/.env" "$partial/secrets/env"
+cp -p "$env_file" "$partial/secrets/env"
 for key in "$data_dir"/*.key; do
   [[ -f "$key" ]] && cp -p "$key" "$partial/secrets/"
 done

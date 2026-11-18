@@ -2,7 +2,8 @@
 
 `scripts/hive/backup.sh` saves the database, files, git repositories and
 secrets into a dated folder in `~/HiveBackups` (only you can read it) and
-keeps the last 14 days. Turn on a nightly run at 03:15 with:
+keeps the last 14 days. Turn on a nightly run at 03:15 with (re-run it after
+updating `backup.sh`, since the nightly job uses an installed copy):
 
 ```bash
 scripts/hive/install-backup-agent.sh

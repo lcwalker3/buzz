@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
 # Installs a per-user launchd agent that runs backup.sh every night at 03:15
 # (and catches up after the Mac wakes if it was asleep then). No administrator
-# password needed. Re-run after moving the checkout.
+# password needed. Re-run after updating backup.sh or moving the .env.
 # Uninstall with:
 #   launchctl bootout "gui/$(id -u)/com.thehive.backup"
 #   rm ~/Library/LaunchAgents/com.thehive.backup.plist
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+data_dir="${HIVE_DATA_DIR:-$HOME/Library/Application Support/TheHive}"
+# Resolve symlinks so the job reads the real .env, not a link in a worktree.
+env_file="$(python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$repo_root/.env")"
+[[ -f "$env_file" ]] || { echo "no .env at $env_file" >&2; exit 1; }
+# Run an installed copy, so the job survives moving or deleting a checkout.
+mkdir -p "$data_dir/bin"
+install -m 700 "$repo_root/scripts/hive/backup.sh" "$data_dir/bin/backup.sh"
 label="com.thehive.backup"
 plist="$HOME/Library/LaunchAgents/$label.plist"
 log_dir="$HOME/Library/Logs/TheHive"
@@ -22,11 +29,12 @@ cat > "$plist" <<PLIST
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
-    <string>$repo_root/scripts/hive/backup.sh</string>
+    <string>$data_dir/bin/backup.sh</string>
   </array>
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>HIVE_ENV_FILE</key><string>$env_file</string>
   </dict>
   <key>StartCalendarInterval</key>
   <dict>
