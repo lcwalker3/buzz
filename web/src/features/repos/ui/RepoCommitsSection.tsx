@@ -1,4 +1,11 @@
-import { Check, Copy, GitCommitHorizontal, MoreHorizontal } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  Copy,
+  GitCommitHorizontal,
+  MoreHorizontal,
+  RotateCw,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -90,12 +97,45 @@ function CommitRow({ commit }: { commit: CommitInfo }) {
   );
 }
 
+function HistoryNotice({
+  error,
+  onRetry,
+}: {
+  error: Error;
+  onRetry: () => void;
+}) {
+  return (
+    <div
+      role="alert"
+      className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-line bg-honey-soft px-4 py-3 text-sm"
+    >
+      <AlertTriangle className="h-4 w-4 shrink-0 text-honey-ink" aria-hidden />
+      <span className="min-w-0 flex-1">
+        Only the latest commit could be loaded. Older history failed:{" "}
+        <span className="text-ink-muted">{error.message}</span>
+      </span>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="flex items-center gap-1.5 rounded-md border border-line bg-panel px-2.5 py-1 text-xs font-medium hover:bg-hover focus-visible:outline-2 focus-visible:outline-honey"
+      >
+        <RotateCw className="h-3.5 w-3.5" aria-hidden />
+        Retry
+      </button>
+    </div>
+  );
+}
+
 export function RepoCommitsSection({
   commits,
   isLoading,
+  historyError = null,
+  onRetryHistory,
 }: {
   commits: CommitInfo[] | undefined;
   isLoading: boolean;
+  historyError?: Error | null;
+  onRetryHistory?: () => void;
 }) {
   if (isLoading) {
     return (
@@ -122,20 +162,25 @@ export function RepoCommitsSection({
   }
 
   return (
-    <ol className="relative space-y-6">
-      {groupByDay(commits).map((group) => (
-        <li key={group.day}>
-          <h3 className="mb-2 flex items-center gap-2 text-xs font-medium text-ink-faint">
-            <GitCommitHorizontal className="h-4 w-4" aria-hidden />
-            Commits on {group.day}
-          </h3>
-          <ul className="repo-card divide-y divide-line overflow-hidden">
-            {group.commits.map((commit) => (
-              <CommitRow key={commit.oid} commit={commit} />
-            ))}
-          </ul>
-        </li>
-      ))}
-    </ol>
+    <>
+      {historyError && onRetryHistory && (
+        <HistoryNotice error={historyError} onRetry={onRetryHistory} />
+      )}
+      <ol className="relative space-y-6">
+        {groupByDay(commits).map((group) => (
+          <li key={group.day}>
+            <h3 className="mb-2 flex items-center gap-2 text-xs font-medium text-ink-faint">
+              <GitCommitHorizontal className="h-4 w-4" aria-hidden />
+              Commits on {group.day}
+            </h3>
+            <ul className="repo-card divide-y divide-line overflow-hidden">
+              {group.commits.map((commit) => (
+                <CommitRow key={commit.oid} commit={commit} />
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ol>
+    </>
   );
 }

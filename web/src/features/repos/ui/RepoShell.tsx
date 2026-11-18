@@ -5,6 +5,7 @@ import buzzAppIcon from "@/assets/app-icon@3x.png";
 import { relayWsUrl } from "@/shared/lib/relay-url";
 import { ThemeToggle } from "@/shared/theme/ThemeToggle";
 import { type BrowseState, browseSearch } from "../browse-search";
+import { ShortcutsHelp } from "./ShortcutsHelp";
 
 function relayHost(): string {
   try {
@@ -51,6 +52,7 @@ export function RepoShell({
             </>
           )}
           <div className="ml-auto flex items-center gap-1">
+            <ShortcutsHelp />
             <ThemeToggle />
           </div>
         </div>

@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { cn } from "@/shared/lib/cn";
 import { useDocumentTitle } from "@/shared/lib/use-document-title";
 import { browseSearch } from "../browse-search";
+import { recordRecentRepo } from "../recent-repos";
 import { getMockReadme, getMockTree, mockRepoCommits } from "../mock-repos";
 import { useGitLog, useGitReadme, useGitTree } from "../use-git-browse";
 import { FileFinder } from "./FileFinder";
@@ -80,6 +81,12 @@ export function RepoFrame({
 }) {
   const { repo, repoError } = ctx;
   useDocumentTitle(path || null, repo?.name);
+
+  // Remember real (not preview) repos for the list page's "Recently viewed".
+  const repoId = repo?.id;
+  useEffect(() => {
+    if (repoId && !ctx.mock) recordRecentRepo(repoId);
+  }, [repoId, ctx.mock]);
 
   useEffect(() => {
     if (repoError) {
@@ -255,7 +262,9 @@ export function RepoDetailPage() {
   });
 
   const tree = useGitTree(ctx.owner, ctx.repoName, ctx.ref);
-  const log = useGitLog(ctx.owner, ctx.repoName, ctx.ref);
+  const log = useGitLog(ctx.owner, ctx.repoName, ctx.ref, {
+    history: tab === "commits",
+  });
   const readme = useGitReadme(ctx.owner, ctx.repoName, ctx.ref);
   const treeEntries = ctx.mock ? getMockTree("") : tree.data;
   const commits = ctx.mock ? mockRepoCommits : log.data;
@@ -273,7 +282,9 @@ export function RepoDetailPage() {
       <BrowseError error={browseError} />
       <RepoTabs
         tab={tab}
-        commitCount={commits?.length}
+        commitCount={
+          ctx.mock || tab === "commits" ? commits?.length : undefined
+        }
         branchCount={ctx.refs?.branches.length}
         onChange={(next) =>
           navigate({
@@ -311,6 +322,8 @@ export function RepoDetailPage() {
           <RepoCommitsSection
             commits={commits}
             isLoading={!ctx.mock && log.isLoading}
+            historyError={ctx.mock ? null : log.historyError}
+            onRetryHistory={() => log.retryHistory()}
           />
         ) : (
           <RepoBranchesSection

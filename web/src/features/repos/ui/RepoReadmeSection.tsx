@@ -2,7 +2,7 @@ import { BookOpen } from "lucide-react";
 
 import type { BrowseState } from "../browse-search";
 import type { ReadmeResult } from "../git-client";
-import { proseClass, RepoMarkdown } from "./RepoMarkdown";
+import { MarkdownOutline, proseClass, RepoMarkdown } from "./RepoMarkdown";
 
 export function RepoReadmeSection({
   readme,
@@ -32,11 +32,14 @@ export function RepoReadmeSection({
   if (!readme) return null;
 
   return (
-    <section className="repo-card mt-6 overflow-hidden">
-      <h2 className="flex items-center gap-2 border-b border-line px-5 py-3 text-sm font-semibold">
-        <BookOpen className="h-4 w-4 text-ink-faint" aria-hidden />
-        {readme.filename}
-      </h2>
+    <section className="repo-card mt-6">
+      <div className="flex items-center justify-between gap-2 border-b border-line py-2 pr-3 pl-5">
+        <h2 className="flex items-center gap-2 text-sm font-semibold">
+          <BookOpen className="h-4 w-4 text-ink-faint" aria-hidden />
+          {readme.filename}
+        </h2>
+        <MarkdownOutline content={readme.content} />
+      </div>
       <div className={`${proseClass} px-6 py-5 sm:pl-8`}>
         <RepoMarkdown
           content={readme.content}
