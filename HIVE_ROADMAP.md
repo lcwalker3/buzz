@@ -83,6 +83,10 @@ Homebrew services; S3 → local MinIO.
       - [x] `vite` 8.0.16 → 8.1.6 (shared by web, admin-web, desktop;
             fixes 2 high + 4 moderate + 1 low advisories). Lockfile-only;
             brings rolldown 1.0.3 → 1.1.8 and its wasm helpers along.
+      - [x] `postcss-selector-parser` 6.0.10 → 6.1.5 (web's
+            `@tailwindcss/typography`; fixes 1 moderate advisory). Typography
+            pins 6.0.10 exactly, so this is a scoped pnpm override in
+            `pnpm-workspace.yaml`; built CSS is byte-identical.
 
 ## Phase 6 — Remove every "buzz" (owner decision 2026-11-18)
 Scope at start: ~45k occurrences in 3,324 files, 30 crates, ~1,400 paths.
@@ -249,3 +253,15 @@ stored on the phone) — only names in code.
   (R6 owner decision) plus `@vitest/mocker` 4.1.12 (admin-web) and
   `postcss-selector-parser` 6.1.5 (web). Tailscale, phone install and owner
   pubkey still wait on the owner.
+- 2026-11-19 (auto): Phase 4, `postcss-selector-parser` 6.0.10 → 6.1.5
+  (moderate advisory: quadratic-time flat selector parsing; fixed in 6.1.5,
+  published 2026-10-19). `@tailwindcss/typography` 0.5.20 (still its latest)
+  pins 6.0.10 exactly, so the fix is a scoped override
+  `@tailwindcss/typography>postcss-selector-parser: 6.1.5` in
+  `pnpm-workspace.yaml`, next to the existing linkify-it override. Lockfile
+  diff touches only that package. Web tsc, biome, vite build pass; the built
+  CSS file is byte-identical to before. Not checked: web e2e (Playwright
+  browsers not installed). `pnpm audit`: 15 advisories, all but one
+  (`@vitest/mocker` 4.1.11 in admin-web, next candidate) are in the
+  deprecated desktop/ app (R6 owner decision). Tailscale, phone install and
+  owner pubkey still wait on the owner.
