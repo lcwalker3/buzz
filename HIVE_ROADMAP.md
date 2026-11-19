@@ -80,6 +80,9 @@ Homebrew services; S3 → local MinIO.
             web already used.
       - [x] `source-map-js` 1.2.1 → 1.2.2 (via postcss/css-tree in web,
             admin-web, desktop; fixes 1 high advisory). Lockfile-only.
+      - [x] `vite` 8.0.16 → 8.1.6 (shared by web, admin-web, desktop;
+            fixes 2 high + 4 moderate + 1 low advisories). Lockfile-only;
+            brings rolldown 1.0.3 → 1.1.8 and its wasm helpers along.
 
 ## Phase 6 — Remove every "buzz" (owner decision 2026-11-18)
 Scope at start: ~45k occurrences in 3,324 files, 30 crates, ~1,400 paths.
@@ -233,4 +236,16 @@ stored on the phone) — only names in code.
   tsc and vite build pass. Not checked: desktop/ (deprecated), web e2e
   (Playwright browsers not installed). `pnpm audit`: 21 advisories. Next
   candidate: vite 8.1.6 in admin-web. Tailscale, phone install and owner
+  pubkey still wait on the owner.
+- 2026-11-19 (auto): Phase 4, `vite` 8.0.16 → 8.1.6 (high advisories in
+  launch-editor / `server.fs.allow`, all fixed in >=8.1.6; 8.1.6 published
+  2026-10-06). Lockfile-only; one vite copy is shared by web, admin-web and
+  desktop. pnpm also pulled unrelated bumps (@babel/runtime, tslib, a second
+  postcss/lightningcss copy); those were trimmed so only vite and its
+  rolldown subtree changed, and `pnpm install --frozen-lockfile` accepts it.
+  Web tsc, biome, vite build pass; admin-web tsc, vite build, vitest pass;
+  web app still serves at http://localhost:3000. Not checked: desktop/
+  (deprecated), web e2e. `pnpm audit`: 16 advisories, now mostly desktop/
+  (R6 owner decision) plus `@vitest/mocker` 4.1.12 (admin-web) and
+  `postcss-selector-parser` 6.1.5 (web). Tailscale, phone install and owner
   pubkey still wait on the owner.
