@@ -75,6 +75,9 @@ Homebrew services; S3 → local MinIO.
             `^1.5.4` range.
       - [x] `nanoid` 3.3.16/3.3.17 → 3.3.20 (via postcss in web, admin-web,
             desktop; fixes 1 high advisory). Lockfile-only.
+      - [x] `postcss` 8.5.19 → 8.5.26 (admin-web's vite; fixes 1
+            moderate advisory). Lockfile-only; deduped onto the 8.5.26 copy
+            web already used.
 
 ## Phase 6 — Remove every "buzz" (owner decision 2026-11-18)
 Scope at start: ~45k occurrences in 3,324 files, 30 crates, ~1,400 paths.
@@ -214,3 +217,11 @@ stored on the phone) — only names in code.
   lists 23 (new advisories published since the last run); next candidates:
   vite 8.1.6, postcss 8.5.23+. Tailscale, phone install and owner pubkey
   still wait on the owner.
+- 2026-11-19 (auto): Phase 4, `postcss` 8.5.19 → 8.5.26 (moderate advisory,
+  admin-web's vite 8.0.16 needs `^8.5.15`). Lockfile-only: the stale copy was
+  dropped so everything shares 8.5.26. Web tsc, biome, vite build pass;
+  admin-web tsc, vite build pass (it has no unit tests). `pnpm audit`: 22
+  advisories; postcss gone. Next candidates: `source-map-js` 1.2.2 (high,
+  via postcss), then vite 8.1.6 in admin-web; the rest are mostly in the
+  deprecated desktop/ app (R6 owner decision). Tailscale, phone install and
+  owner pubkey still wait on the owner.
