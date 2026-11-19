@@ -73,6 +73,8 @@ Homebrew services; S3 → local MinIO.
       - [x] `seroval` 1.5.4 → 1.8.1 (web router runtime; fixes 1 critical +
             4 high advisories). Lockfile-only; still within router-core's
             `^1.5.4` range.
+      - [x] `nanoid` 3.3.16/3.3.17 → 3.3.20 (via postcss in web, admin-web,
+            desktop; fixes 1 high advisory). Lockfile-only.
 
 ## Phase 6 — Remove every "buzz" (owner decision 2026-11-18)
 Scope at start: ~45k occurrences in 3,324 files, 30 crates, ~1,400 paths.
@@ -202,4 +204,13 @@ stored on the phone) — only names in code.
   `HIVE_PUSH_GATEWAY_URL` is set). Pre-existing on this branch, untouched:
   `dart format` flags onboarding_wordmark.dart and
   channel_detail_page_test.dart. Tailscale, phone install and owner pubkey
+  still wait on the owner.
+- 2026-11-18 (auto): Phase 4, `nanoid` 3.3.16/3.3.17 → 3.3.20 (high
+  advisory, pulled in by postcss). Lockfile-only; an unrelated
+  `@babel/runtime` bump that pnpm pulled along was removed to keep this one
+  package. `pnpm install --frozen-lockfile` OK; web tsc, biome, vite build and
+  admin-web vite build pass. Not checked: desktop/ (deprecated). Remaining
+  Phase 2 audit hits are behind Builderlab build defines. `pnpm audit` now
+  lists 23 (new advisories published since the last run); next candidates:
+  vite 8.1.6, postcss 8.5.23+. Tailscale, phone install and owner pubkey
   still wait on the owner.
