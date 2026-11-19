@@ -87,6 +87,9 @@ Homebrew services; S3 → local MinIO.
             `@tailwindcss/typography`; fixes 1 moderate advisory). Typography
             pins 6.0.10 exactly, so this is a scoped pnpm override in
             `pnpm-workspace.yaml`; built CSS is byte-identical.
+      - [x] `vitest` 4.1.11 → 4.1.12 (admin-web test runner; its exact
+            pin on `@vitest/mocker` fixes 2 moderate advisories).
+            Lockfile-only; within admin-web's `^4.1.1`.
 
 ## Phase 6 — Remove every "buzz" (owner decision 2026-11-18)
 Scope at start: ~45k occurrences in 3,324 files, 30 crates, ~1,400 paths.
@@ -265,3 +268,15 @@ stored on the phone) — only names in code.
   (`@vitest/mocker` 4.1.11 in admin-web, next candidate) are in the
   deprecated desktop/ app (R6 owner decision). Tailscale, phone install and
   owner pubkey still wait on the owner.
+- 2026-11-19 (auto): Phase 4, `vitest` 4.1.11 → 4.1.12 in admin-web (fixes
+  `@vitest/mocker` GHSA-qxg6-89mg-rqv8 and GHSA-xp26-3454-mjgp, both
+  moderate; vitest pins mocker exactly, so vitest itself moves; 4.1.12
+  published 2026-10-15). Lockfile-only: pnpm also bumped chai, tinyrainbow,
+  obug, std-env, tinyexec, @types/estree, @jridgewell/sourcemap-codec and
+  @babel/runtime; those were trimmed (the old versions satisfy 4.1.12's
+  ranges), so only the 8 vitest-family packages changed, and
+  `pnpm install --frozen-lockfile` accepts it. admin-web tsc, vite build,
+  vitest run (no test files) pass; web tsc, biome, vite build pass.
+  `pnpm audit`: 13 advisories, all in the deprecated desktop/ app (R6 owner
+  decision: delete or rename it). Not checked: desktop/, web e2e. Tailscale,
+  phone install and owner pubkey still wait on the owner.
