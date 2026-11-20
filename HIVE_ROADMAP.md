@@ -104,6 +104,9 @@ Homebrew services; S3 → local MinIO.
       - [x] Flutter: `crypto` 3.0.7 → 3.0.8 (direct dependency used for
             hashing in relay auth, media upload, NIP-OA). Lockfile-only;
             within `^3.0.7`.
+      - [x] Flutter: `clock` 1.1.2 → 1.1.3 (direct dependency for
+            testable time in presence cache and Your Hive stats).
+            Lockfile-only; within its existing constraint.
 
 ## Phase 6 — Remove every "buzz" (owner decision 2026-11-18)
 Scope at start: ~45k occurrences in 3,324 files, 30 crates, ~1,400 paths.
@@ -333,3 +336,11 @@ stored on the phone) — only names in code.
   Not verified on the phone. Next Flutter candidates, one per run: patch
   bumps such as `clock`, `intl`, `shared_preferences`, `url_launcher`.
   Tailscale, phone install and owner pubkey still wait on the owner.
+- 2026-11-20 (auto): Phase 4, Flutter: `clock` 1.1.2 → 1.1.3 via
+  `flutter pub upgrade clock` (commit f63c802c5); pubspec.lock is the only
+  file changed (one package, no transitive moves). flutter analyze clean;
+  flutter test for test/shared and test/features/profile (the clock users)
+  passes, 1,873 tests. dart format still flags only the two pre-existing
+  files. Not verified on the phone. Next Flutter candidates, one per run:
+  `intl`, `shared_preferences`, `url_launcher`, `share_plus`. Tailscale,
+  phone install and owner pubkey still wait on the owner.
