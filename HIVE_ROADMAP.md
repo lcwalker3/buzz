@@ -94,8 +94,10 @@ Homebrew services; S3 → local MinIO.
             RUSTSEC hits are documented ignores in `deny.toml`). Yanked
             `async-executor` 1.14.0 → 1.14.1 (via zbus in the dev-only
             `buzz-mesh-smoke` path; not linked into the relay).
-            Lockfile-only. Still yanked: `nostr-sdk` 0.45.1 (via mesh-llm;
-            0.45.6 available, next candidate).
+            Lockfile-only.
+      - [x] Rust: yanked `nostr-sdk` 0.45.1 → 0.45.6 (via mesh-llm, only
+            under the dev-only `buzz-mesh-smoke`). Lockfile-only, one
+            package; no yanked crates remain.
 
 ## Phase 6 — Remove every "buzz" (owner decision 2026-11-18)
 Scope at start: ~45k occurrences in 3,324 files, 30 crates, ~1,400 paths.
@@ -296,3 +298,13 @@ stored on the phone) — only names in code.
   0.45.6 (via mesh-llm), and the now-stale `RUSTSEC-2026-0381` ignore in
   deny.toml. Tailscale, phone install and owner pubkey still wait on the
   owner.
+- 2026-11-20 (auto): Phase 4, Rust: yanked `nostr-sdk` 0.45.1 → 0.45.6
+  (mesh-llm-client / mesh-llm-host-runtime, reached only through the
+  dev-only `buzz-mesh-smoke`; not linked into the relay). `cargo update`
+  also reshuffled `windows-sys` picks for 10 Windows-only crates; those were
+  trimmed so the lockfile diff is the one package, and `cargo metadata
+  --locked` accepts it. `cargo build --release --locked -p buzz-relay` OK (no
+  relay change, no restart); `cargo test --locked -p buzz-mesh-smoke` passes
+  (no unit tests); `cargo deny check advisories` OK with no yanked crates.
+  Next: drop the now-unmatched `RUSTSEC-2026-0381` ignore in deny.toml.
+  Tailscale, phone install and owner pubkey still wait on the owner.
