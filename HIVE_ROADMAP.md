@@ -101,6 +101,9 @@ Homebrew services; S3 → local MinIO.
       - [x] Rust: dropped the stale `RUSTSEC-2026-0381` (webpki-roots)
             ignore from `deny.toml`; the advisory no longer matches the
             lockfile, so `cargo deny` warned about an unused ignore.
+      - [x] Flutter: `crypto` 3.0.7 → 3.0.8 (direct dependency used for
+            hashing in relay auth, media upload, NIP-OA). Lockfile-only;
+            within `^3.0.7`.
 
 ## Phase 6 — Remove every "buzz" (owner decision 2026-11-18)
 Scope at start: ~45k occurrences in 3,324 files, 30 crates, ~1,400 paths.
@@ -321,3 +324,12 @@ stored on the phone) — only names in code.
   Flutter package review (one package per run) and the 13 desktop/ npm
   advisories (R6 owner decision). Tailscale, phone install and owner pubkey
   still wait on the owner.
+- 2026-11-20 (auto): Phase 4, Flutter: `crypto` 3.0.7 → 3.0.8 via
+  `flutter pub upgrade crypto`; pubspec.lock is the only file changed (one
+  package, no transitive moves). flutter analyze clean; flutter test for
+  test/shared, test/features/agents and the channel notices journey (the
+  crypto users) passes, 1,733 tests. dart format still flags only the two
+  pre-existing files (onboarding_wordmark.dart, channel_detail_page_test.dart).
+  Not verified on the phone. Next Flutter candidates, one per run: patch
+  bumps such as `clock`, `intl`, `shared_preferences`, `url_launcher`.
+  Tailscale, phone install and owner pubkey still wait on the owner.
