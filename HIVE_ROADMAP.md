@@ -344,3 +344,11 @@ stored on the phone) — only names in code.
   files. Not verified on the phone. Next Flutter candidates, one per run:
   `intl`, `shared_preferences`, `url_launcher`, `share_plus`. Tailscale,
   phone install and owner pubkey still wait on the owner.
+- 2026-11-20 (auto): Phase 4, Flutter: `intl` 0.20.2 → 0.20.3 via
+  `flutter pub upgrade intl`; pubspec.lock is the only file changed (one
+  package, no transitive moves). flutter analyze clean; flutter test for
+  test/features/channels, profile, settings (the intl users) and
+  test/shared passes, 4,451 tests. dart format still flags only the two
+  pre-existing files. Not verified on the phone. Next Flutter candidates,
+  one per run: `shared_preferences`, `url_launcher`, `share_plus`.
+  Tailscale, phone install and owner pubkey still wait on the owner.
