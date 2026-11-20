@@ -98,6 +98,9 @@ Homebrew services; S3 → local MinIO.
       - [x] Rust: yanked `nostr-sdk` 0.45.1 → 0.45.6 (via mesh-llm, only
             under the dev-only `buzz-mesh-smoke`). Lockfile-only, one
             package; no yanked crates remain.
+      - [x] Rust: dropped the stale `RUSTSEC-2026-0381` (webpki-roots)
+            ignore from `deny.toml`; the advisory no longer matches the
+            lockfile, so `cargo deny` warned about an unused ignore.
 
 ## Phase 6 — Remove every "buzz" (owner decision 2026-11-18)
 Scope at start: ~45k occurrences in 3,324 files, 30 crates, ~1,400 paths.
@@ -308,3 +311,13 @@ stored on the phone) — only names in code.
   (no unit tests); `cargo deny check advisories` OK with no yanked crates.
   Next: drop the now-unmatched `RUSTSEC-2026-0381` ignore in deny.toml.
   Tailscale, phone install and owner pubkey still wait on the owner.
+- 2026-11-20 (auto): Phase 4, Rust: removed the `RUSTSEC-2026-0381`
+  ignore (and its comment) from `deny.toml`. `cargo deny` reported it as
+  `advisory-not-detected`: webpki-roots 0.26.11 is still in the lockfile (via
+  tokio-tungstenite 0.28 → async-wsocket → nostr-sdk) but the advisory no
+  longer flags it. `cargo deny check` (advisories, bans, licenses, sources)
+  passes with no unused-ignore warnings; `cargo build --release --locked -p
+  buzz-relay` OK (config-only change, no restart). Remaining Phase 4 work:
+  Flutter package review (one package per run) and the 13 desktop/ npm
+  advisories (R6 owner decision). Tailscale, phone install and owner pubkey
+  still wait on the owner.
