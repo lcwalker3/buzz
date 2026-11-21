@@ -107,6 +107,11 @@ Homebrew services; S3 → local MinIO.
       - [x] Flutter: `clock` 1.1.2 → 1.1.3 (direct dependency for
             testable time in presence cache and Your Hive stats).
             Lockfile-only; within its existing constraint.
+      - [x] Flutter: `intl` 0.20.2 → 0.20.3 (date/number formatting).
+            Lockfile-only.
+      - [x] Flutter: `shared_preferences` 2.5.5 → 2.5.6 (app settings,
+            read state, theme, community and relay choices). Lockfile-only;
+            the platform packages (`_android`, `_foundation`) were left as is.
 
 ## Phase 6 — Remove every "buzz" (owner decision 2026-11-18)
 Scope at start: ~45k occurrences in 3,324 files, 30 crates, ~1,400 paths.
@@ -352,3 +357,18 @@ stored on the phone) — only names in code.
   pre-existing files. Not verified on the phone. Next Flutter candidates,
   one per run: `shared_preferences`, `url_launcher`, `share_plus`.
   Tailscale, phone install and owner pubkey still wait on the owner.
+- 2026-11-21 (auto): Phase 4, Flutter: `shared_preferences` 2.5.5 → 2.5.6
+  via `flutter pub upgrade shared_preferences`; pubspec.lock is the only
+  file changed (one package, no transitive moves). flutter analyze clean;
+  flutter test with a 120 s per-test timeout for test/shared and every
+  test/features folder that uses preferences (activity, age_gate, agents,
+  channels, forum, home, profile, search, settings) passes, 4,797 tests.
+  dart format still flags only the two pre-existing files. Found while
+  testing: a plain `flutter test` of the whole suite hung for 48 min with
+  two idle test workers and printed nothing. The hanging file was not
+  identified; it is not in the folders above, and it was not checked whether
+  the hang predates this bump. Worth finding on a later run (run the other
+  folders, such as test/features/pairing and journeys, one at a time with
+  `--timeout`). Not verified on the phone. Next Flutter candidates, one per
+  run: `url_launcher`, `share_plus`. Tailscale, phone install and owner
+  pubkey still wait on the owner.
