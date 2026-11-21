@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
+import '../brand.dart';
 
 /// Coarse outcomes safe to use for control flow without retaining OS details.
 enum DeviceAuthResult { success, cancelled, unavailable, lockedOut, failed }
@@ -25,7 +26,7 @@ class LocalSensitiveActionAuthorizer implements SensitiveActionAuthorizer {
   Future<DeviceAuthResult> authorizeIdentityAction({
     required bool biometricOnly,
   }) => _authorize(
-    localizedReason: 'Confirm exporting your Buzz identity',
+    localizedReason: 'Confirm exporting your $appName identity',
     biometricOnly: biometricOnly,
   );
 

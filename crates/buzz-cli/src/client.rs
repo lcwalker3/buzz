@@ -552,8 +552,8 @@ impl BuzzClient {
     /// Timeout defaults are tuned for degraded WAN links and can be overridden
     /// via environment variables:
     ///
-    /// - `BUZZ_CONNECT_TIMEOUT_SECS` — TCP connect timeout (default 15 s)
-    /// - `BUZZ_TIMEOUT_SECS` — per-request total timeout (default 30 s)
+    /// - `HIVE_CONNECT_TIMEOUT_SECS` — TCP connect timeout (default 15 s)
+    /// - `HIVE_TIMEOUT_SECS` — per-request total timeout (default 30 s)
     ///
     /// A value of zero for either variable is treated as invalid and falls back to the default.
     /// A client for the relay at `relay_url`, as configured.
@@ -563,8 +563,8 @@ impl BuzzClient {
             // `Authorization` across origins but not `x-auth-tag` or the
             // NIP-FI assertion. A 3xx surfaces as a relay error instead.
             .redirect(reqwest::redirect::Policy::none())
-            .timeout(env_duration_secs("BUZZ_TIMEOUT_SECS", 30))
-            .connect_timeout(env_duration_secs("BUZZ_CONNECT_TIMEOUT_SECS", 15))
+            .timeout(env_duration_secs("HIVE_TIMEOUT_SECS", 30))
+            .connect_timeout(env_duration_secs("HIVE_CONNECT_TIMEOUT_SECS", 15))
             .build()
             .map_err(|e| CliError::Other(e.to_string()))?;
         Ok(Self {
@@ -1112,8 +1112,8 @@ impl BuzzClient {
         let unknown = |detail: String| CliError::DeliveryUnknown(detail);
         let http = reqwest::Client::builder()
             .redirect(reqwest::redirect::Policy::none())
-            .timeout(env_duration_secs("BUZZ_TIMEOUT_SECS", 30))
-            .connect_timeout(env_duration_secs("BUZZ_CONNECT_TIMEOUT_SECS", 15))
+            .timeout(env_duration_secs("HIVE_TIMEOUT_SECS", 30))
+            .connect_timeout(env_duration_secs("HIVE_CONNECT_TIMEOUT_SECS", 15))
             .build()?;
         let req = self
             .authorize(
@@ -1609,7 +1609,7 @@ impl BuzzClient {
 }
 
 /// Normalize a relay URL: ws:// → http://, wss:// → https://, strip trailing slash.
-/// BUZZ_RELAY_URL may be ws/wss (copied from MCP config).
+/// HIVE_RELAY_URL may be ws/wss (copied from MCP config).
 pub fn normalize_relay_url(url: &str) -> String {
     url.replace("wss://", "https://")
         .replace("ws://", "http://")
@@ -1887,7 +1887,7 @@ mod retry_tests {
     #[test]
     fn env_duration_secs_parsing() {
         // All assertions share one env var key; sequential set/remove prevents races.
-        const KEY: &str = "BUZZ_CLI_TEST_DURATION_SECS";
+        const KEY: &str = "HIVE_CLI_TEST_DURATION_SECS";
 
         // Valid numeric value is parsed.
         std::env::set_var(KEY, "42");
@@ -3236,8 +3236,8 @@ mod federated_identity_route_tests {
         ] {
             assert!(
                 matches!(&err, CliError::Auth(m)
-                    if m.contains("BUZZ_FEDERATED_IDENTITY_TOKEN")
-                        && m.contains("BUZZ_FEDERATED_IDENTITY_ADAPTER")),
+                    if m.contains("HIVE_FEDERATED_IDENTITY_TOKEN")
+                        && m.contains("HIVE_FEDERATED_IDENTITY_ADAPTER")),
                 "{err:?}"
             );
         }
@@ -3578,7 +3578,7 @@ mod desktop_throttle_tests {
         let err = client.get_authed("/forbidden").await.unwrap_err();
         let text = err.to_string();
         assert!(
-            !text.contains("stale") && !text.contains("BUZZ_AUTH_TAG"),
+            !text.contains("stale") && !text.contains("HIVE_AUTH_TAG"),
             "{text}"
         );
     }

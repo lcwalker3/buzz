@@ -818,7 +818,7 @@ mod postgres_tests {
     /// a fresh community on `host`; returns `None` when Postgres is unavailable.
     async fn invite_test_state(host: &str) -> Option<Arc<AppState>> {
         let mut config = crate::config::Config::for_test(); // [FI-TRACE-ENV-RACE]
-        let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| TEST_DB_URL.to_string());
         config.database_url = database_url.clone();

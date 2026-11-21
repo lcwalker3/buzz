@@ -1,6 +1,6 @@
 # Private-channel media revocation
 
-`BUZZ_MEDIA_READ_MODE` is a startup setting: `off` (default), `shadow`, or
+`HIVE_MEDIA_READ_MODE` is a startup setting: `off` (default), `shadow`, or
 `enforce`. Unknown values fail startup. Channel revocation is effective only
 in `enforce`. Blossom authentication, tenant binding, and community admission
 remain mandatory in every mode.

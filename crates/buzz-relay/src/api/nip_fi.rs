@@ -19,9 +19,9 @@
 //!
 //! ## Environment variables
 //!
-//! The command API is enabled when `BUZZ_NIP_FI_MODE` is `enforce` or
+//! The command API is enabled when `HIVE_NIP_FI_MODE` is `enforce` or
 //! `shadow` (shadow keeps the deny entry but closes no session).  S4 fields
-//! are read from the same `BUZZ_NIP_FI_ISSUERS` JSON array as the assertion
+//! are read from the same `HIVE_NIP_FI_ISSUERS` JSON array as the assertion
 //! policy; in both modes every issuer entry must carry them:
 //!
 //! ```json
@@ -208,7 +208,7 @@ pub async fn disconnect(
 
 // ── Startup component builder ─────────────────────────────────────────────────
 
-/// Per-issuer command configuration parsed from the `BUZZ_NIP_FI_ISSUERS` JSON.
+/// Per-issuer command configuration parsed from the `HIVE_NIP_FI_ISSUERS` JSON.
 ///
 /// In enforce and shadow modes `maximum_command_age_seconds` and
 /// `authorized_principals` are required on every issuer and startup
@@ -3607,7 +3607,7 @@ mod route_integration_tests {
         use super::*;
 
         fn redis_guard() -> Arc<dyn buzz_auth::CommandReplayGuard> {
-            let url = std::env::var("BUZZ_TEST_REDIS_URL")
+            let url = std::env::var("HIVE_TEST_REDIS_URL")
                 .or_else(|_| std::env::var("REDIS_URL"))
                 .unwrap_or_else(|_| "redis://127.0.0.1:6379".into());
             let pool = buzz_pubsub::redis_connection(&url).expect("redis pool");
@@ -3635,7 +3635,7 @@ mod route_integration_tests {
             use buzz_auth::CommandReplayGuard as _;
 
             let mut config = crate::config::Config::for_test();
-            config.redis_url = std::env::var("BUZZ_TEST_REDIS_URL")
+            config.redis_url = std::env::var("HIVE_TEST_REDIS_URL")
                 .or_else(|_| std::env::var("REDIS_URL"))
                 .unwrap_or_else(|_| "redis://127.0.0.1:6379".into());
             let mut registry = IssuerRegistry::new();
@@ -3897,7 +3897,7 @@ mod route_integration_tests {
         const DENY_BODY: &[u8] = b"authorization denied\n";
 
         fn redis_url() -> String {
-            std::env::var("BUZZ_TEST_REDIS_URL")
+            std::env::var("HIVE_TEST_REDIS_URL")
                 .or_else(|_| std::env::var("REDIS_URL"))
                 .unwrap_or_else(|_| "redis://127.0.0.1:6379".into())
         }

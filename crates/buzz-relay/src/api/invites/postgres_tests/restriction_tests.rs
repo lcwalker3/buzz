@@ -279,7 +279,7 @@ pub(super) mod postgres_tests {
             eprintln!("skipping destructive fixture outside postgres-isolation wrapper");
             return;
         };
-        let url = std::env::var("BUZZ_TEST_DATABASE_URL").unwrap_or_default();
+        let url = std::env::var("HIVE_TEST_DATABASE_URL").unwrap_or_default();
         assert!(
             wrapper_owns_database(&url, &identity.join(":")),
             "refusing destructive DDL on a shared database"

@@ -959,7 +959,7 @@ async fn every_route_makes_its_check_in_both_auth_modes() {
                 (status, body["error"]["message"].as_str()),
                 (
                     StatusCode::FORBIDDEN,
-                    Some("this endpoint requires BUZZ_ADMIN_AUTH=nip98")
+                    Some("this endpoint requires HIVE_ADMIN_AUTH=nip98")
                 ),
                 "disabled {method} {uri} ({check:?})"
             );

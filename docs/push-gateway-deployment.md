@@ -4,8 +4,8 @@
 
 ## Network and health
 
-- Public listener: `BUZZ_PUSH_BIND_ADDR` (default `0.0.0.0:8080`). Route the deployment hostname to this port; the binary needs no public-origin setting.
-- Private health listener: `BUZZ_PUSH_HEALTH_ADDR` (default `0.0.0.0:8081`). Probe `/_liveness` and `/_readiness`; do not expose this port publicly. The chart has no pod-ingress allowance for 8081; Kubernetes node/kubelet-origin probe traffic is exempt from NetworkPolicy. Add a narrowly selected monitoring source only if the target CNI requires pod-origin health scraping.
+- Public listener: `HIVE_PUSH_BIND_ADDR` (default `0.0.0.0:8080`). Route the deployment hostname to this port; the binary needs no public-origin setting.
+- Private health listener: `HIVE_PUSH_HEALTH_ADDR` (default `0.0.0.0:8081`). Probe `/_liveness` and `/_readiness`; do not expose this port publicly. The chart has no pod-ingress allowance for 8081; Kubernetes node/kubelet-origin probe traffic is exempt from NetworkPolicy. Add a narrowly selected monitoring source only if the target CNI requires pod-origin health scraping.
 - Readiness fails when PostgreSQL authority is unavailable. Graceful shutdown stops accepting new requests before draining in-flight APNs calls.
 
 ## Required configuration
@@ -13,15 +13,15 @@
 | Variable | Purpose |
 |---|---|
 | `DATABASE_URL` | PostgreSQL authority/admission store. Runtime credentials need DML on the six gateway tables, not DDL. |
-| `BUZZ_PUSH_MAX_GRANT_LIFETIME_SECONDS` | Maximum delegation capability lifetime (`1..=31536000`). |
-| `BUZZ_PUSH_MAX_INSTALLATION_LIFETIME_SECONDS` | Maximum encrypted-token installation lifetime (default 90 days, max one year). Clients must renew before expiry. |
-| `BUZZ_PUSH_APP_ATTEST_ROOT_CERT_PATH` | Read-only mounted Apple App Attest root certificate PEM. |
-| `BUZZ_PUSH_APP_ATTEST_APP_ID` | Exact server-owned Apple App Attest application identifier (`TEAMID.bundle-id`). |
-| `BUZZ_PUSH_APNS_TOPIC` | Server-owned APNs topic. Never accepted from a client. |
-| `BUZZ_PUSH_APNS_ENVIRONMENT` | `production` or `sandbox`, selected by deployment configuration. |
-| `BUZZ_PUSH_APNS_CERT_PATH` | Read-only certificate/private-key PEM. |
-| `BUZZ_PUSH_GRANT_KEYS` | Capability AEAD keyring, `id:base64-32-bytes[,predecessor...]`; current key first. |
-| `BUZZ_PUSH_TOKEN_KEYS` | Independent token-custody AEAD keyring in the same format. Never reuse grant keys. |
+| `HIVE_PUSH_MAX_GRANT_LIFETIME_SECONDS` | Maximum delegation capability lifetime (`1..=31536000`). |
+| `HIVE_PUSH_MAX_INSTALLATION_LIFETIME_SECONDS` | Maximum encrypted-token installation lifetime (default 90 days, max one year). Clients must renew before expiry. |
+| `HIVE_PUSH_APP_ATTEST_ROOT_CERT_PATH` | Read-only mounted Apple App Attest root certificate PEM. |
+| `HIVE_PUSH_APP_ATTEST_APP_ID` | Exact server-owned Apple App Attest application identifier (`TEAMID.bundle-id`). |
+| `HIVE_PUSH_APNS_TOPIC` | Server-owned APNs topic. Never accepted from a client. |
+| `HIVE_PUSH_APNS_ENVIRONMENT` | `production` or `sandbox`, selected by deployment configuration. |
+| `HIVE_PUSH_APNS_CERT_PATH` | Read-only certificate/private-key PEM. |
+| `HIVE_PUSH_GRANT_KEYS` | Capability AEAD keyring, `id:base64-32-bytes[,predecessor...]`; current key first. |
+| `HIVE_PUSH_TOKEN_KEYS` | Independent token-custody AEAD keyring in the same format. Never reuse grant keys. |
 
 Each gateway serves one configured Apple application. App Attest validates
 `application.appAttestAppId` (`TEAMID.bundle-id`) before enrollment. APNs uses
@@ -41,10 +41,10 @@ sees it.
 
 | Variable | Purpose |
 |---|---|
-| `BUZZ_PUSH_ANDROID_PACKAGE_NAME` | Exact Android application package, for example `com.example.buzz`. |
-| `BUZZ_PUSH_ANDROID_SIGNING_CERT_DIGESTS` | Comma-separated SHA-256 digests (64 hex characters each) of the app's accepted signing certificates. |
-| `BUZZ_PUSH_FCM_PROJECT_ID` | Firebase project that owns the app's registration tokens, for example `example-project`. |
-| `BUZZ_PUSH_FCM_SERVICE_ACCOUNT_PATH` | Read-only mounted service account key JSON the gateway uses to call FCM. Never commit it. |
+| `HIVE_PUSH_ANDROID_PACKAGE_NAME` | Exact Android application package, for example `com.example.buzz`. |
+| `HIVE_PUSH_ANDROID_SIGNING_CERT_DIGESTS` | Comma-separated SHA-256 digests (64 hex characters each) of the app's accepted signing certificates. |
+| `HIVE_PUSH_FCM_PROJECT_ID` | Firebase project that owns the app's registration tokens, for example `example-project`. |
+| `HIVE_PUSH_FCM_SERVICE_ACCOUNT_PATH` | Read-only mounted service account key JSON the gateway uses to call FCM. Never commit it. |
 
 The wake is a high-priority, data-only FCM message with a compiled-in payload,
 one constant collapse key and a time to live taken from the delivery's expiry.
@@ -57,29 +57,29 @@ Android Key Attestation chain verification is not part of this build yet: a
 gateway configured for Android starts, logs a warning, and rejects every Android
 enrollment until it lands. Enable Android in production only after that.
 
-Optional endpoint quota policy variables are `BUZZ_PUSH_ENDPOINT_QUOTA_WINDOW_SECONDS` (default `10`, max `86400`) and `BUZZ_PUSH_ENDPOINT_QUOTA_MAX_DELIVERIES` (default `10`, max `10000`). These are Buzz policy hypotheses, not Apple-published limits; tune under load while retaining a hard ceiling.
+Optional endpoint quota policy variables are `HIVE_PUSH_ENDPOINT_QUOTA_WINDOW_SECONDS` (default `10`, max `86400`) and `HIVE_PUSH_ENDPOINT_QUOTA_MAX_DELIVERIES` (default `10`, max `10000`). These are Buzz policy hypotheses, not Apple-published limits; tune under load while retaining a hard ceiling.
 
 ## Personal device development
 
 A development-signed iOS app uses Apple's development App Attest environment.
 The ordinary gateway binary rejects those attestations. For an isolated personal
 stack, build with Cargo feature `personal-dev-app-attest` (Docker build argument
-`BUZZ_PUSH_CARGO_FEATURES=personal-dev-app-attest`) and set
-`BUZZ_PUSH_APP_ATTEST_ENVIRONMENT=development`. The default remains `production`,
+`HIVE_PUSH_CARGO_FEATURES=personal-dev-app-attest`) and set
+`HIVE_PUSH_APP_ATTEST_ENVIRONMENT=development`. The default remains `production`,
 including in that special build; ordinary builds reject the development setting.
 The gateway accepts exactly the selected AAGUID and still verifies the pinned
 Apple root, certificate chain, nonce, application identity, public key,
 credential ID, and counter. This is not a simulator or attestation bypass.
 
-Set `BUZZ_PUSH_APP_ATTEST_APP_ID` to the personal `TEAMID.bundle-id`,
-`BUZZ_PUSH_APNS_TOPIC` to that same bundle ID,
-`BUZZ_PUSH_APNS_ENVIRONMENT=sandbox`, and supply its APNs certificate.
+Set `HIVE_PUSH_APP_ATTEST_APP_ID` to the personal `TEAMID.bundle-id`,
+`HIVE_PUSH_APNS_TOPIC` to that same bundle ID,
+`HIVE_PUSH_APNS_ENVIRONMENT=sandbox`, and supply its APNs certificate.
 This isolated stack uses its own server-configured application identity.
 Do not point distributed clients at this personal gateway.
 
 Build the mobile client with the personal team and parent bundle ID, its matching
 `.NotificationService` extension, development APNs/App Attest entitlements, and
-an explicit `BUZZ_PUSH_GATEWAY_URL`. See `mobile/README.md` for gitignored signing
+an explicit `HIVE_PUSH_GATEWAY_URL`. See `mobile/README.md` for gitignored signing
 overrides. Both targets need matching provisioning profiles; the parent profile
 must include the capabilities in `Runner.entitlements`. Validate enrollment and
 notification presentation on a physical device, not a simulator.
@@ -111,7 +111,7 @@ mobile configured-to-unconfigured migration is supported. Push has no existing
 enabled users. After enabling push, retain gateway configuration in updates to
 that app identity; omitting it is not a push shutdown mechanism.
 
-The gateway's dedicated pool does not consume the relay-oriented `BUZZ_DB_LOCK_TIMEOUT_MS`, `BUZZ_DB_IDLE_TXN_TIMEOUT_MS`, or `BUZZ_DB_STATEMENT_TIMEOUT_MS` settings. Its session-timeout policy remains separate from the `buzz-db` writer policy and must be designed and rolled out independently.
+The gateway's dedicated pool does not consume the relay-oriented `HIVE_DB_LOCK_TIMEOUT_MS`, `HIVE_DB_IDLE_TXN_TIMEOUT_MS`, or `HIVE_DB_STATEMENT_TIMEOUT_MS` settings. Its session-timeout policy remains separate from the `buzz-db` writer policy and must be designed and rolled out independently.
 
 All replicas must share one PostgreSQL database. Delivery authority, replay admission, and endpoint quota reservation are transactional there, so replica count does not multiply the abuse ceiling. The gateway owns a scoped migration history under `crates/buzz-push-gateway/migrations`; it creates only the six `push_gateway_*` authority tables plus SQLx's migration-history table and never runs relay migrations.
 
@@ -121,7 +121,7 @@ The service reaps expired challenges and replay rows, idle quota rows, expired/r
 
 ## Metrics and alerting
 
-The gateway serves Prometheus metrics at `GET /metrics` on the **private health listener** (`BUZZ_PUSH_HEALTH_ADDR`, default `0.0.0.0:8081`) — the same port as the probes, never on the public `8080`. All series are sanitized and bounded-cardinality: label values are drawn only from closed sets (the five APNs outcome classes, the fixed admission results, the static error codes already returned to callers, and the readiness causes). No endpoint, device token, relay pubkey, request id, or any request-scoped identifier is ever used as a label.
+The gateway serves Prometheus metrics at `GET /metrics` on the **private health listener** (`HIVE_PUSH_HEALTH_ADDR`, default `0.0.0.0:8081`) — the same port as the probes, never on the public `8080`. All series are sanitized and bounded-cardinality: label values are drawn only from closed sets (the five APNs outcome classes, the fixed admission results, the static error codes already returned to callers, and the readiness causes). No endpoint, device token, relay pubkey, request id, or any request-scoped identifier is ever used as a label.
 
 | Metric | Type | Labels | Meaning |
 |---|---|---|---|
@@ -173,7 +173,7 @@ Alerting rules ship as an opt-in prometheus-operator `PrometheusRule` (`promethe
 
 | Alert | Fires when | Severity | Action |
 |---|---|---|---|
-| `PushGatewayConfigurationFault` | any `configuration_fault` outcomes for 10m | critical | The APNs certificate/topic/environment is unhealthy. Check `BUZZ_PUSH_APNS_*` configuration. No endpoints are being invalidated. |
+| `PushGatewayConfigurationFault` | any `configuration_fault` outcomes for 10m | critical | The APNs certificate/topic/environment is unhealthy. Check `HIVE_PUSH_APNS_*` configuration. No endpoints are being invalidated. |
 | `PushGatewayAdmissionUnavailable` | any admission `unavailable` for 5m | critical | PostgreSQL authority store is unreachable. Check DB connectivity and the pod's `postgresEgressCidrs` NetworkPolicy. |
 | `PushGatewayReadinessAuthorityFailing` | readiness `authority` failures for 5m | warning | Replicas are being pulled from the Service on DB check failure. Fix DB health before capacity drops below the PodDisruptionBudget. |
 | `PushGatewayReaperFailing` | reaper failed ≥2 times within 30m (runs every 5m) | warning | Expired reservations aren't being swept, growing the bounded-until-expiry window. Check DB write availability. |
@@ -181,9 +181,9 @@ Alerting rules ship as an opt-in prometheus-operator `PrometheusRule` (`promethe
 
 ## Relay configuration
 
-Relay push is an explicit deployment opt-in through `BUZZ_PUSH_ENABLED=true`;
+Relay push is an explicit deployment opt-in through `HIVE_PUSH_ENABLED=true`;
 the established strict boolean parser rejects unknown values and the default is
-false. When enabled, `BUZZ_PUSH_GATEWAY_DELIVERY_URL` is required and must be an
+false. When enabled, `HIVE_PUSH_GATEWAY_DELIVERY_URL` is required and must be an
 exact HTTP(S) URL whose path is `/v1/deliveries/apns` or `/v1/deliveries`.
 Use `/v1/deliveries` only with a gateway that already serves it; the public
 gateway at `push.buzz.xyz` does not yet. A gateway that does not answer on the
@@ -217,7 +217,7 @@ installation, event, or request identifier as a label.
 
 The operational relay integration is complete: per-origin event matching with
 read-authorization checks, durable enqueue, send-time revalidation, and NIP-98
-delivery run only when `BUZZ_PUSH_ENABLED=true`. End-to-end use still requires
+delivery run only when `HIVE_PUSH_ENABLED=true`. End-to-end use still requires
 the client App Attest enrollment/delegation flow to place a gateway-issued opaque
 capability—not a raw APNs token—into the encrypted relay lease.
 
@@ -284,7 +284,7 @@ plan; never edit published migrations or their checksums.
 
 ### Relay rollback and reactivation
 
-Set `BUZZ_PUSH_ENABLED=false` in the approved configuration for **every writer
+Set `HIVE_PUSH_ENABLED=false` in the approved configuration for **every writer
 workload in the affected database scope**, then replace all previously enabled
 relay processes. This is a startup setting, not a live configuration reload.
 Keep the delivery URL, image, relay keys, schema, leases, client preferences and

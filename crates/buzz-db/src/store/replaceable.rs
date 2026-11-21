@@ -808,7 +808,7 @@ mod postgres_tests {
         let pool = PgPool::connect(&database_url)
             .await
             .expect("connect to test DB");
-        if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() == Ok("migration") {
+        if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() == Ok("migration") {
             migration::run_migrations(&pool)
                 .await
                 .expect("apply migration schema");

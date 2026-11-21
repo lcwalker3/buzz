@@ -5,7 +5,7 @@ use serde_json::json;
 #[test]
 #[ignore = "manual observer packing measurement"]
 fn publish_queue_drain_probe() {
-    let count: usize = std::env::var("BUZZ_OBSERVER_PROBE_EVENTS")
+    let count: usize = std::env::var("HIVE_OBSERVER_PROBE_EVENTS")
         .unwrap_or_else(|_| "10000".into())
         .parse()
         .unwrap();

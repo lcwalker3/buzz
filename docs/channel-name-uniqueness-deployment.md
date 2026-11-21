@@ -48,7 +48,7 @@ that release no longer checks names in the relay.
    so clients show the new name.
 
    ```sh
-   DATABASE_URL=postgres://... BUZZ_PRIVATE_KEY=<operator key> \
+   DATABASE_URL=postgres://... HIVE_PRIVATE_KEY=<operator key> \
      scripts/maintenance/rename_duplicate_listed_channel_names.sh <community host>
    ```
 
@@ -62,7 +62,7 @@ that release no longer checks names in the relay.
    RELAY_URL=wss://<community host> buzz-admin add-member --pubkey <operator npub>
    ```
 
-   The script stops at the first auth refusal and says so. `BUZZ_RELAY_URL`
+   The script stops at the first auth refusal and says so. `HIVE_RELAY_URL`
    defaults to `wss://<community host>`. The script needs `psql` and
    `python3`. Run it with `--dry-run` first to see
    the plan. The host must match `communities.host` exactly; the script stops
@@ -83,9 +83,9 @@ that release no longer checks names in the relay.
    when no open, unarchived stream has the name, and the relay refuses that
    create while an archived channel holds the name. The apps create each
    starter at a fixed id, a UUIDv5 of the relay's HTTP origin and the name.
-   The script computes those ids with `python3` from `BUZZ_RELAY_URL` (so it
-   must be the URL clients use), or from `BUZZ_STARTER_ORIGIN` when set (for
-   a desktop build with its own `BUZZ_RELAY_HTTP`), and prints them; check
+   The script computes those ids with `python3` from `HIVE_RELAY_URL` (so it
+   must be the URL clients use), or from `HIVE_STARTER_ORIGIN` when set (for
+   a desktop build with its own `HIVE_RELAY_HTTP`), and prints them; check
    them against a client before the real run. When any channel row has one
    of those ids, whatever its name or state, the relay refuses the create
    there, so the script renames nothing for that starter name, and an
@@ -199,7 +199,7 @@ DROP INDEX CONCURRENTLY IF EXISTS public.idx_channels_listed_name;
 
 Roll back from the contract release to the writer release, not further: an
 older relay cannot report the index's refusal as `invalid:`. Keep the index.
-Run the writer release with auto-migration off (`BUZZ_AUTO_MIGRATE=false`, or
+Run the writer release with auto-migration off (`HIVE_AUTO_MIGRATE=false`, or
 `migrate.autoMigrate=false` in the Helm chart). With it on, the writer release
 refuses a database that has migration 0083, which it does not know
 (`VersionMissing`).

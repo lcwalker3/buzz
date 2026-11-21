@@ -18,7 +18,7 @@ struct Fixture {
 }
 
 async fn fixture() -> Fixture {
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL")
+    let url = std::env::var("HIVE_TEST_DATABASE_URL")
         .or_else(|_| std::env::var("DATABASE_URL"))
         .unwrap();
     let db = Db::from_pool(PgPool::connect(&url).await.unwrap());
@@ -764,7 +764,7 @@ async fn database_failure_is_not_hidden_by_an_existing_child() {
         .fetch_one(&mut *lock)
         .await
         .unwrap();
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL")
+    let url = std::env::var("HIVE_TEST_DATABASE_URL")
         .or_else(|_| std::env::var("DATABASE_URL"))
         .unwrap();
     let pool = sqlx::postgres::PgPoolOptions::new()

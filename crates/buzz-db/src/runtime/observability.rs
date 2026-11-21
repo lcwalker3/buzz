@@ -1745,7 +1745,7 @@ mod tests {
             .await
             .expect("connect size-one serving-write test pool");
         let db = crate::Db::from_pool(pool.clone());
-        if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
+        if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
             db.migrate().await.expect("migrate serving-write test DB");
         }
         let test_scope = db

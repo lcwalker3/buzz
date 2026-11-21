@@ -35,6 +35,7 @@ import '../../shared/widgets/duo_toolbar.dart';
 import '../../shared/widgets/bottom_up_page_route.dart';
 import '../../shared/widgets/ios_glass_navigation_button.dart';
 import '../../shared/widgets/immediate_page_route.dart';
+import '../../shared/brand.dart';
 
 part 'settings_page/profile_section.dart';
 part 'settings_page/status_section.dart';

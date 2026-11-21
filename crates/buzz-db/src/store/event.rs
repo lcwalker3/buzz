@@ -2496,7 +2496,7 @@ impl Db {
     /// ([`crate::RoutePredicate::for_query`]): a channel-pinned query with an
     /// `until` upper bound may be served covered (provably complete below
     /// the fence wall); anything else is bounded-staleness only. The whole
-    /// seam is gated on `BUZZ_REPLICA_READ_MAX_AGE_MS` (default off): when
+    /// seam is gated on `HIVE_REPLICA_READ_MAX_AGE_MS` (default off): when
     /// unset, even covered-eligible queries stay on the writer, so merging
     /// this seam is a true no-op until the budget is configured. Every
     /// failure fails closed to the writer, except a statement-timeout cancel
@@ -3393,7 +3393,7 @@ mod postgres_tests {
     const TEST_DB_URL: &str = "postgres://buzz:buzz_dev@localhost:5432/buzz"; // sadscan:disable np.postgres.1
 
     async fn setup_pool() -> PgPool {
-        let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| TEST_DB_URL.to_owned());
 

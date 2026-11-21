@@ -22,7 +22,7 @@ impl std::str::FromStr for MediaReadMode {
             "off" => Ok(Self::Off),
             "shadow" => Ok(Self::Shadow),
             "enforce" => Ok(Self::Enforce),
-            _ => Err("BUZZ_MEDIA_READ_MODE must be off, shadow, or enforce".into()),
+            _ => Err("HIVE_MEDIA_READ_MODE must be off, shadow, or enforce".into()),
         }
     }
 }

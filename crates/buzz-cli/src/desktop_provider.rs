@@ -2,7 +2,7 @@
 //! one identity over loopback (`docs/local-credential-provider.md`).
 //!
 //! The caller never holds the private key. It finds a provider through an
-//! inherited `BUZZ_CREDENTIAL_PROVIDER` token or a paired token in the OS
+//! inherited `HIVE_CREDENTIAL_PROVIDER` token or a paired token in the OS
 //! keychain, and sends each request on a connection whose server side it has
 //! confirmed belongs to the same OS user, for inherited and paired tokens
 //! alike.
@@ -26,7 +26,7 @@ use ownership::{connect, current_uid};
 #[cfg(test)]
 static SAME_USER_TURN: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
-pub const PROVIDER_ENV: &str = "BUZZ_CREDENTIAL_PROVIDER";
+pub const PROVIDER_ENV: &str = "HIVE_CREDENTIAL_PROVIDER";
 
 /// The protocol version this caller speaks.
 const VERSION: u32 = 1;
@@ -739,7 +739,7 @@ struct Inherited {
     token: String,
 }
 
-/// The inherited token from `BUZZ_CREDENTIAL_PROVIDER`, if set.
+/// The inherited token from `HIVE_CREDENTIAL_PROVIDER`, if set.
 pub fn inherited() -> Result<Option<(Endpoint, String)>, CliError> {
     let Some(raw) = std::env::var(PROVIDER_ENV)
         .ok()
@@ -851,7 +851,7 @@ struct Keychain;
 fn no_keychain(e: keyring::Error) -> CliError {
     CliError::Auth(format!(
         "no OS keychain is reachable ({e}); on Linux start a Secret Service such as \
-         gnome-keyring, or set BUZZ_PRIVATE_KEY instead. Paired tokens are never written to files."
+         gnome-keyring, or set HIVE_PRIVATE_KEY instead. Paired tokens are never written to files."
     ))
 }
 
@@ -994,7 +994,7 @@ pub async fn inherited_relay() -> Result<Option<String>, CliError> {
         1 => Ok(distinct.pop()),
         _ => Err(CliError::Usage(format!(
             "this agent's Buzz credential acts on several relays ({}); pass --relay or set \
-             BUZZ_RELAY_URL",
+             HIVE_RELAY_URL",
             distinct.join(", ")
         ))),
     }

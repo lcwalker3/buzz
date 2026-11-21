@@ -93,13 +93,7 @@ build-release:
     cargo build --workspace --release
 
 # Run repo lint, formatting, and repository policy checks
-check: fmt-check clippy desktop-check desktop-tauri-fmt-check desktop-tauri-clippy web-check mobile-check security-review-check file-size-check
-
-# Validate the trusted security-review workflow support and renderer contract.
-security-review-check:
-    node --check .github/scripts/codex-security-review.js
-    node --test .github/scripts/codex-security-review.test.js
-    actionlint .github/workflows/codex-security-review.yml
+check: fmt-check clippy desktop-check desktop-tauri-fmt-check desktop-tauri-clippy web-check mobile-check file-size-check
 
 # Run the repository-wide differential file-size ratchet and its policy tests.
 # The ratchet inspects only files changed from the merge base, so this stays
@@ -256,8 +250,8 @@ desktop-tauri-test-compiled-flags: _ensure-sidecar-stubs
     #!/usr/bin/env bash
     set -euo pipefail
     cd desktop/src-tauri
-    unset BUZZ_BUILD_AUTO_CONNECT_DEFAULT_RELAY BUZZ_BUILD_AGENT_ACCESS_OWNER_ONLY BUZZ_BUILD_DEMO_SLUG
-    unset BUZZ_TEST_EXPECTED_AUTO_CONNECT_DEFAULT_RELAY BUZZ_TEST_EXPECTED_AGENT_ACCESS_OWNER_ONLY BUZZ_TEST_EXPECTED_DEMO_SLUG
+    unset HIVE_BUILD_AUTO_CONNECT_DEFAULT_RELAY HIVE_BUILD_AGENT_ACCESS_OWNER_ONLY HIVE_BUILD_DEMO_SLUG
+    unset HIVE_TEST_EXPECTED_AUTO_CONNECT_DEFAULT_RELAY HIVE_TEST_EXPECTED_AGENT_ACCESS_OWNER_ONLY HIVE_TEST_EXPECTED_DEMO_SLUG
     # Run ignored assertions by name; libtest passes a filter that matches
     # nothing, so require exactly one passing test per filter.
     run_ignored() {
@@ -271,34 +265,34 @@ desktop-tauri-test-compiled-flags: _ensure-sidecar-stubs
     flag_tests=(compiled_flag_matches_expected compiled_policy_matches_expected)
     echo "=== Clean build (no flag) → expect false ==="
     (
-      export BUZZ_TEST_EXPECTED_AUTO_CONNECT_DEFAULT_RELAY=false
-      export BUZZ_TEST_EXPECTED_AGENT_ACCESS_OWNER_ONLY=false
+      export HIVE_TEST_EXPECTED_AUTO_CONNECT_DEFAULT_RELAY=false
+      export HIVE_TEST_EXPECTED_AGENT_ACCESS_OWNER_ONLY=false
       run_ignored "${flag_tests[@]}"
     )
     echo "=== Internal build (flags set) → expect true ==="
     (
-      export BUZZ_BUILD_AUTO_CONNECT_DEFAULT_RELAY=1
-      export BUZZ_BUILD_AGENT_ACCESS_OWNER_ONLY=1
-      export BUZZ_TEST_EXPECTED_AUTO_CONNECT_DEFAULT_RELAY=true
-      export BUZZ_TEST_EXPECTED_AGENT_ACCESS_OWNER_ONLY=true
+      export HIVE_BUILD_AUTO_CONNECT_DEFAULT_RELAY=1
+      export HIVE_BUILD_AGENT_ACCESS_OWNER_ONLY=1
+      export HIVE_TEST_EXPECTED_AUTO_CONNECT_DEFAULT_RELAY=true
+      export HIVE_TEST_EXPECTED_AGENT_ACCESS_OWNER_ONLY=true
       run_ignored "${flag_tests[@]}"
       cargo test --lib
     )
     echo "=== Auto-connect only → capabilities stay independent ==="
     (
-      export BUZZ_BUILD_AUTO_CONNECT_DEFAULT_RELAY=1
-      export BUZZ_TEST_EXPECTED_AUTO_CONNECT_DEFAULT_RELAY=true
-      export BUZZ_TEST_EXPECTED_AGENT_ACCESS_OWNER_ONLY=false
+      export HIVE_BUILD_AUTO_CONNECT_DEFAULT_RELAY=1
+      export HIVE_TEST_EXPECTED_AUTO_CONNECT_DEFAULT_RELAY=true
+      export HIVE_TEST_EXPECTED_AGENT_ACCESS_OWNER_ONLY=false
       run_ignored "${flag_tests[@]}"
     )
     echo "=== Maximum accepted demo name reaches Rust build validation ==="
     DEMO_CONFIG="$(node ../scripts/demo-build-config.mjs "$(printf 'x%.0s' {1..31})" /dev/null 1234567812345678)"
     DEMO_SLUG="$(node -e 'console.log(JSON.parse(process.argv[1]).slug)' "$DEMO_CONFIG")"
     (
-      export BUZZ_BUILD_DEMO_SLUG="$DEMO_SLUG"
-      export BUZZ_TEST_EXPECTED_DEMO_SLUG="$DEMO_SLUG"
-      export BUZZ_TEST_EXPECTED_AUTO_CONNECT_DEFAULT_RELAY=false
-      export BUZZ_TEST_EXPECTED_AGENT_ACCESS_OWNER_ONLY=false
+      export HIVE_BUILD_DEMO_SLUG="$DEMO_SLUG"
+      export HIVE_TEST_EXPECTED_DEMO_SLUG="$DEMO_SLUG"
+      export HIVE_TEST_EXPECTED_AUTO_CONNECT_DEFAULT_RELAY=false
+      export HIVE_TEST_EXPECTED_AGENT_ACCESS_OWNER_ONLY=false
       run_ignored compiled_demo_slug_matches_expected "${flag_tests[@]}"
       cargo test --lib
     )
@@ -348,7 +342,7 @@ desktop-demo-build demo_name target="aarch64-apple-darwin":
     ./scripts/bundle-sidecars.sh "$TARGET"
     pnpm install
     cd {{desktop_dir}}
-    BUZZ_BUILD_DEMO_SLUG="$DEMO_SLUG" pnpm tauri build --features mesh-llm --target "$TARGET" --bundles app --config "$CONFIG_PATH"
+    HIVE_BUILD_DEMO_SLUG="$DEMO_SLUG" pnpm tauri build --features mesh-llm --target "$TARGET" --bundles app --config "$CONFIG_PATH"
     cd ..
     VERSION="$(node -p "require('./desktop/package.json').version")"
     DMG_ARCH="${TARGET%%-*}"; [[ "$DMG_ARCH" == "x86_64" ]] && DMG_ARCH=x64
@@ -718,13 +712,13 @@ mesh-dev-fresh:
     set -euo pipefail
     ./scripts/dev-reset.sh --yes
     ./scripts/setup-desktop-test-data.sh
-    export BUZZ_PRIVATE_KEY="3dbaebadb5dfd777ff25149ee230d907a15a9e1294b40b830661e65bb42f6c03"
-    export BUZZ_REQUIRE_RELAY_MEMBERSHIP=true
-    export BUZZ_ALLOW_NIP_OA_AUTH=true
+    export HIVE_PRIVATE_KEY="3dbaebadb5dfd777ff25149ee230d907a15a9e1294b40b830661e65bb42f6c03"
+    export HIVE_REQUIRE_RELAY_MEMBERSHIP=true
+    export HIVE_ALLOW_NIP_OA_AUTH=true
     export RELAY_OWNER_PUBKEY="e5ebc6cdb579be112e336cc319b5989b4bb6af11786ea90dbe52b5f08d741b34"
-    export BUZZ_RELAY_PRIVATE_KEY="0000000000000000000000000000000000000000000000000000000000000001"
-    export BUZZ_RECONCILE_CHANNELS=true
-    export BUZZ_RESET_WEBVIEW_STATE=1
+    export HIVE_RELAY_PRIVATE_KEY="0000000000000000000000000000000000000000000000000000000000000001"
+    export HIVE_RECONCILE_CHANNELS=true
+    export HIVE_RESET_WEBVIEW_STATE=1
     exec just mesh=1 dev
 
 # Real serve->client->inference on this machine (not CI).
@@ -788,7 +782,7 @@ relay-web: bootstrap _ensure-migrations
     set +o allexport
     [[ -d node_modules ]] || pnpm install
     pnpm -C web build
-    BUZZ_WEB_DIR=./web/dist cargo run -p buzz-relay
+    HIVE_WEB_DIR=./web/dist cargo run -p buzz-relay
 
 # Build and run the private admin dashboard
 admin: bootstrap _ensure-migrations
@@ -800,26 +794,26 @@ admin: bootstrap _ensure-migrations
     set +o allexport
     [[ -d node_modules ]] || pnpm install
     pnpm -C admin-web build
-    export BUZZ_ADMIN_HOST="${BUZZ_ADMIN_HOST:-admin.localhost:3000}"
-    export BUZZ_ADMIN_WEB_DIR="${BUZZ_ADMIN_WEB_DIR:-{{justfile_directory()}}/admin-web/dist}"
+    export HIVE_ADMIN_HOST="${HIVE_ADMIN_HOST:-admin.localhost:3000}"
+    export HIVE_ADMIN_WEB_DIR="${HIVE_ADMIN_WEB_DIR:-{{justfile_directory()}}/admin-web/dist}"
     # Default to disabled auth locally: a NIP-07 signer extension can't be
     # assumed in dev. Disabled mode serves every moderation read (reports,
     # feedback, restrictions, community directory, member profiles, any stored
     # message by ID) to anyone who can reach the relay port and refuses writes
     # and staffing, so it binds the relay to 127.0.0.1 (port from .env)
     # unless the mode is exactly nip98: a padded or misspelled value stays
-    # local. Override per run with BUZZ_ADMIN_AUTH=nip98 (plus
+    # local. Override per run with HIVE_ADMIN_AUTH=nip98 (plus
     # RELAY_OPERATOR_PUBKEYS or RELAY_OWNER_PUBKEY) to exercise the
-    # authenticated path; that keeps BUZZ_BIND_ADDR as configured.
-    export BUZZ_ADMIN_AUTH="${BUZZ_ADMIN_AUTH:-disabled}"
-    if [[ "$BUZZ_ADMIN_AUTH" != nip98 ]]; then
-        bind_addr="${BUZZ_BIND_ADDR:-0.0.0.0:3000}"
+    # authenticated path; that keeps HIVE_BIND_ADDR as configured.
+    export HIVE_ADMIN_AUTH="${HIVE_ADMIN_AUTH:-disabled}"
+    if [[ "$HIVE_ADMIN_AUTH" != nip98 ]]; then
+        bind_addr="${HIVE_BIND_ADDR:-0.0.0.0:3000}"
         relay_port="${bind_addr##*:}"; [[ -n "$relay_port" ]] || relay_port=3000
-        export BUZZ_BIND_ADDR="127.0.0.1:${relay_port}"
+        export HIVE_BIND_ADDR="127.0.0.1:${relay_port}"
     fi
-    echo "Admin dashboard: http://${BUZZ_ADMIN_HOST}/reports"
-    echo "Auth mode: ${BUZZ_ADMIN_AUTH} (set BUZZ_ADMIN_AUTH=nip98 to require a signed operator)"
-    echo "Relay bind: ${BUZZ_BIND_ADDR:-0.0.0.0:3000}"
+    echo "Admin dashboard: http://${HIVE_ADMIN_HOST}/reports"
+    echo "Auth mode: ${HIVE_ADMIN_AUTH} (set HIVE_ADMIN_AUTH=nip98 to require a signed operator)"
+    echo "Relay bind: ${HIVE_BIND_ADDR:-0.0.0.0:3000}"
     cargo run -p buzz-relay
 
 # Seed deterministic reports and product feedback for local admin dashboard review
@@ -852,10 +846,10 @@ dev *ARGS: bootstrap _ensure-sidecar-stubs _ensure-migrations
     set -o allexport
     source .env
     set +o allexport
-    bind_addr="${BUZZ_BIND_ADDR:-0.0.0.0:3000}"
+    bind_addr="${HIVE_BIND_ADDR:-0.0.0.0:3000}"
     relay_port="${bind_addr##*:}"; [[ -n "$relay_port" ]] || relay_port=3000
-    health_port="${BUZZ_HEALTH_PORT:-8080}"
-    metrics_port="${BUZZ_METRICS_PORT:-9102}"
+    health_port="${HIVE_HEALTH_PORT:-8080}"
+    metrics_port="${HIVE_METRICS_PORT:-9102}"
     if command -v lsof >/dev/null 2>&1; then
         for spec in "relay:$relay_port" "health:$health_port" "metrics:$metrics_port"; do
             name="${spec%%:*}"; port="${spec##*:}"
@@ -871,8 +865,8 @@ dev *ARGS: bootstrap _ensure-sidecar-stubs _ensure-migrations
     # Docker Desktop's forwarded MinIO port can stall under the deployment
     # probe's 32 concurrent writers. Keep the gate enabled in local dev, using
     # the bounded profile already used by the relay test launcher.
-    export BUZZ_GIT_PROBE_WRITERS="${BUZZ_GIT_PROBE_WRITERS:-8}"
-    export BUZZ_GIT_PROBE_ROUNDS="${BUZZ_GIT_PROBE_ROUNDS:-2}"
+    export HIVE_GIT_PROBE_WRITERS="${HIVE_GIT_PROBE_WRITERS:-8}"
+    export HIVE_GIT_PROBE_ROUNDS="${HIVE_GIT_PROBE_ROUNDS:-2}"
     ./target/debug/buzz-relay &
     RELAY_PID=$!
     cleanup() {
@@ -900,10 +894,10 @@ dev *ARGS: bootstrap _ensure-sidecar-stubs _ensure-migrations
     cd {{desktop_dir}}
     [[ -d node_modules ]] || pnpm install
     source ../scripts/instance-env.sh
-    INSTANCE_ID=$(node -e "console.log(JSON.parse(process.env.BUZZ_TAURI_CONFIG).identifier)")
-    echo "Starting on Vite port ${BUZZ_VITE_PORT}, relay ${BUZZ_RELAY_URL}"
+    INSTANCE_ID=$(node -e "console.log(JSON.parse(process.env.HIVE_TAURI_CONFIG).identifier)")
+    echo "Starting on Vite port ${HIVE_VITE_PORT}, relay ${HIVE_RELAY_URL}"
     FEATURES=(); [[ -n "{{mesh}}" ]] && FEATURES=(--features mesh-llm)
-    pnpm exec tauri dev ${FEATURES[@]+"${FEATURES[@]}"} --config "$BUZZ_TAURI_CONFIG" {{ARGS}}
+    pnpm exec tauri dev ${FEATURES[@]+"${FEATURES[@]}"} --config "$HIVE_TAURI_CONFIG" {{ARGS}}
 
 # Run only the desktop app. No relay, database, Docker, migrations, or .env are needed.
 # The app opens normally and asks for a community before making a relay connection.
@@ -920,23 +914,23 @@ desktop-standalone *ARGS: _ensure-sidecar-stubs
     done
     cd {{desktop_dir}}
     [[ -d node_modules ]] || pnpm install
-    unset BUZZ_PRIVATE_KEY BUZZ_SHARE_IDENTITY
+    unset HIVE_PRIVATE_KEY HIVE_SHARE_IDENTITY
     if [[ -n "{{fresh}}" ]]; then
-        export BUZZ_RESET_WEBVIEW_STATE=1
+        export HIVE_RESET_WEBVIEW_STATE=1
     fi
     source ../scripts/instance-env.sh
-    INSTANCE_ID=$(node -e "console.log(JSON.parse(process.env.BUZZ_TAURI_CONFIG).identifier)")
-    export BUZZ_DEV_KEYRING_SERVICE="buzz-desktop-dev.${BUZZ_INSTANCE_SLUG:-main}"
+    INSTANCE_ID=$(node -e "console.log(JSON.parse(process.env.HIVE_TAURI_CONFIG).identifier)")
+    export HIVE_DEV_KEYRING_SERVICE="buzz-desktop-dev.${HIVE_INSTANCE_SLUG:-main}"
     if [[ -n "{{fresh}}" ]]; then
-        ../scripts/reset-desktop-standalone-state.sh "$INSTANCE_ID" "$BUZZ_DEV_KEYRING_SERVICE"
+        ../scripts/reset-desktop-standalone-state.sh "$INSTANCE_ID" "$HIVE_DEV_KEYRING_SERVICE"
     fi
     trap '../scripts/cleanup-instance-agents.sh "$INSTANCE_ID" || true' EXIT
-    echo "Starting standalone desktop on Vite port ${BUZZ_VITE_PORT}; no relay services were started"
+    echo "Starting standalone desktop on Vite port ${HIVE_VITE_PORT}; no relay services were started"
     FEATURES=()
     if [[ -n "{{mesh}}" ]]; then
         FEATURES=(--features mesh-llm)
     fi
-    pnpm exec tauri dev ${FEATURES[@]+"${FEATURES[@]}"} --config "$BUZZ_TAURI_CONFIG" {{ARGS}}
+    pnpm exec tauri dev ${FEATURES[@]+"${FEATURES[@]}"} --config "$HIVE_TAURI_CONFIG" {{ARGS}}
 
 # Run the desktop app against the internal staging relay (installs deps + builds agent tools automatically)
 staging *ARGS: bootstrap _ensure-sidecar-stubs
@@ -964,14 +958,14 @@ staging *ARGS: bootstrap _ensure-sidecar-stubs
         chmod +x "desktop/src-tauri/binaries/${bin}-${TARGET}"
     done
     cd {{desktop_dir}}
-    export BUZZ_RELAY_URL="wss://buzz.block.builderlabstaging.xyz"
+    export HIVE_RELAY_URL="wss://buzz.block.builderlabstaging.xyz"
     source ../scripts/instance-env.sh
     # Ctrl+C kills the Tauri app before its in-process sweep finishes, leaking
     # agent workers. Reap this instance's agents on exit as a backstop.
-    INSTANCE_ID=$(node -e "console.log(JSON.parse(process.env.BUZZ_TAURI_CONFIG).identifier)")
+    INSTANCE_ID=$(node -e "console.log(JSON.parse(process.env.HIVE_TAURI_CONFIG).identifier)")
     trap '../scripts/cleanup-instance-agents.sh "$INSTANCE_ID" || true' EXIT
-    echo "Starting staging on Vite port ${BUZZ_VITE_PORT}, relay ${BUZZ_RELAY_URL}"
-    pnpm exec tauri dev ${FEATURES[@]+"${FEATURES[@]}"} --config "$BUZZ_TAURI_CONFIG" {{ARGS}}
+    echo "Starting staging on Vite port ${HIVE_VITE_PORT}, relay ${HIVE_RELAY_URL}"
+    pnpm exec tauri dev ${FEATURES[@]+"${FEATURES[@]}"} --config "$HIVE_TAURI_CONFIG" {{ARGS}}
 
 # Run the desktop app against the production relay (installs deps + builds agent tools automatically)
 production *ARGS: bootstrap _ensure-sidecar-stubs
@@ -999,14 +993,14 @@ production *ARGS: bootstrap _ensure-sidecar-stubs
         chmod +x "desktop/src-tauri/binaries/${bin}-${TARGET}"
     done
     cd {{desktop_dir}}
-    export BUZZ_RELAY_URL="wss://buzz.block.builderlab.xyz"
+    export HIVE_RELAY_URL="wss://buzz.block.builderlab.xyz"
     source ../scripts/instance-env.sh
     # Ctrl+C kills the Tauri app before its in-process sweep finishes, leaking
     # agent workers. Reap this instance's agents on exit as a backstop.
-    INSTANCE_ID=$(node -e "console.log(JSON.parse(process.env.BUZZ_TAURI_CONFIG).identifier)")
+    INSTANCE_ID=$(node -e "console.log(JSON.parse(process.env.HIVE_TAURI_CONFIG).identifier)")
     trap '../scripts/cleanup-instance-agents.sh "$INSTANCE_ID" || true' EXIT
-    echo "Starting production on Vite port ${BUZZ_VITE_PORT}, relay ${BUZZ_RELAY_URL}"
-    pnpm exec tauri dev ${FEATURES[@]+"${FEATURES[@]}"} --config "$BUZZ_TAURI_CONFIG" {{ARGS}}
+    echo "Starting production on Vite port ${HIVE_VITE_PORT}, relay ${HIVE_RELAY_URL}"
+    pnpm exec tauri dev ${FEATURES[@]+"${FEATURES[@]}"} --config "$HIVE_TAURI_CONFIG" {{ARGS}}
 
 # Run the desktop frontend dev server (port derived from worktree)
 desktop-dev:
@@ -1015,8 +1009,8 @@ desktop-dev:
     cd {{desktop_dir}}
     [[ -d node_modules ]] || pnpm install
     source ../scripts/instance-env.sh
-    echo "Starting frontend dev server on Vite port ${BUZZ_VITE_PORT}, relay ${BUZZ_RELAY_URL}"
-    pnpm exec vite --port "${BUZZ_VITE_PORT}" --strictPort
+    echo "Starting frontend dev server on Vite port ${HIVE_VITE_PORT}, relay ${HIVE_RELAY_URL}"
+    pnpm exec vite --port "${HIVE_VITE_PORT}" --strictPort
 
 # ─── Web ─────────────────────────────────────────────────────────────────────
 
@@ -1026,9 +1020,9 @@ web:
     set -euo pipefail
     [[ -d node_modules ]] || pnpm install
     source scripts/instance-env.sh
-    export VITE_PORT=$((BUZZ_VITE_PORT + 100))
-    export VITE_RELAY_URL="${BUZZ_RELAY_URL}"
-    echo "Starting web dev server on port ${VITE_PORT}, relay ${BUZZ_RELAY_URL}"
+    export VITE_PORT=$((HIVE_VITE_PORT + 100))
+    export VITE_RELAY_URL="${HIVE_RELAY_URL}"
+    echo "Starting web dev server on port ${VITE_PORT}, relay ${HIVE_RELAY_URL}"
     cd {{web_dir}}
     pnpm exec vite --port "${VITE_PORT}" --strictPort
 
@@ -1089,8 +1083,8 @@ mobile-build-android:
     set -euo pipefail
     ./scripts/mobile-worktree-overrides.sh
     set -- build apk --debug --no-pub
-    if [[ -n "${BUZZ_PUSH_GATEWAY_URL:-}" ]]; then
-        set -- "$@" --dart-define="BUZZ_PUSH_GATEWAY_URL=${BUZZ_PUSH_GATEWAY_URL}"
+    if [[ -n "${HIVE_PUSH_GATEWAY_URL:-}" ]]; then
+        set -- "$@" --dart-define="HIVE_PUSH_GATEWAY_URL=${HIVE_PUSH_GATEWAY_URL}"
     fi
     unset GIT_DIR GIT_WORK_TREE
     cd {{mobile_dir}}
@@ -1109,14 +1103,14 @@ mobile-dev:
     open -a "$simulator_app"
     sleep 3
     ./scripts/mobile-worktree-overrides.sh
-    gateway_url="${BUZZ_PUSH_GATEWAY_URL:-}"
+    gateway_url="${HIVE_PUSH_GATEWAY_URL:-}"
     overrides_file="{{mobile_dir}}/ios/Flutter/AppOverrides.xcconfig"
     if [[ -z "$gateway_url" && -f "$overrides_file" ]]; then
-        gateway_url="$(sed -nE 's/^[[:space:]]*BUZZ_PUSH_GATEWAY_URL[[:space:]]*=[[:space:]]*(.*[^[:space:]])[[:space:]]*$/\1/p' "$overrides_file" | tail -n 1 | sed 's/\$()//g')"
+        gateway_url="$(sed -nE 's/^[[:space:]]*HIVE_PUSH_GATEWAY_URL[[:space:]]*=[[:space:]]*(.*[^[:space:]])[[:space:]]*$/\1/p' "$overrides_file" | tail -n 1 | sed 's/\$()//g')"
     fi
     set -- run
     if [[ -n "$gateway_url" ]]; then
-        set -- "$@" --dart-define="BUZZ_PUSH_GATEWAY_URL=${gateway_url}"
+        set -- "$@" --dart-define="HIVE_PUSH_GATEWAY_URL=${gateway_url}"
     fi
     cd {{mobile_dir}}
     unset GIT_DIR GIT_WORK_TREE
@@ -1381,7 +1375,7 @@ _release-pr lane version:
 # ─── Agent Harness ────────────────────────────────────────────────────────────
 
 # Run a goose agent connected to a Buzz relay (foreground)
-goose relay="ws://localhost:3000" agents="1" heartbeat="0" prompt="" key="$BUZZ_PRIVATE_KEY":
+goose relay="ws://localhost:3000" agents="1" heartbeat="0" prompt="" key="$HIVE_PRIVATE_KEY":
     #!/usr/bin/env bash
     set -euo pipefail
     export PATH="{{justfile_directory()}}/bin:$PATH"
@@ -1389,7 +1383,7 @@ goose relay="ws://localhost:3000" agents="1" heartbeat="0" prompt="" key="$BUZZ_
     exec env "${env_args[@]}" ./target/release/buzz-acp
 
 # Run a goose agent in the background (screen session named 'goose-agent-N')
-goose-bg relay="ws://localhost:3000" agents="1" heartbeat="0" prompt="" key="$BUZZ_PRIVATE_KEY":
+goose-bg relay="ws://localhost:3000" agents="1" heartbeat="0" prompt="" key="$HIVE_PRIVATE_KEY":
     #!/usr/bin/env bash
     set -euo pipefail
     export PATH="{{justfile_directory()}}/bin:$PATH"

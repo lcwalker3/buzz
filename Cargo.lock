@@ -294,9 +294,9 @@ dependencies = [
 
 [[package]]
 name = "async-executor"
-version = "1.14.0"
+version = "1.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c96bf972d85afc50bf5ab8fe2d54d1586b4e0b46c97c50a0c9e71e2f7bcd812a"
+checksum = "f426a31126c735126297bc5ea7a521263c9faff4f63ca415267ee625651c4f37"
 dependencies = [
  "async-task",
  "concurrent-queue",
@@ -6624,9 +6624,9 @@ dependencies = [
 
 [[package]]
 name = "nostr-sdk"
-version = "0.45.1"
+version = "0.45.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26c86342f367bd9b173ec4a697e936e3a82d6dad5b4aa06c0d35d9b4f88a8e72"
+checksum = "6241efa2469244b0c40ad9b32172d07e363a537cb822d3d5ba8c3a78e2829746"
 dependencies = [
  "async-utility",
  "async-wsocket",

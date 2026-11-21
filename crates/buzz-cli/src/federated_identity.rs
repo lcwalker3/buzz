@@ -1,7 +1,7 @@
 //! Headless NIP-FI evidence: mint relay assertions from a NIP-FA adapter
 //! session (`docs/nips/NIP-FA.md` §Relay assertion).
 //!
-//! The adapter session token (`BUZZ_FEDERATED_IDENTITY_TOKEN`) proves who the
+//! The adapter session token (`HIVE_FEDERATED_IDENTITY_TOKEN`) proves who the
 //! user is; a NIP-98 proof proves the CLI controls the key. The adapter answers
 //! with a short-lived assertion that the CLI attaches as
 //! `Nostr-Federated-Identity: Bearer …` on every protected relay request.
@@ -24,9 +24,9 @@ use crate::cached_assertion::{unix_now, CachedAssertion};
 use crate::error::CliError;
 
 /// Environment variable carrying a NIP-FA adapter session token.
-pub const FEDERATED_IDENTITY_TOKEN_ENV: &str = "BUZZ_FEDERATED_IDENTITY_TOKEN";
+pub const FEDERATED_IDENTITY_TOKEN_ENV: &str = "HIVE_FEDERATED_IDENTITY_TOKEN";
 /// Environment variable carrying the NIP-FA adapter base URL.
-pub const FEDERATED_IDENTITY_ADAPTER_ENV: &str = "BUZZ_FEDERATED_IDENTITY_ADAPTER";
+pub const FEDERATED_IDENTITY_ADAPTER_ENV: &str = "HIVE_FEDERATED_IDENTITY_ADAPTER";
 
 /// NIP-FA assertion endpoint, relative to the adapter base.
 const ASSERTIONS_PATH: &str = "/v1/identity/assertions";

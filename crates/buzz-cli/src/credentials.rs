@@ -8,7 +8,7 @@
 //! code path serves relays with and without NIP-FI.
 //!
 //! [`resolve`] tries each link in order; the first configured link wins. An
-//! explicit key (`--private-key` / `BUZZ_PRIVATE_KEY`) is the first link, so a
+//! explicit key (`--private-key` / `HIVE_PRIVATE_KEY`) is the first link, so a
 //! caller that chooses a key always gets that key.
 
 use std::sync::Arc;
@@ -26,13 +26,13 @@ pub use crate::federated_identity::{
 /// Raw credential settings, from flags and the environment.
 #[derive(Default)]
 pub struct Settings {
-    /// `--private-key` / `BUZZ_PRIVATE_KEY`.
+    /// `--private-key` / `HIVE_PRIVATE_KEY`.
     pub private_key: Option<String>,
-    /// `--auth-tag` / `BUZZ_AUTH_TAG` (NIP-OA owner attestation).
+    /// `--auth-tag` / `HIVE_AUTH_TAG` (NIP-OA owner attestation).
     pub auth_tag: Option<String>,
-    /// `BUZZ_FEDERATED_IDENTITY_TOKEN` (NIP-FA adapter session token).
+    /// `HIVE_FEDERATED_IDENTITY_TOKEN` (NIP-FA adapter session token).
     pub federated_identity_token: Option<String>,
-    /// `BUZZ_FEDERATED_IDENTITY_ADAPTER` (NIP-FA adapter base URL).
+    /// `HIVE_FEDERATED_IDENTITY_ADAPTER` (NIP-FA adapter base URL).
     pub federated_identity_adapter: Option<String>,
 }
 
@@ -91,7 +91,7 @@ pub async fn resolve(settings: Settings, relay_url: &str) -> Result<Credentials,
 /// The error for a relay no link serves, naming it and the relays this CLI
 /// is paired for, so a missing `--relay` is plain.
 fn no_credentials(relay_url: &str, paired: &[String]) -> CliError {
-    let fix = "set BUZZ_PRIVATE_KEY, pass --private-key, or run `buzz auth desktop pair` \
+    let fix = "set HIVE_PRIVATE_KEY, pass --private-key, or run `buzz auth desktop pair` \
                with Buzz running";
     #[cfg(unix)]
     let this_one = crate::desktop_provider::provider_relay_url(relay_url)
@@ -108,7 +108,7 @@ fn no_credentials(relay_url: &str, paired: &[String]) -> CliError {
     } else {
         format!(
             "no credentials for {relay_url}: this CLI is paired with Buzz only for {}; pass \
-             --relay (or set BUZZ_RELAY_URL) to use a pairing, or {fix}",
+             --relay (or set HIVE_RELAY_URL) to use a pairing, or {fix}",
             paired.join(", ")
         )
     })
@@ -143,13 +143,13 @@ fn ignored_headless_settings(settings: &Settings) -> Option<String> {
     (!ignored.is_empty()).then(|| {
         format!(
             "warning: the Buzz desktop link supplies this identity's evidence; ignoring {} \
-             (set BUZZ_PRIVATE_KEY to use them)",
+             (set HIVE_PRIVATE_KEY to use them)",
             ignored.join(" and ")
         )
     })
 }
 
-/// Link 1: an explicit key from `--private-key` or `BUZZ_PRIVATE_KEY`.
+/// Link 1: an explicit key from `--private-key` or `HIVE_PRIVATE_KEY`.
 fn explicit_key(
     settings: &Settings,
     evidence: Option<AdapterSession>,
@@ -158,7 +158,7 @@ fn explicit_key(
         return Ok(None);
     };
     let keys =
-        Keys::parse(raw).map_err(|e| CliError::Key(format!("invalid BUZZ_PRIVATE_KEY: {e}")))?;
+        Keys::parse(raw).map_err(|e| CliError::Key(format!("invalid HIVE_PRIVATE_KEY: {e}")))?;
     let auth_tag = settings
         .auth_tag
         .as_deref()
@@ -196,24 +196,24 @@ fn evidence_source(
 
 /// Parse and verify a NIP-OA auth tag for `public_key`.
 ///
-/// `BUZZ_AUTH_TAG` is hand-authored configuration, so the unquoted raw
+/// `HIVE_AUTH_TAG` is hand-authored configuration, so the unquoted raw
 /// shorthand `[auth,hex,,hex]` is normalized to JSON here — at this input
 /// edge only. The SDK grammar and the `x-auth-tag` wire format stay strict
 /// JSON; all validation and signature verification happen on the strict path.
 fn parse_auth_tag(input: &str, public_key: &PublicKey) -> Result<AuthTag, CliError> {
     let json = crate::normalize_auth_tag_input(input);
     let tag = buzz_sdk::nip_oa::parse_auth_tag(&json)
-        .map_err(|e| CliError::Auth(format!("BUZZ_AUTH_TAG is malformed: {e}")))?;
+        .map_err(|e| CliError::Auth(format!("HIVE_AUTH_TAG is malformed: {e}")))?;
     buzz_sdk::nip_oa::verify_auth_tag(&json, public_key).map_err(|e| {
         CliError::Auth(format!(
-            "BUZZ_AUTH_TAG verification failed for pubkey {}: {e}",
+            "HIVE_AUTH_TAG verification failed for pubkey {}: {e}",
             public_key.to_hex()
         ))
     })?;
     // Canonical wire form derives from the parsed-and-verified tag
     // (same shape as buzz-acp's RestClient), never from raw input.
     let canonical = serde_json::to_string(tag.as_slice())
-        .map_err(|e| CliError::Auth(format!("BUZZ_AUTH_TAG serialization failed: {e}")))?;
+        .map_err(|e| CliError::Auth(format!("HIVE_AUTH_TAG serialization failed: {e}")))?;
     Ok(AuthTag {
         tag,
         json: canonical,
@@ -403,7 +403,7 @@ impl Credentials {
         }
         let keys = self.local_keys.as_ref().ok_or_else(|| {
             CliError::Auth(
-                "buzz mem needs a local key: set BUZZ_PRIVATE_KEY or pass --private-key".into(),
+                "buzz mem needs a local key: set HIVE_PRIVATE_KEY or pass --private-key".into(),
             )
         })?;
         let k_c = buzz_core::engram::conversation_key(keys.secret_key(), peer);
@@ -839,7 +839,7 @@ mod tests {
             }
         };
         let none = message("http://localhost:3000", &[]);
-        assert!(none.starts_with("no credentials for http://localhost:3000: set BUZZ_PRIVATE_KEY"));
+        assert!(none.starts_with("no credentials for http://localhost:3000: set HIVE_PRIVATE_KEY"));
 
         let elsewhere = message("http://localhost:3000", &["wss://team.example/"]);
         assert!(

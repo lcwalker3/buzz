@@ -64,7 +64,7 @@ class _ConnectionSection extends ConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showFeedbackSnackBar(
                     const SnackBar(
-                      content: Text('Couldn’t resume Buzz. Try again.'),
+                      content: Text('Couldn’t resume $appName. Try again.'),
                     ),
                     kind: ToastKind.error,
                   );

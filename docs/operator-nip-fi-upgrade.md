@@ -5,8 +5,8 @@ stored requirement through the deployment operator API. The command needs the
 configured `RELAY_OPERATOR_API_ORIGIN` and an allowlisted operator signing key
 in a protected file. It sends one signed request and never retries automatically.
 
-Before rolling, close `BUZZ_NIP_FI_UPGRADES_ENABLED` on every old relay and
-keep `BUZZ_NIP_FI_CHANGES=false` on new relays. Pause callers and upgrade them
+Before rolling, close `HIVE_NIP_FI_UPGRADES_ENABLED` on every old relay and
+keep `HIVE_NIP_FI_CHANGES=false` on new relays. Pause callers and upgrade them
 for the [supported API](operator-nip-fi-policy-client.md) before deploying this
 relay version. Apply the schema and roll compatible management writers across
 the whole fleet. Then explicitly

@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>BuzzAppGroupIdentifier</key>
-	<string>$(BUZZ_APP_GROUP_IDENTIFIER)</string>
+	<string>$(HIVE_APP_GROUP_IDENTIFIER)</string>
 	<key>BuzzKeychainAccessGroup</key>
-	<string>$(AppIdentifierPrefix)$(BUZZ_KEYCHAIN_ACCESS_GROUP)</string>
+	<string>$(AppIdentifierPrefix)$(HIVE_KEYCHAIN_ACCESS_GROUP)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

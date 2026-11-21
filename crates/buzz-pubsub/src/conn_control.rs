@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::broadcast;
 use uuid::Uuid;
 
-use crate::topic::BUZZ_PREFIX;
+use crate::topic::HIVE_PREFIX;
 
 /// Tenant-local Redis pub/sub channel suffix for connection-control messages.
 pub const CONN_CONTROL_SUFFIX: &str = "conn-control";
@@ -32,7 +32,7 @@ pub const CONN_CONTROL_PATTERN: &str = "buzz:*:conn-control";
 
 /// Redis pub/sub channel for connection-control messages under `ctx`.
 pub fn conn_control_channel(ctx: &TenantContext) -> String {
-    format!("{BUZZ_PREFIX}:{}:{CONN_CONTROL_SUFFIX}", ctx.community())
+    format!("{HIVE_PREFIX}:{}:{CONN_CONTROL_SUFFIX}", ctx.community())
 }
 
 // ── NIP-FI global disconnect channel ─────────────────────────────────────────
@@ -91,7 +91,7 @@ pub fn decode_nip_fi_disconnect(payload: &str) -> Result<NipFiDisconnect, serde_
 /// Parse a connection-control Redis channel into its scoped community id.
 pub fn parse_conn_control_channel(channel: &str) -> Option<CommunityId> {
     let mut parts = channel.split(':');
-    if parts.next()? != BUZZ_PREFIX {
+    if parts.next()? != HIVE_PREFIX {
         return None;
     }
     let community_id = Uuid::parse_str(parts.next()?).ok()?;

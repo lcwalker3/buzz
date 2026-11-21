@@ -100,7 +100,7 @@ void main() {
       ),
     );
     await tester.pump();
-    expect(find.bySemanticsLabel('Buzz'), findsOneWidget);
+    expect(find.bySemanticsLabel('The Hive'), findsOneWidget);
     expect(find.text('Sign in with email').hitTestable(), findsNothing);
     expect(
       find.text('or sign in with email'),

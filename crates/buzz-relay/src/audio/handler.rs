@@ -6003,7 +6003,7 @@ mod tests {
 
     /// Create an AppState backed by the real local DB.
     ///
-    /// Reads `BUZZ_TEST_DATABASE_URL`; falls back to the local development URL.
+    /// Reads `HIVE_TEST_DATABASE_URL`; falls back to the local development URL.
     /// Returns `None` if the resolved database is not reachable.
     async fn audio_test_state_real_db() -> Option<std::sync::Arc<crate::state::AppState>> {
         audio_test_state_real_db_with(|_| {}).await
@@ -6014,7 +6014,7 @@ mod tests {
         configure: impl FnOnce(&mut crate::config::Config),
     ) -> Option<std::sync::Arc<crate::state::AppState>> {
         use std::sync::Arc;
-        let db_url = std::env::var("BUZZ_TEST_DATABASE_URL").unwrap_or_else(|_| {
+        let db_url = std::env::var("HIVE_TEST_DATABASE_URL").unwrap_or_else(|_| {
             "postgres://buzz:buzz_dev@localhost:5432/buzz".to_string() // sadscan:disable np.postgres.1 -- local test-only credentials
         });
         if sqlx::PgPool::connect(&db_url).await.is_err() {
@@ -9129,7 +9129,7 @@ mod tests {
 
             let state = audio_test_state_real_db()
                 .await
-                .expect("F2a: PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres");
+                .expect("F2a: PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres");
             let pool = state.db.pool().clone();
             let (tenant, channel_id, member_key) = seed_audio_fixture(&pool).await;
             let community_id = tenant.community();
@@ -9221,7 +9221,7 @@ mod tests {
             use uuid::Uuid;
 
             let state = audio_test_state_real_db().await.expect(
-                "PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres",
+                "PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres",
             );
             let pool = state.db.pool().clone();
             let (tenant, channel_id, member_key) = seed_audio_fixture(&pool).await;
@@ -9348,7 +9348,7 @@ mod tests {
 
             let state = audio_test_state_real_db()
                 .await
-                .expect("F2b: PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres");
+                .expect("F2b: PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres");
             let pool = state.db.pool().clone();
             let (tenant, channel_id, member_key) = seed_audio_fixture(&pool).await;
             let community_id = tenant.community();
@@ -9478,7 +9478,7 @@ mod tests {
 
             let state = audio_test_state_real_db()
                 .await
-                .expect("F2c: PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres");
+                .expect("F2c: PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres");
             let pool = state.db.pool().clone();
 
             // ── Two-channel AutoAddRequired fixture ───────────────────────────
@@ -9688,7 +9688,7 @@ mod tests {
 
             let state = audio_test_state_real_db()
                 .await
-                .expect("W9: PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres");
+                .expect("W9: PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres");
             let pool = state.db.pool().clone();
             let (tenant, channel_id, member_key) = seed_audio_fixture(&pool).await;
             let community_id = tenant.community();
@@ -9820,7 +9820,7 @@ mod tests {
 
             let state = audio_test_state_real_db()
                 .await
-                .expect("W10: PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres");
+                .expect("W10: PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres");
             let pool = state.db.pool().clone();
             let (tenant, channel_id, member_key_a) = seed_audio_fixture(&pool).await;
             let community_id = tenant.community();
@@ -9987,7 +9987,7 @@ mod tests {
 
             let state = audio_test_state_real_db()
                 .await
-                .expect("W10-reaffirm: PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres");
+                .expect("W10-reaffirm: PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres");
             let pool = state.db.pool().clone();
             let (tenant, channel_id, member_key) = seed_audio_fixture(&pool).await;
             let community_id = tenant.community();
@@ -10149,7 +10149,7 @@ mod tests {
 
             let state = audio_test_state_real_db()
                 .await
-                .expect("CW5: PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres");
+                .expect("CW5: PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres");
             let pool = state.db.pool().clone();
 
             // Fixture: community + channel — NO membership row for the test key.
@@ -10408,7 +10408,7 @@ mod tests {
 
             let state = audio_test_state_real_db()
                 .await
-                .expect("CW5-variant: PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres");
+                .expect("CW5-variant: PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres");
             let pool = state.db.pool().clone();
 
             // Fixture: community + channel — NO membership row for the joining key.
@@ -10819,7 +10819,7 @@ mod tests {
 
             let state = audio_test_state_real_db()
                 .await
-                .expect("CW8: PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres");
+                .expect("CW8: PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres");
             let pool = state.db.pool().clone();
             let (tenant, channel_id, member_key) = seed_audio_fixture(&pool).await;
             let community = tenant.community();
@@ -11027,7 +11027,7 @@ mod tests {
 
             let state = audio_test_state_real_db()
                 .await
-                .expect("CW10: PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres");
+                .expect("CW10: PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres");
             let pool = state.db.pool().clone();
             let (tenant, channel_id, member_key) = seed_audio_fixture(&pool).await;
             let community_id = tenant.community();
@@ -11210,7 +11210,7 @@ mod tests {
 
             let state = audio_test_state_real_db()
                 .await
-                .expect("CW10-full: PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres");
+                .expect("CW10-full: PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres");
             let pool = state.db.pool().clone();
             let (tenant, channel_id, member_key) = seed_audio_fixture(&pool).await;
             let community = tenant.community();
@@ -11693,7 +11693,7 @@ mod tests {
 
             let log = crate::nip_fi_shadow::tests::WouldDenyLog::capture();
             let state = audio_test_state_real_db().await.expect(
-                "PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres",
+                "PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres",
             );
             let pool = state.db.pool().clone();
             let (tenant, channel_id, key) = seed_audio_fixture(&pool).await;
@@ -11893,7 +11893,7 @@ mod tests {
             use std::sync::Arc;
 
             let state = audio_test_state_real_db().await.expect(
-                "PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres",
+                "PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres",
             );
             let pool = state.db.pool().clone();
             let (tenant, channel_id, key) = seed_audio_fixture(&pool).await;
@@ -11979,7 +11979,7 @@ mod tests {
         /// A fast refusal hands the socket to a background close and returns.
         /// The connection permit must stay held until that socket ends, or a
         /// client that never answers the Close lets open audio sockets exceed
-        /// `BUZZ_MAX_CONNECTIONS`.
+        /// `HIVE_MAX_CONNECTIONS`.
         ///
         /// Mutation: stop the wrapper from joining the background close → the
         /// permit is released while the socket is still open → the
@@ -11994,7 +11994,7 @@ mod tests {
             use tokio::io::AsyncReadExt as _;
 
             let state = audio_test_state_real_db().await.expect(
-                "PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres",
+                "PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres",
             );
             let pool = state.db.pool().clone();
             let (tenant, channel_id, key) = seed_audio_fixture(&pool).await;
@@ -12107,7 +12107,7 @@ mod tests {
 
             let state = audio_test_state_real_db()
                 .await
-                .expect("F1: PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres");
+                .expect("F1: PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres");
             let pool = state.db.pool().clone();
             let (tenant, channel_id, member_key) = seed_audio_fixture(&pool).await;
             let community_id = tenant.community();
@@ -12223,7 +12223,7 @@ mod tests {
 
             let state = audio_test_state_real_db()
                 .await
-                .expect("F2d: PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres");
+                .expect("F2d: PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres");
             let pool = state.db.pool().clone();
             let (tenant, channel_id, member_key) = seed_audio_fixture(&pool).await;
             let community_id = tenant.community();
@@ -12440,7 +12440,7 @@ mod tests {
 
             let state = audio_test_state_real_db()
                 .await
-                .expect("F7a: PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres");
+                .expect("F7a: PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres");
             let pool = state.db.pool().clone();
             let (tenant, channel_id, alice_key) = seed_audio_fixture(&pool).await;
             let community_id = tenant.community();
@@ -15904,7 +15904,7 @@ mod tests {
             let state = audio_test_state_real_db_with(|c| c.huddle_audio_available = false)
                 .await
                 .expect(
-                    "PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres",
+                    "PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres",
                 );
             let (tenant, channel_id, key) = seed_audio_fixture(state.db.pool()).await;
             let (mut client, server) =
@@ -15959,7 +15959,7 @@ mod tests {
         #[ignore = "requires Postgres — runs in postgres-ci nextest lane"]
         async fn owner_revoke_closes_audio_only_agent() {
             let state = audio_test_state_real_db().await.expect(
-                "PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres",
+                "PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres",
             );
             let (tenant, channel_id, bystander) = seed_audio_fixture(state.db.pool()).await;
             let (agent, owner) = (nostr::Keys::generate(), nostr::Keys::generate());
@@ -16175,7 +16175,7 @@ mod tests {
         #[ignore = "requires Postgres — runs in postgres-ci nextest lane"]
         async fn audio_refuses_agent_whose_owner_link_fails() {
             let state = audio_test_state_real_db().await.expect(
-                "PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres",
+                "PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres",
             );
             let (tenant, channel_id, _member) = seed_audio_fixture(state.db.pool()).await;
             let (agent, owner, prior_owner) = (
@@ -16231,7 +16231,7 @@ mod tests {
         #[ignore = "requires Postgres — runs in postgres-ci nextest lane"]
         async fn audio_join_rejects_community_banned_member() {
             let state = audio_test_state_real_db().await.expect(
-                "PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres",
+                "PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres",
             );
             let (tenant, channel_id, member_key) = seed_audio_fixture(state.db.pool()).await;
             state
@@ -16268,7 +16268,7 @@ mod tests {
         #[ignore = "requires Postgres — runs in postgres-ci nextest lane"]
         async fn ban_disconnect_closes_live_audio_socket() {
             let state = audio_test_state_real_db().await.expect(
-                "PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres",
+                "PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres",
             );
             let (tenant, channel_id, member_key) = seed_audio_fixture(state.db.pool()).await;
             let community = tenant.community();
@@ -16331,7 +16331,7 @@ mod tests {
             issuer_first: bool,
         ) -> Vec<tokio_tungstenite::tungstenite::Message> {
             let state = audio_test_state_real_db().await.expect(
-                "PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres",
+                "PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres",
             );
             let (tenant, channel_id, member) = seed_audio_fixture(state.db.pool()).await;
             let community = tenant.community();
@@ -16417,7 +16417,7 @@ mod tests {
         #[ignore = "requires Postgres — runs in postgres-ci nextest lane"]
         async fn nip_fi_agent_banned_at_early_check_logs_denied() {
             let state = audio_test_state_real_db().await.expect(
-                "PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres",
+                "PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres",
             );
             let (tenant, channel_id, _member) = seed_audio_fixture(state.db.pool()).await;
             let (agent, owner) = (nostr::Keys::generate(), nostr::Keys::generate());
@@ -16466,7 +16466,7 @@ mod tests {
         #[ignore = "requires Postgres — runs in postgres-ci nextest lane"]
         async fn nip_fi_agent_expiring_at_owner_permit_sends_denial_and_close() {
             let state = audio_test_state_real_db().await.expect(
-                "PostgreSQL must be available — set BUZZ_TEST_DATABASE_URL or start local postgres",
+                "PostgreSQL must be available — set HIVE_TEST_DATABASE_URL or start local postgres",
             );
             let (tenant, channel_id, _member) = seed_audio_fixture(state.db.pool()).await;
             let community = tenant.community();

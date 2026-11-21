@@ -152,9 +152,9 @@ pub fn datastore_span(args: TokenStream, item: TokenStream) -> TokenStream {
         )
         .record(__buzz_datastore_elapsed_7f3a9c.as_secs_f64());
         if __buzz_datastore_elapsed_7f3a9c >= ::std::time::Duration::from_millis(500) {
-            static __BUZZ_DATASTORE_SLOW_SAMPLE_7F3A9C:
+            static __HIVE_DATASTORE_SLOW_SAMPLE_7F3A9C:
                 ::std::sync::atomic::AtomicU64 = ::std::sync::atomic::AtomicU64::new(0);
-            if __BUZZ_DATASTORE_SLOW_SAMPLE_7F3A9C.fetch_add(
+            if __HIVE_DATASTORE_SLOW_SAMPLE_7F3A9C.fetch_add(
                 1,
                 ::std::sync::atomic::Ordering::Relaxed,
             ) % 100 == 0 {

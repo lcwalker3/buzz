@@ -44,7 +44,7 @@ canonical archive row.
 
 Shared archive snapshots are rebuilt from the retained canonical archive rows.
 The snapshot replacement is a fresh signed event; no old signature is reused.
-Deletion requires `BUZZ_RELAY_PRIVATE_KEY` matching the affected snapshot signer.
+Deletion requires `HIVE_RELAY_PRIVATE_KEY` matching the affected snapshot signer.
 Preview never requires or reads this key. Historical snapshots that require a
 different signing key remain blocked pending reconciliation. Do not pass secrets
 on the command line or include them in logs.

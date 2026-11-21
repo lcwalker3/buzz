@@ -72,7 +72,7 @@ void main() {
       expect(notifications, 0);
     },
     skip:
-        !const bool.fromEnvironment('BUZZ_HOSTED_RELAY_AUTH') ||
+        !const bool.fromEnvironment('HIVE_HOSTED_RELAY_AUTH') ||
         !HostedEnvironment.enabled,
   );
 

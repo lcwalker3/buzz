@@ -44,16 +44,16 @@ spec:
             - { name: public, containerPort: 8080 }
             - { name: health, containerPort: 8081 }
           env:
-            - { name: BUZZ_PUSH_BIND_ADDR, value: "0.0.0.0:8080" }
-            - { name: BUZZ_PUSH_HEALTH_ADDR, value: "0.0.0.0:8081" }
+            - { name: HIVE_PUSH_BIND_ADDR, value: "0.0.0.0:8080" }
+            - { name: HIVE_PUSH_HEALTH_ADDR, value: "0.0.0.0:8081" }
             {{/* Schema bounds this integer; normalize YAML numbers before quote can emit scientific notation. */}}
-            - { name: BUZZ_PUSH_MAX_GRANT_LIFETIME_SECONDS, value: {{ .Values.maxGrantLifetimeSeconds | int64 | quote }} }
-            - { name: BUZZ_PUSH_APP_ATTEST_ROOT_CERT_PATH, value: /run/buzz/app-attest/root.pem }
-            - { name: BUZZ_PUSH_APP_ATTEST_APP_ID, value: {{ .Values.application.appAttestAppId | quote }} }
-            - { name: BUZZ_PUSH_APNS_TOPIC, value: {{ .Values.application.apnsTopic | quote }} }
-            - { name: BUZZ_PUSH_APNS_ENVIRONMENT, value: {{ .Values.application.apnsEnvironment | quote }} }
-            - { name: BUZZ_PUSH_APNS_CERT_PATH, value: /run/buzz/apns/identity.pem }
-            {{- range $name := list "DATABASE_URL" "BUZZ_PUSH_GRANT_KEYS" "BUZZ_PUSH_TOKEN_KEYS" }}
+            - { name: HIVE_PUSH_MAX_GRANT_LIFETIME_SECONDS, value: {{ .Values.maxGrantLifetimeSeconds | int64 | quote }} }
+            - { name: HIVE_PUSH_APP_ATTEST_ROOT_CERT_PATH, value: /run/buzz/app-attest/root.pem }
+            - { name: HIVE_PUSH_APP_ATTEST_APP_ID, value: {{ .Values.application.appAttestAppId | quote }} }
+            - { name: HIVE_PUSH_APNS_TOPIC, value: {{ .Values.application.apnsTopic | quote }} }
+            - { name: HIVE_PUSH_APNS_ENVIRONMENT, value: {{ .Values.application.apnsEnvironment | quote }} }
+            - { name: HIVE_PUSH_APNS_CERT_PATH, value: /run/buzz/apns/identity.pem }
+            {{- range $name := list "DATABASE_URL" "HIVE_PUSH_GRANT_KEYS" "HIVE_PUSH_TOKEN_KEYS" }}
             - name: {{ $name }}
               valueFrom: { secretKeyRef: { name: {{ $.Values.existingSecret }}, key: {{ $name }} } }
             {{- end }}

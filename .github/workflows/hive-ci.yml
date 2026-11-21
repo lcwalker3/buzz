@@ -1,0 +1,92 @@
+# The Hive CI: build and test every part of the app on each PR and push to
+# main. Toolchains come from the repo's pinned Hermit environment, and every
+# third-party action is pinned to a full commit SHA.
+name: Hive CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: hive-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: cashapp/activate-hermit@cea9af7913204a965fd488637a8d1811bba2e616 # v1
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter buzz-web
+      - name: Lint and checks
+        run: cd web && pnpm check
+      - name: Typecheck and build
+        run: cd web && pnpm build
+
+  mobile:
+    name: Mobile (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Checks
+            kind: checks
+          - name: Tests 1/3
+            kind: test
+            shard: 1
+          - name: Tests 2/3
+            kind: test
+            shard: 2
+          - name: Tests 3/3
+            kind: test
+            shard: 3
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: cashapp/activate-hermit@cea9af7913204a965fd488637a8d1811bba2e616 # v1
+      - name: Restore pub cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('mobile/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
+      - name: Install dependencies
+        run: cd mobile && flutter pub get
+      - name: Format check
+        if: matrix.kind == 'checks'
+        run: cd mobile && dart format --output=none --set-exit-if-changed .
+      - name: Analyze
+        if: matrix.kind == 'checks'
+        run: cd mobile && flutter analyze
+      - name: Test
+        if: matrix.kind == 'test'
+        run: /bin/bash scripts/mobile-test-shard.sh ${{ matrix.shard }} 3
+
+  rust:
+    name: Rust
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: cashapp/activate-hermit@cea9af7913204a965fd488637a8d1811bba2e616 # v1
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@0fd46367812ee04360509b4169d9f659d6892bb2 # v2.79.15
+        with:
+          tool: cargo-nextest
+      - name: Format check
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Unit tests
+        run: just test-unit

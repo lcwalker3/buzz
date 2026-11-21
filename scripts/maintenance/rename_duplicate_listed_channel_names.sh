@@ -22,10 +22,10 @@
 # fail the same way.
 #
 # Usage:
-#   DATABASE_URL=postgres://... BUZZ_PRIVATE_KEY=<operator key> \
+#   DATABASE_URL=postgres://... HIVE_PRIVATE_KEY=<operator key> \
 #     scripts/maintenance/rename_duplicate_listed_channel_names.sh [--dry-run] <community host>
 #
-# BUZZ_PRIVATE_KEY must belong to a relay operator (RELAY_OPERATOR_PUBKEYS, or
+# HIVE_PRIVATE_KEY must belong to a relay operator (RELAY_OPERATOR_PUBKEYS, or
 # an `operator` row in relay_operators), not a moderator. The key must also be
 # a member of the community: POST /events checks community membership before
 # it checks the operator role, so a key that is not a member gets 403
@@ -37,9 +37,9 @@
 # (add-member also finds only an unarchived community), run this script, and
 # archive it again. For one being deleted, it stops: no rename can land there,
 # and its duplicates go when its deletion completes.
-# BUZZ_RELAY_URL defaults to wss://<community host>. It also gives the
-# clients' starter channel ids unless BUZZ_STARTER_ORIGIN is set (below), so
-# it must be the URL clients use. BUZZ_CLI defaults to `buzz`. The script
+# HIVE_RELAY_URL defaults to wss://<community host>. It also gives the
+# clients' starter channel ids unless HIVE_STARTER_ORIGIN is set (below), so
+# it must be the URL clients use. HIVE_CLI defaults to `buzz`. The script
 # needs psql and python3.
 set -euo pipefail
 
@@ -57,17 +57,17 @@ fi
 host=$1
 : "${DATABASE_URL:?set DATABASE_URL}"
 if ! $dry_run; then
-    : "${BUZZ_PRIVATE_KEY:?set BUZZ_PRIVATE_KEY to a relay operator key}"
+    : "${HIVE_PRIVATE_KEY:?set HIVE_PRIVATE_KEY to a relay operator key}"
 fi
-relay_url=${BUZZ_RELAY_URL:-wss://$host}
-buzz=${BUZZ_CLI:-buzz}
+relay_url=${HIVE_RELAY_URL:-wss://$host}
+buzz=${HIVE_CLI:-buzz}
 plan_sql="$(cd "$(dirname "$0")" && pwd)/plan_duplicate_listed_channel_renames.sql"
 
 # The ids released desktop and mobile apps create their starter channels at:
 # UUIDv5 of "starter-channel:v1:<origin>:<slug>" (starter_channel_uuid in
 # desktop/src-tauri/src/commands/channels.rs). The origin is the clients'
-# relay HTTP origin: BUZZ_STARTER_ORIGIN when set (for a desktop build with
-# its own BUZZ_RELAY_HTTP), else the relay URL with wss:// as https:// and
+# relay HTTP origin: HIVE_STARTER_ORIGIN when set (for a desktop build with
+# its own HIVE_RELAY_HTTP), else the relay URL with wss:// as https:// and
 # ws:// as http://, trimmed of whitespace and trailing "/" as desktop does.
 # The script prints the ids so they can be checked against a client.
 starter=$(python3 -I -c '
@@ -83,7 +83,7 @@ ids = [str(uuid.uuid5(ns, "starter-channel:v1:%s:%s" % (origin.strip(), slug)))
        for slug in ("general", "welcome-everyone")]
 print(origin)
 print("{" + ",".join(ids) + "}")
-' "${BUZZ_STARTER_ORIGIN:-$relay_url}" "${BUZZ_STARTER_ORIGIN:-}")
+' "${HIVE_STARTER_ORIGIN:-$relay_url}" "${HIVE_STARTER_ORIGIN:-}")
 starter_origin=${starter%%$'\n'*}
 starter_ids=${starter#*$'\n'}
 echo "starter channel ids for $starter_origin (general, welcome-everyone): $starter_ids" >&2
@@ -139,7 +139,7 @@ while IFS= read -r -d '' channel && IFS= read -r -d '' name &&
         continue
     fi
     status=0
-    BUZZ_RELAY_URL=$relay_url "$buzz" channels update \
+    HIVE_RELAY_URL=$relay_url "$buzz" channels update \
         --channel="$channel" --name="$new_name" </dev/null >/dev/null || status=$?
     if [[ $status -eq 0 ]]; then
         printf 'renamed %s from %q to %q\n' "$channel" "$name" "$new_name"

@@ -367,8 +367,8 @@ async fn run_rename_script(
     .arg(host)
     .env("PATH", path)
     .env("DATABASE_URL", &database_url)
-    .env("BUZZ_PRIVATE_KEY", "unused")
-    .env("BUZZ_CLI", &cli)
+    .env("HIVE_PRIVATE_KEY", "unused")
+    .env("HIVE_CLI", &cli)
     .env("STUB_LOG", &log)
     .output()
     .expect("run the rename script");

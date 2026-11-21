@@ -69,7 +69,7 @@ When the desktop launches a process for an agent, through any agent harness, it
 sets:
 
 ```text
-BUZZ_CREDENTIAL_PROVIDER={"url":"http://127.0.0.1:<port>/<path>","token":"<token>"}
+HIVE_CREDENTIAL_PROVIDER={"url":"http://127.0.0.1:<port>/<path>","token":"<token>"}
 ```
 
 - The token's identity is that agent. It is never the owner.
@@ -400,7 +400,7 @@ where it can: no `auth_tag` means the caller sends no `auth` tag, and no
 ## Platforms
 
 Version 1 supports macOS and Linux. On Windows the desktop MUST NOT set
-`BUZZ_CREDENTIAL_PROVIDER` or write advertisements, and callers MUST skip the
+`HIVE_CREDENTIAL_PROVIDER` or write advertisements, and callers MUST skip the
 desktop link, because loopback has no same-user check there. A named pipe with
 an access control list is the planned Windows transport.
 
@@ -415,11 +415,11 @@ an access control list is the planned Windows transport.
   [assertion–key binding](nips/NIP-FI.md#assertionkey-binding) means a leaked
   assertion is useless without the identity's key.
 - **Tokens in the environment.** Child processes of an agent inherit
-  `BUZZ_CREDENTIAL_PROVIDER` and act as that agent. That matches the agent's
+  `HIVE_CREDENTIAL_PROVIDER` and act as that agent. That matches the agent's
   existing authority.
 - **An agent running as its owner's user can reach the owner's paired tokens.**
   The no-fallback rule binds only callers that follow it. An agent that can run
-  commands as the same OS user can unset `BUZZ_CREDENTIAL_PROVIDER`, or read the
+  commands as the same OS user can unset `HIVE_CREDENTIAL_PROVIDER`, or read the
   paired tokens from the OS keychain itself, and then act as the owner. On
   macOS the keychain item belongs to the `buzz` binary, so it opens with no
   prompt. On Linux, Secret Service is readable once it is unlocked. The

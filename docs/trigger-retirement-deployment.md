@@ -72,7 +72,7 @@ PostgreSQL refuses with `2BP01`.
 ## Rollback
 
 Roll back to the stop build, not further, and only with auto-migration off
-(`BUZZ_AUTO_MIGRATE=false`, or `migrate.autoMigrate=false` in the Helm chart).
+(`HIVE_AUTO_MIGRATE=false`, or `migrate.autoMigrate=false` in the Helm chart).
 With it on, the stop build refuses a database that has migrations it does
 not know (`VersionMissing`) and does not start. With it off, the stop build
 serves, but its startup check finds the floor trigger gone and keeps the

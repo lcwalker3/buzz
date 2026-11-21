@@ -548,7 +548,7 @@ impl RoutePredicate {
     /// sound predicate from the query shape. Never produces a covered arm
     /// without both a channel-scope proof AND a real upper bound.
     ///
-    /// `routing_enabled` is whether `BUZZ_REPLICA_READ_MAX_AGE_MS` is set
+    /// `routing_enabled` is whether `HIVE_REPLICA_READ_MAX_AGE_MS` is set
     /// (non-zero). When it is NOT, this returns `Bounded` — which the zero
     /// budget then fails closed — so the new seams are genuinely dark at
     /// the deploy default even for channel-pinned queries carrying `until`.
@@ -570,7 +570,7 @@ impl RoutePredicate {
     }
 }
 
-/// Map the configured read budget (`BUZZ_REPLICA_READ_MAX_AGE_MS`) to the
+/// Map the configured read budget (`HIVE_REPLICA_READ_MAX_AGE_MS`) to the
 /// runtime gate: `0` disables bounded-staleness routing; anything above the
 /// fence staleness gate is clamped to it (an entry older than the staleness
 /// gate never routes anyway, so a larger budget would only misrepresent the
@@ -675,7 +675,7 @@ pub enum DbReadinessOutcome {
 #[derive(Debug, Clone)]
 pub struct DbConfig {
     /// Enable push producers on every writer connection. Defaults to false.
-    /// Relay startup copies `BUZZ_PUSH_ENABLED`; auxiliary writers stay off.
+    /// Relay startup copies `HIVE_PUSH_ENABLED`; auxiliary writers stay off.
     pub push_enabled: bool,
     /// Postgres connection URL (usually sourced from `DATABASE_URL`).
     pub database_url: String,
@@ -686,7 +686,7 @@ pub struct DbConfig {
     /// Maximum number of connections in the pool.
     pub max_connections: u32,
     /// Maximum connections in the read-replica pool (env
-    /// `BUZZ_DB_READ_POOL_SIZE`). `None` inherits [`Self::max_connections`].
+    /// `HIVE_DB_READ_POOL_SIZE`). `None` inherits [`Self::max_connections`].
     pub read_max_connections: Option<u32>,
     /// Minimum number of idle connections to maintain.
     pub min_connections: u32,
@@ -697,14 +697,14 @@ pub struct DbConfig {
     /// Seconds a connection may sit idle before being closed.
     pub idle_timeout_secs: u64,
     /// Replica read budget `B` in milliseconds (bounded arm, env
-    /// `BUZZ_REPLICA_READ_MAX_AGE_MS`). `0` disables bounded-staleness
+    /// `HIVE_REPLICA_READ_MAX_AGE_MS`). `0` disables bounded-staleness
     /// routing — the rollout default. Values above
     /// [`replica_fence::FENCE_STALENESS`] are clamped to it: an entry older
     /// than the staleness gate never routes anyway, so a larger budget
     /// would only misrepresent the config.
     pub replica_read_max_age_ms: u64,
     /// Replica fence heartbeat interval in milliseconds (env
-    /// `BUZZ_REPLICA_FENCE_PROBE_INTERVAL_MS`). `0` selects
+    /// `HIVE_REPLICA_FENCE_PROBE_INTERVAL_MS`). `0` selects
     /// [`replica_fence::DEFAULT_PROBE_INTERVAL`]; other values are clamped
     /// to [`replica_fence::MIN_PROBE_INTERVAL`]..=
     /// [`replica_fence::MAX_PROBE_INTERVAL`]. Only used when a read pool is
@@ -712,13 +712,13 @@ pub struct DbConfig {
     /// [`replica_fence::min_read_budget`] of this interval.
     pub replica_fence_probe_interval_ms: u64,
     /// Session `lock_timeout` in milliseconds for writer connections (env
-    /// `BUZZ_DB_LOCK_TIMEOUT_MS`). `0` disables the timeout.
+    /// `HIVE_DB_LOCK_TIMEOUT_MS`). `0` disables the timeout.
     pub lock_timeout_ms: u64,
     /// Session `idle_in_transaction_session_timeout` in milliseconds for
-    /// writer connections (env `BUZZ_DB_IDLE_TXN_TIMEOUT_MS`). `0` disables.
+    /// writer connections (env `HIVE_DB_IDLE_TXN_TIMEOUT_MS`). `0` disables.
     pub idle_txn_timeout_ms: u64,
     /// Session `statement_timeout` in milliseconds for writer connections
-    /// (env `BUZZ_DB_STATEMENT_TIMEOUT_MS`). Defaults to
+    /// (env `HIVE_DB_STATEMENT_TIMEOUT_MS`). Defaults to
     /// [`DEFAULT_STATEMENT_TIMEOUT_MS`]. Every writer session is bounded:
     /// `0` or a value above [`MAX_STATEMENT_TIMEOUT_MS`] installs the maximum
     /// (see [`Self::effective_statement_timeout_ms`]). Migration and
@@ -781,7 +781,7 @@ impl DbConfig {
         }
     }
 
-    /// Overlay writer session timeouts from the shared `BUZZ_DB_*_TIMEOUT_MS`
+    /// Overlay writer session timeouts from the shared `HIVE_DB_*_TIMEOUT_MS`
     /// environment variables. Missing or invalid values retain the existing
     /// configuration; explicit zeroes pass through to disable the lock and
     /// idle timeouts, while the statement timeout is still clamped at connect
@@ -797,13 +797,13 @@ impl DbConfig {
                 .and_then(|value| value.parse::<u64>().ok())
         }
 
-        if let Some(value) = parse("BUZZ_DB_LOCK_TIMEOUT_MS") {
+        if let Some(value) = parse("HIVE_DB_LOCK_TIMEOUT_MS") {
             self.lock_timeout_ms = value;
         }
-        if let Some(value) = parse("BUZZ_DB_IDLE_TXN_TIMEOUT_MS") {
+        if let Some(value) = parse("HIVE_DB_IDLE_TXN_TIMEOUT_MS") {
             self.idle_txn_timeout_ms = value;
         }
-        if let Some(value) = parse("BUZZ_DB_STATEMENT_TIMEOUT_MS") {
+        if let Some(value) = parse("HIVE_DB_STATEMENT_TIMEOUT_MS") {
             self.statement_timeout_ms = value;
         }
         self
@@ -834,7 +834,7 @@ impl Db {
                 budget_ms = budget.as_millis() as u64,
                 probe_interval_ms = fence_probe_interval.as_millis() as u64,
                 recommended_min_ms = min_read_budget.as_millis() as u64,
-                "BUZZ_REPLICA_READ_MAX_AGE_MS cannot absorb one fence heartbeat that waits out \
+                "HIVE_REPLICA_READ_MAX_AGE_MS cannot absorb one fence heartbeat that waits out \
                  its lock timeout; bounded replica reads will spill to the writer whenever \
                  a beat is late"
             );
@@ -891,7 +891,7 @@ impl Db {
                 configured_ms = config.statement_timeout_ms,
                 installed_ms = statement_timeout_ms,
                 "writer statement_timeout cannot be disabled or exceed the maximum; \
-                 installing the maximum (BUZZ_DB_STATEMENT_TIMEOUT_MS)"
+                 installing the maximum (HIVE_DB_STATEMENT_TIMEOUT_MS)"
             );
         }
         let default_transaction_read_only = config.default_transaction_read_only;
@@ -1564,7 +1564,7 @@ impl Db {
                 // and reader connection health/latency; high active suggests
                 // contention, but this metric alone does not distinguish
                 // contention from slow connects. Note the gauge is a coarse
-                // sample (BUZZ_POOL_METRICS_INTERVAL_SECS, default 10s) while
+                // sample (HIVE_POOL_METRICS_INTERVAL_SECS, default 10s) while
                 // the event it explains lasts ~150ms — a short burst may fall
                 // between samples entirely, so absence of elevated active is
                 // NOT evidence of a cold connect.
@@ -1642,7 +1642,7 @@ impl Db {
     /// out configuration (`disabled`) and splits its ambiguous `stale`
     /// reason by cause. Reasons:
     /// - `heartbeat_stale`: the newest heartbeat is older than the
-    ///   bounded-read budget (`BUZZ_REPLICA_READ_MAX_AGE_MS`) — the probe
+    ///   bounded-read budget (`HIVE_REPLICA_READ_MAX_AGE_MS`) — the probe
     ///   is late, not the replica;
     /// - `heartbeat_missing`: no live heartbeat proof at all (the probe has
     ///   not committed one, or none in [`replica_fence::FENCE_STALENESS`]);
@@ -1773,7 +1773,7 @@ impl Db {
     ///
     /// `max` is the **reader's** ceiling ([`Db::read_max_connections`]), not
     /// the writer's: `buzz_db_read_pool_active / buzz_db_read_pool_max` is
-    /// the operator's utilisation signal for tuning `BUZZ_DB_READ_POOL_SIZE`,
+    /// the operator's utilisation signal for tuning `HIVE_DB_READ_POOL_SIZE`,
     /// and deriving it from the writer's max would misreport saturation by
     /// exactly the ratio of the two pool sizes — in the direction that hides
     /// the problem.

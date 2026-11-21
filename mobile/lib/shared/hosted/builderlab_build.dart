@@ -20,15 +20,15 @@ abstract final class BuilderlabBuild {
     List<String> relayDomains,
   })
   _config = parse(
-    distribution: const String.fromEnvironment('BUZZ_DISTRIBUTION'),
-    url: const String.fromEnvironment('BUZZ_BUILDERLAB_URL'),
-    relays: const String.fromEnvironment('BUZZ_BUILDERLAB_RELAYS'),
+    distribution: const String.fromEnvironment('HIVE_DISTRIBUTION'),
+    url: const String.fromEnvironment('HIVE_BUILDERLAB_URL'),
+    relays: const String.fromEnvironment('HIVE_BUILDERLAB_RELAYS'),
     retired: [
-      if (const bool.hasEnvironment('BUZZ_AUTH_DOMAINS')) 'BUZZ_AUTH_DOMAINS',
-      if (const bool.hasEnvironment('BUZZ_ORGANIZATION_URL'))
-        'BUZZ_ORGANIZATION_URL',
-      if (const bool.hasEnvironment('BUZZ_ORGANIZATION_RELAYS'))
-        'BUZZ_ORGANIZATION_RELAYS',
+      if (const bool.hasEnvironment('HIVE_AUTH_DOMAINS')) 'HIVE_AUTH_DOMAINS',
+      if (const bool.hasEnvironment('HIVE_ORGANIZATION_URL'))
+        'HIVE_ORGANIZATION_URL',
+      if (const bool.hasEnvironment('HIVE_ORGANIZATION_RELAYS'))
+        'HIVE_ORGANIZATION_RELAYS',
     ],
   );
 
@@ -38,13 +38,13 @@ abstract final class BuilderlabBuild {
     'https://app.builderlab.xyz',
   );
 
-  /// `BUZZ_DISTRIBUTION`: `internal` or `public`. Null for a Nostr-only build.
+  /// `HIVE_DISTRIBUTION`: `internal` or `public`. Null for a Nostr-only build.
   static BuilderlabDistribution? get distribution => _config.distribution;
 
-  /// `BUZZ_BUILDERLAB_URL`: this build's Builderlab HTTPS origin.
+  /// `HIVE_BUILDERLAB_URL`: this build's Builderlab HTTPS origin.
   static Uri? get origin => _config.origin;
 
-  /// `BUZZ_BUILDERLAB_RELAYS`: comma-separated DNS domains whose relays use
+  /// `HIVE_BUILDERLAB_RELAYS`: comma-separated DNS domains whose relays use
   /// this build's Builderlab session. A public build also matches their
   /// subdomains; an internal build matches only these exact hosts.
   static List<String> get relayDomains => _config.relayDomains;
@@ -85,8 +85,8 @@ abstract final class BuilderlabBuild {
     // Nostr-only build without its organization restriction.
     if (retired.isNotEmpty) {
       throw StateError(
-        '${retired.join(', ')} retired: set BUZZ_DISTRIBUTION, '
-        'BUZZ_BUILDERLAB_URL and BUZZ_BUILDERLAB_RELAYS instead',
+        '${retired.join(', ')} retired: set HIVE_DISTRIBUTION, '
+        'HIVE_BUILDERLAB_URL and HIVE_BUILDERLAB_RELAYS instead',
       );
     }
     final domains = _parseDomains(relays);
@@ -95,14 +95,14 @@ abstract final class BuilderlabBuild {
     }
     if (distribution.isEmpty || url.isEmpty || domains.isEmpty) {
       throw StateError(
-        'BUZZ_DISTRIBUTION, BUZZ_BUILDERLAB_URL and BUZZ_BUILDERLAB_RELAYS must be set together',
+        'HIVE_DISTRIBUTION, HIVE_BUILDERLAB_URL and HIVE_BUILDERLAB_RELAYS must be set together',
       );
     }
     final kind = BuilderlabDistribution.values
         .where((value) => value.name == distribution)
         .singleOrNull;
     if (kind == null) {
-      throw StateError('BUZZ_DISTRIBUTION must be internal or public');
+      throw StateError('HIVE_DISTRIBUTION must be internal or public');
     }
     // An internal build reaches one organization community and has no
     // switcher, so a second relay could strand its members there.
@@ -117,7 +117,7 @@ abstract final class BuilderlabBuild {
         uri.hasQuery ||
         uri.hasFragment ||
         (uri.path.isNotEmpty && uri.path != '/')) {
-      throw StateError('BUZZ_BUILDERLAB_URL must be an HTTPS origin');
+      throw StateError('HIVE_BUILDERLAB_URL must be an HTTPS origin');
     }
     final origin = Uri.parse(uri.origin);
     // Sessions are stored per origin host, so the internal build's cleanup of
@@ -144,7 +144,7 @@ abstract final class BuilderlabBuild {
             r'^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$',
           ).hasMatch(domain)) {
             throw StateError(
-              'BUZZ_BUILDERLAB_RELAYS must contain DNS names, not URLs or wildcards',
+              'HIVE_BUILDERLAB_RELAYS must contain DNS names, not URLs or wildcards',
             );
           }
           return domain;

@@ -149,7 +149,7 @@ enum Command {
         channel: Option<String>,
 
         /// Relay private key (hex) for signing events. Falls back to
-        /// BUZZ_RELAY_PRIVATE_KEY env var. If neither is set, generates
+        /// HIVE_RELAY_PRIVATE_KEY env var. If neither is set, generates
         /// an ephemeral key (events will be unverifiable after restart).
         #[arg(long)]
         relay_key: Option<String>,
@@ -194,7 +194,7 @@ async fn run(cli: Cli) -> Result<i32> {
             let keys = Keys::generate();
             println!("Public key:  {}", keys.public_key().to_hex());
             println!("Secret key:  {}", keys.secret_key().display_secret());
-            println!("\nSet BUZZ_PRIVATE_KEY to the secret key to use this identity.");
+            println!("\nSet HIVE_PRIVATE_KEY to the secret key to use this identity.");
             Ok(0)
         }
         Command::Migrate => {
@@ -254,10 +254,10 @@ async fn cmd_storage_snapshot(max_objects: u64) -> Result<i32> {
     })?;
     let storage = Arc::new(MediaStorage::new(&storage_config_from_env()?)?);
     let code_sha =
-        std::env::var("BUZZ_STORAGE_SNAPSHOT_CODE_SHA").unwrap_or_else(|_| "unknown".to_string());
+        std::env::var("HIVE_STORAGE_SNAPSHOT_CODE_SHA").unwrap_or_else(|_| "unknown".to_string());
     if code_sha.is_empty() || code_sha.len() > 128 {
         return Err(anyhow::anyhow!(
-            "BUZZ_STORAGE_SNAPSHOT_CODE_SHA must contain 1 to 128 bytes"
+            "HIVE_STORAGE_SNAPSHOT_CODE_SHA must contain 1 to 128 bytes"
         ));
     }
 
@@ -353,16 +353,16 @@ fn storage_config_from_env() -> Result<MediaConfig> {
     let required = |name: &str| {
         std::env::var(name).map_err(|_| anyhow::anyhow!("{name} must be set for storage-snapshot"))
     };
-    let addressing_style = std::env::var("BUZZ_S3_ADDRESSING_STYLE")
+    let addressing_style = std::env::var("HIVE_S3_ADDRESSING_STYLE")
         .unwrap_or_else(|_| "path".to_string())
         .parse::<S3AddressingStyle>()
         .map_err(anyhow::Error::msg)?;
     Ok(MediaConfig {
-        s3_endpoint: std::env::var("BUZZ_S3_ENDPOINT").unwrap_or_default(),
-        s3_access_key: std::env::var("BUZZ_S3_ACCESS_KEY").unwrap_or_default(),
-        s3_secret_key: std::env::var("BUZZ_S3_SECRET_KEY").unwrap_or_default(),
-        s3_bucket: required("BUZZ_S3_BUCKET")?,
-        s3_region: std::env::var("BUZZ_S3_REGION").unwrap_or_else(|_| "us-east-1".to_string()),
+        s3_endpoint: std::env::var("HIVE_S3_ENDPOINT").unwrap_or_default(),
+        s3_access_key: std::env::var("HIVE_S3_ACCESS_KEY").unwrap_or_default(),
+        s3_secret_key: std::env::var("HIVE_S3_SECRET_KEY").unwrap_or_default(),
+        s3_bucket: required("HIVE_S3_BUCKET")?,
+        s3_region: std::env::var("HIVE_S3_REGION").unwrap_or_else(|_| "us-east-1".to_string()),
         s3_addressing_style: addressing_style,
         max_image_bytes: 1,
         max_gif_bytes: 1,
@@ -439,9 +439,9 @@ async fn cmd_partition_audit(months_ahead: u32) -> Result<i32> {
         serde_json::to_string_pretty(&PartitionAuditOutput {
             schema_version: 1,
             mode: "read_only",
-            source_sha: option_env!("BUZZ_SOURCE_SHA").unwrap_or("unknown"),
-            build_id: option_env!("BUZZ_BUILD_ID").unwrap_or("local"),
-            build_url: option_env!("BUZZ_BUILD_URL").unwrap_or("unknown"),
+            source_sha: option_env!("HIVE_SOURCE_SHA").unwrap_or("unknown"),
+            build_id: option_env!("HIVE_BUILD_ID").unwrap_or("local"),
+            build_url: option_env!("HIVE_BUILD_URL").unwrap_or("unknown"),
             outcome,
             months_ahead,
             identity,
@@ -707,18 +707,18 @@ async fn fan_out_membership_list(
 
 /// Connect to DB, Redis pub/sub, and load the relay keypair.
 ///
-/// `BUZZ_RELAY_PRIVATE_KEY` is required — the CLI signs kind:13534 events.
+/// `HIVE_RELAY_PRIVATE_KEY` is required — the CLI signs kind:13534 events.
 async fn connect_member_services() -> Result<(Db, Arc<PubSubManager>, Keys)> {
     let db = connect_db().await?;
 
     let relay_keypair = {
-        let hex = std::env::var("BUZZ_RELAY_PRIVATE_KEY").map_err(|_| {
+        let hex = std::env::var("HIVE_RELAY_PRIVATE_KEY").map_err(|_| {
             anyhow::anyhow!(
-                "BUZZ_RELAY_PRIVATE_KEY is required for add-member/remove-member/republish-members.\n\
+                "HIVE_RELAY_PRIVATE_KEY is required for add-member/remove-member/republish-members.\n\
                  The relay must have a stable signing key to publish kind:13534 events."
             )
         })?;
-        Keys::parse(&hex).map_err(|e| anyhow::anyhow!("invalid BUZZ_RELAY_PRIVATE_KEY: {e}"))?
+        Keys::parse(&hex).map_err(|e| anyhow::anyhow!("invalid HIVE_RELAY_PRIVATE_KEY: {e}"))?
     };
 
     let redis_url =
@@ -792,10 +792,10 @@ async fn reconcile_channels(
     // never use an ephemeral key because it replaces an existing authoritative
     // snapshot.
     let configured_relay_key =
-        relay_key_arg.or_else(|| std::env::var("BUZZ_RELAY_PRIVATE_KEY").ok());
+        relay_key_arg.or_else(|| std::env::var("HIVE_RELAY_PRIVATE_KEY").ok());
     if channel_arg.is_some() && configured_relay_key.is_none() {
         return Err(anyhow::anyhow!(
-            "--channel requires --relay-key or BUZZ_RELAY_PRIVATE_KEY"
+            "--channel requires --relay-key or HIVE_RELAY_PRIVATE_KEY"
         ));
     }
     let relay_keys = match configured_relay_key {
@@ -809,7 +809,7 @@ async fn reconcile_channels(
                 k.public_key().to_hex()
             );
             eprintln!("Events signed with this key won't be verifiable after this run.");
-            eprintln!("Pass --relay-key or set BUZZ_RELAY_PRIVATE_KEY for production use.");
+            eprintln!("Pass --relay-key or set HIVE_RELAY_PRIVATE_KEY for production use.");
             k
         }
     };

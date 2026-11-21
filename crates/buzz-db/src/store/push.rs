@@ -1612,13 +1612,13 @@ mod postgres_tests {
     use tokio::sync::Barrier;
 
     async fn setup_pool() -> PgPool {
-        let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| "postgres://buzz:buzz_dev@localhost:5432/buzz".into()); // sadscan:disable np.postgres.1 -- local test-only credentials
         let pool = PgPool::connect(&database_url)
             .await
             .expect("connect to test DB");
-        if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
+        if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
             migration::run_migrations(&pool)
                 .await
                 .expect("run migrations");
@@ -1632,7 +1632,7 @@ mod postgres_tests {
         channel: Option<Uuid>,
     ) -> crate::Result<(buzz_core::StoredEvent, bool)> {
         let db = crate::Db::new(&crate::DbConfig {
-            database_url: std::env::var("BUZZ_TEST_DATABASE_URL").expect("isolated test database"),
+            database_url: std::env::var("HIVE_TEST_DATABASE_URL").expect("isolated test database"),
             push_enabled: true,
             ..crate::DbConfig::default()
         })

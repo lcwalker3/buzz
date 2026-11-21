@@ -125,10 +125,10 @@ fn parse_keyring(
 }
 
 fn parse_application(e: &HashMap<String, String>) -> Result<ApplicationConfig, ConfigError> {
-    let app_id_key = "BUZZ_PUSH_APP_ATTEST_APP_ID";
-    let cert_key = "BUZZ_PUSH_APNS_CERT_PATH";
-    let topic_key = "BUZZ_PUSH_APNS_TOPIC";
-    let environment_key = "BUZZ_PUSH_APNS_ENVIRONMENT";
+    let app_id_key = "HIVE_PUSH_APP_ATTEST_APP_ID";
+    let cert_key = "HIVE_PUSH_APNS_CERT_PATH";
+    let topic_key = "HIVE_PUSH_APNS_TOPIC";
+    let environment_key = "HIVE_PUSH_APNS_ENVIRONMENT";
     let required = |key: &'static str| {
         e.get(key)
             .map(String::as_str)
@@ -137,13 +137,13 @@ fn parse_application(e: &HashMap<String, String>) -> Result<ApplicationConfig, C
     };
     let app_attest_app_id = required(app_id_key)?.to_owned();
     let app_attest_environment = match e
-        .get("BUZZ_PUSH_APP_ATTEST_ENVIRONMENT")
+        .get("HIVE_PUSH_APP_ATTEST_ENVIRONMENT")
         .map(String::as_str)
     {
         None | Some("production") => AppAttestEnvironment::Production,
         #[cfg(feature = "personal-dev-app-attest")]
         Some("development") => AppAttestEnvironment::Development,
-        Some(_) => return Err(ConfigError::Invalid("BUZZ_PUSH_APP_ATTEST_ENVIRONMENT")),
+        Some(_) => return Err(ConfigError::Invalid("HIVE_PUSH_APP_ATTEST_ENVIRONMENT")),
     };
     let apns_topic = required(topic_key)?.to_owned();
     let apns_cert_path = PathBuf::from(required(cert_key)?);
@@ -162,10 +162,10 @@ fn parse_application(e: &HashMap<String, String>) -> Result<ApplicationConfig, C
 }
 
 const ANDROID_SETTINGS: [&str; 4] = [
-    "BUZZ_PUSH_ANDROID_PACKAGE_NAME",
-    "BUZZ_PUSH_ANDROID_SIGNING_CERT_DIGESTS",
-    "BUZZ_PUSH_FCM_PROJECT_ID",
-    "BUZZ_PUSH_FCM_SERVICE_ACCOUNT_PATH",
+    "HIVE_PUSH_ANDROID_PACKAGE_NAME",
+    "HIVE_PUSH_ANDROID_SIGNING_CERT_DIGESTS",
+    "HIVE_PUSH_FCM_PROJECT_ID",
+    "HIVE_PUSH_FCM_SERVICE_ACCOUNT_PATH",
 ];
 
 fn valid_android_package_name(name: &str) -> bool {
@@ -230,29 +230,29 @@ impl Config {
                 .filter(|v| !v.is_empty())
                 .ok_or(ConfigError::Missing(k))
         }
-        let grant_keys = parse_keyring(e, "BUZZ_PUSH_GRANT_KEYS")?;
-        let token_keys = parse_keyring(e, "BUZZ_PUSH_TOKEN_KEYS")?;
+        let grant_keys = parse_keyring(e, "HIVE_PUSH_GRANT_KEYS")?;
+        let token_keys = parse_keyring(e, "HIVE_PUSH_TOKEN_KEYS")?;
         if grant_keys.iter().any(|grant| {
             token_keys
                 .iter()
                 .any(|token| grant.id == token.id || grant.key == token.key)
         }) {
-            return Err(ConfigError::Invalid("BUZZ_PUSH_TOKEN_KEYS"));
+            return Err(ConfigError::Invalid("HIVE_PUSH_TOKEN_KEYS"));
         }
-        let max_grant_lifetime_seconds = req(e, "BUZZ_PUSH_MAX_GRANT_LIFETIME_SECONDS")?
+        let max_grant_lifetime_seconds = req(e, "HIVE_PUSH_MAX_GRANT_LIFETIME_SECONDS")?
             .parse::<i64>()
             .ok()
             .filter(|seconds| (1..=31_536_000).contains(seconds))
-            .ok_or(ConfigError::Invalid("BUZZ_PUSH_MAX_GRANT_LIFETIME_SECONDS"))?;
+            .ok_or(ConfigError::Invalid("HIVE_PUSH_MAX_GRANT_LIFETIME_SECONDS"))?;
         let max_installation_lifetime_seconds = e
-            .get("BUZZ_PUSH_MAX_INSTALLATION_LIFETIME_SECONDS")
+            .get("HIVE_PUSH_MAX_INSTALLATION_LIFETIME_SECONDS")
             .map(String::as_str)
             .unwrap_or("7776000")
             .parse::<i64>()
             .ok()
             .filter(|seconds| (1..=31_536_000).contains(seconds))
             .ok_or(ConfigError::Invalid(
-                "BUZZ_PUSH_MAX_INSTALLATION_LIFETIME_SECONDS",
+                "HIVE_PUSH_MAX_INSTALLATION_LIFETIME_SECONDS",
             ))?;
         let bounded_positive = |key: &'static str, default: i64, max: i64| {
             e.get(key)
@@ -265,23 +265,23 @@ impl Config {
                 .ok_or(ConfigError::Invalid(key))
         };
         let endpoint_quota_window_seconds =
-            bounded_positive("BUZZ_PUSH_ENDPOINT_QUOTA_WINDOW_SECONDS", 10, 86_400)?;
+            bounded_positive("HIVE_PUSH_ENDPOINT_QUOTA_WINDOW_SECONDS", 10, 86_400)?;
         let endpoint_quota_max_deliveries =
-            bounded_positive("BUZZ_PUSH_ENDPOINT_QUOTA_MAX_DELIVERIES", 10, 10_000)?;
+            bounded_positive("HIVE_PUSH_ENDPOINT_QUOTA_MAX_DELIVERIES", 10, 10_000)?;
         let application = parse_application(e)?;
         let android = parse_android(e)?;
         let bind_addr = e
-            .get("BUZZ_PUSH_BIND_ADDR")
+            .get("HIVE_PUSH_BIND_ADDR")
             .map(String::as_str)
             .unwrap_or("0.0.0.0:8080")
             .parse::<SocketAddr>()
-            .map_err(|_| ConfigError::Invalid("BUZZ_PUSH_BIND_ADDR"))?;
+            .map_err(|_| ConfigError::Invalid("HIVE_PUSH_BIND_ADDR"))?;
         let health_addr = e
-            .get("BUZZ_PUSH_HEALTH_ADDR")
+            .get("HIVE_PUSH_HEALTH_ADDR")
             .map(String::as_str)
             .unwrap_or("0.0.0.0:8081")
             .parse::<SocketAddr>()
-            .map_err(|_| ConfigError::Invalid("BUZZ_PUSH_HEALTH_ADDR"))?;
+            .map_err(|_| ConfigError::Invalid("HIVE_PUSH_HEALTH_ADDR"))?;
         Ok(Self {
             bind_addr,
             health_addr,
@@ -292,7 +292,7 @@ impl Config {
             application,
             android,
             database_url: req(e, "DATABASE_URL")?.to_owned(),
-            app_attest_root_cert_path: req(e, "BUZZ_PUSH_APP_ATTEST_ROOT_CERT_PATH")?.into(),
+            app_attest_root_cert_path: req(e, "HIVE_PUSH_APP_ATTEST_ROOT_CERT_PATH")?.into(),
             grant_keys,
             token_keys,
         })
@@ -313,11 +313,11 @@ mod tests {
             AppAttestEnvironment::Production
         );
         for value in ["", "sandbox", "Production", "unknown"] {
-            env.insert("BUZZ_PUSH_APP_ATTEST_ENVIRONMENT".into(), value.into());
+            env.insert("HIVE_PUSH_APP_ATTEST_ENVIRONMENT".into(), value.into());
             assert!(Config::from_map(&env).is_err());
         }
         env.insert(
-            "BUZZ_PUSH_APP_ATTEST_ENVIRONMENT".into(),
+            "HIVE_PUSH_APP_ATTEST_ENVIRONMENT".into(),
             "production".into(),
         );
         assert_eq!(
@@ -328,7 +328,7 @@ mod tests {
             AppAttestEnvironment::Production
         );
         env.insert(
-            "BUZZ_PUSH_APP_ATTEST_ENVIRONMENT".into(),
+            "HIVE_PUSH_APP_ATTEST_ENVIRONMENT".into(),
             "development".into(),
         );
         #[cfg(feature = "personal-dev-app-attest")]
@@ -346,7 +346,7 @@ mod tests {
     fn base() -> HashMap<String, String> {
         HashMap::from([
             (
-                "BUZZ_PUSH_GRANT_KEYS".into(),
+                "HIVE_PUSH_GRANT_KEYS".into(),
                 format!(
                     "current:{},old:{}",
                     STANDARD.encode([1; 32]),
@@ -354,7 +354,7 @@ mod tests {
                 ),
             ),
             (
-                "BUZZ_PUSH_TOKEN_KEYS".into(),
+                "HIVE_PUSH_TOKEN_KEYS".into(),
                 format!(
                     "current-token:{},old-token:{}",
                     STANDARD.encode([3; 32]),
@@ -362,7 +362,7 @@ mod tests {
                 ),
             ),
             (
-                "BUZZ_PUSH_MAX_GRANT_LIFETIME_SECONDS".into(),
+                "HIVE_PUSH_MAX_GRANT_LIFETIME_SECONDS".into(),
                 "2592000".into(),
             ),
             (
@@ -370,21 +370,21 @@ mod tests {
                 "postgres://buzz:test@localhost/buzz".into(), // sadscan:disable np.postgres.1
             ),
             (
-                "BUZZ_PUSH_APP_ATTEST_APP_ID".into(),
+                "HIVE_PUSH_APP_ATTEST_APP_ID".into(),
                 "TEAM.com.example.buzz".into(),
             ),
             (
-                "BUZZ_PUSH_APP_ATTEST_ROOT_CERT_PATH".into(),
+                "HIVE_PUSH_APP_ATTEST_ROOT_CERT_PATH".into(),
                 "/apple-root.pem".into(),
             ),
             (
-                "BUZZ_PUSH_APNS_CERT_PATH".into(),
+                "HIVE_PUSH_APNS_CERT_PATH".into(),
                 "/apns-identity.pem".into(),
             ),
-            ("BUZZ_PUSH_APNS_TOPIC".into(), "com.example.buzz".into()),
-            ("BUZZ_PUSH_APNS_ENVIRONMENT".into(), "production".into()),
-            ("BUZZ_PUSH_BIND_ADDR".into(), "127.0.0.1:8080".into()),
-            ("BUZZ_PUSH_HEALTH_ADDR".into(), "127.0.0.1:8081".into()),
+            ("HIVE_PUSH_APNS_TOPIC".into(), "com.example.buzz".into()),
+            ("HIVE_PUSH_APNS_ENVIRONMENT".into(), "production".into()),
+            ("HIVE_PUSH_BIND_ADDR".into(), "127.0.0.1:8080".into()),
+            ("HIVE_PUSH_HEALTH_ADDR".into(), "127.0.0.1:8081".into()),
         ])
     }
 
@@ -398,9 +398,9 @@ mod tests {
         assert_eq!(config.application.apns_topic, "com.example.buzz");
 
         for variable in [
-            "BUZZ_PUSH_APNS_CERT_PATH",
-            "BUZZ_PUSH_APNS_TOPIC",
-            "BUZZ_PUSH_APP_ATTEST_APP_ID",
+            "HIVE_PUSH_APNS_CERT_PATH",
+            "HIVE_PUSH_APNS_TOPIC",
+            "HIVE_PUSH_APP_ATTEST_APP_ID",
         ] {
             let mut env = base();
             env.remove(variable);
@@ -412,7 +412,7 @@ mod tests {
 
     #[test]
     fn startup_needs_no_origin_and_transcript_audiences_stay_registered() {
-        assert!(!base().contains_key("BUZZ_PUSH_GATEWAY_ORIGIN"));
+        assert!(!base().contains_key("HIVE_PUSH_GATEWAY_ORIGIN"));
         Config::from_map(&base()).unwrap();
         assert_eq!(ENROLL_AUDIENCE, "https://push.buzz.xyz/v1/installations");
         assert_eq!(DELEGATE_AUDIENCE, "https://push.buzz.xyz/v1/delegations");
@@ -443,13 +443,13 @@ mod tests {
     #[test]
     fn malformed_security_configuration_fails_startup() {
         for (key, value) in [
-            ("BUZZ_PUSH_APP_ATTEST_APP_ID", ""),
-            ("BUZZ_PUSH_APNS_ENVIRONMENT", "staging"),
-            ("BUZZ_PUSH_MAX_GRANT_LIFETIME_SECONDS", "0"),
-            ("BUZZ_PUSH_MAX_GRANT_LIFETIME_SECONDS", "31536001"),
-            ("BUZZ_PUSH_MAX_GRANT_LIFETIME_SECONDS", "2.592e+06"),
-            ("BUZZ_PUSH_MAX_GRANT_LIFETIME_SECONDS", "2592000.5"),
-            ("BUZZ_PUSH_MAX_INSTALLATION_LIFETIME_SECONDS", "0"),
+            ("HIVE_PUSH_APP_ATTEST_APP_ID", ""),
+            ("HIVE_PUSH_APNS_ENVIRONMENT", "staging"),
+            ("HIVE_PUSH_MAX_GRANT_LIFETIME_SECONDS", "0"),
+            ("HIVE_PUSH_MAX_GRANT_LIFETIME_SECONDS", "31536001"),
+            ("HIVE_PUSH_MAX_GRANT_LIFETIME_SECONDS", "2.592e+06"),
+            ("HIVE_PUSH_MAX_GRANT_LIFETIME_SECONDS", "2592000.5"),
+            ("HIVE_PUSH_MAX_INSTALLATION_LIFETIME_SECONDS", "0"),
         ] {
             let mut env = base();
             env.insert(key.into(), value.into());
@@ -462,7 +462,7 @@ mod tests {
     #[test]
     #[ignore = "run deploy/charts/buzz-push-gateway/tests/grant-lifetime.sh"]
     fn helm_rendered_grant_lifetimes() {
-        let path = std::env::var("BUZZ_TEST_HELM_ENV_FILE").unwrap();
+        let path = std::env::var("HIVE_TEST_HELM_ENV_FILE").unwrap();
         let cases: Vec<(String, i64, HashMap<String, String>)> =
             serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
         assert_eq!(cases.len(), 9);
@@ -472,7 +472,7 @@ mod tests {
             let config = Config::from_map(&env).unwrap_or_else(|error| panic!("{label}: {error}"));
             assert_eq!(config.max_grant_lifetime_seconds, expected, "{label}");
             assert_eq!(
-                env["BUZZ_PUSH_MAX_GRANT_LIFETIME_SECONDS"],
+                env["HIVE_PUSH_MAX_GRANT_LIFETIME_SECONDS"],
                 expected.to_string(),
                 "{label} must render decimal integer text"
             );
@@ -483,16 +483,16 @@ mod tests {
         let mut env = base();
         env.extend([
             (
-                "BUZZ_PUSH_ANDROID_PACKAGE_NAME".into(),
+                "HIVE_PUSH_ANDROID_PACKAGE_NAME".into(),
                 "com.example.buzz".into(),
             ),
             (
-                "BUZZ_PUSH_ANDROID_SIGNING_CERT_DIGESTS".into(),
+                "HIVE_PUSH_ANDROID_SIGNING_CERT_DIGESTS".into(),
                 format!("{},{}", "ab".repeat(32), "CD".repeat(32)),
             ),
-            ("BUZZ_PUSH_FCM_PROJECT_ID".into(), "example-project".into()),
+            ("HIVE_PUSH_FCM_PROJECT_ID".into(), "example-project".into()),
             (
-                "BUZZ_PUSH_FCM_SERVICE_ACCOUNT_PATH".into(),
+                "HIVE_PUSH_FCM_SERVICE_ACCOUNT_PATH".into(),
                 "/fcm/service-account.json".into(),
             ),
         ]);
@@ -519,13 +519,13 @@ mod tests {
     #[test]
     fn malformed_android_configuration_fails_startup() {
         for (key, value) in [
-            ("BUZZ_PUSH_ANDROID_PACKAGE_NAME", "buzz"),
-            ("BUZZ_PUSH_ANDROID_PACKAGE_NAME", "com..buzz"),
-            ("BUZZ_PUSH_ANDROID_PACKAGE_NAME", "com.1buzz"),
-            ("BUZZ_PUSH_ANDROID_SIGNING_CERT_DIGESTS", ""),
-            ("BUZZ_PUSH_ANDROID_SIGNING_CERT_DIGESTS", "abcd"),
-            ("BUZZ_PUSH_ANDROID_SIGNING_CERT_DIGESTS", "zz"),
-            ("BUZZ_PUSH_FCM_PROJECT_ID", ""),
+            ("HIVE_PUSH_ANDROID_PACKAGE_NAME", "buzz"),
+            ("HIVE_PUSH_ANDROID_PACKAGE_NAME", "com..buzz"),
+            ("HIVE_PUSH_ANDROID_PACKAGE_NAME", "com.1buzz"),
+            ("HIVE_PUSH_ANDROID_SIGNING_CERT_DIGESTS", ""),
+            ("HIVE_PUSH_ANDROID_SIGNING_CERT_DIGESTS", "abcd"),
+            ("HIVE_PUSH_ANDROID_SIGNING_CERT_DIGESTS", "zz"),
+            ("HIVE_PUSH_FCM_PROJECT_ID", ""),
         ] {
             let mut env = android_env();
             env.insert(key.into(), value.into());
@@ -540,7 +540,7 @@ mod tests {
             format!("other:{}", STANDARD.encode([1; 32])),
         ] {
             let mut env = base();
-            env.insert("BUZZ_PUSH_TOKEN_KEYS".into(), token_keys);
+            env.insert("HIVE_PUSH_TOKEN_KEYS".into(), token_keys);
             assert!(Config::from_map(&env).is_err());
         }
     }
@@ -548,8 +548,8 @@ mod tests {
     #[test]
     fn listener_defaults_remain_public_when_addresses_are_absent() {
         let mut env = base();
-        env.remove("BUZZ_PUSH_BIND_ADDR");
-        env.remove("BUZZ_PUSH_HEALTH_ADDR");
+        env.remove("HIVE_PUSH_BIND_ADDR");
+        env.remove("HIVE_PUSH_HEALTH_ADDR");
 
         let config = Config::from_map(&env).unwrap();
         assert_eq!(config.bind_addr, "0.0.0.0:8080".parse().unwrap());
@@ -559,12 +559,12 @@ mod tests {
     #[test]
     fn malformed_or_empty_keyrings_fail_startup() {
         for (variable, value) in [
-            ("BUZZ_PUSH_GRANT_KEYS", ""),
-            ("BUZZ_PUSH_GRANT_KEYS", "missing_separator"),
-            ("BUZZ_PUSH_GRANT_KEYS", "id:bad-base64"),
-            ("BUZZ_PUSH_TOKEN_KEYS", ""),
-            ("BUZZ_PUSH_TOKEN_KEYS", "missing_separator"),
-            ("BUZZ_PUSH_TOKEN_KEYS", "id:bad-base64"),
+            ("HIVE_PUSH_GRANT_KEYS", ""),
+            ("HIVE_PUSH_GRANT_KEYS", "missing_separator"),
+            ("HIVE_PUSH_GRANT_KEYS", "id:bad-base64"),
+            ("HIVE_PUSH_TOKEN_KEYS", ""),
+            ("HIVE_PUSH_TOKEN_KEYS", "missing_separator"),
+            ("HIVE_PUSH_TOKEN_KEYS", "id:bad-base64"),
         ] {
             let mut env = base();
             env.insert(variable.into(), value.into());

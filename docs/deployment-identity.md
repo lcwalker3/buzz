@@ -98,7 +98,7 @@ otherwise `Chart.AppVersion`.
 
 The exact runtime identity stays exact elsewhere: the Pod's image reference is
 `repository@digest` when a digest is pinned, and the storage-accounting
-`BUZZ_STORAGE_SNAPSHOT_CODE_SHA` (persisted as `code_sha` on every snapshot
+`HIVE_STORAGE_SNAPSHOT_CODE_SHA` (persisted as `code_sha` on every snapshot
 row) is the digest when set, otherwise the tag, otherwise `Chart.AppVersion`.
 
 The label value has to be sanitized: a

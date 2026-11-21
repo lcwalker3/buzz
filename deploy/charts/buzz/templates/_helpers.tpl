@@ -84,7 +84,7 @@ use, which promotion tooling writes together with image.digest — otherwise the
 digest, otherwise Chart.AppVersion. The chart owns this label so a wrapper never
 has to pin a second copy of the image identity that silently drifts; the exact
 runtime identity stays in the image reference and in
-BUZZ_STORAGE_SNAPSHOT_CODE_SHA ("buzz.imageRevision").
+HIVE_STORAGE_SNAPSHOT_CODE_SHA ("buzz.imageRevision").
 */}}
 {{- define "buzz.imageVersionSource" -}}
 {{- if .Values.image.tag -}}

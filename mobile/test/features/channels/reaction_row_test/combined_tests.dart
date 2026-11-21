@@ -101,7 +101,7 @@ void combinedReactionTests() {
         'mixed reaction glyphs stay centered, image=$loadCustom scale=$scale',
         (tester) async {
           final imageBytes = (await rootBundle.load(
-            'assets/images/buzz-icon.png',
+            'assets/images/the-hive-mark.png',
           )).buffer.asUint8List();
           final client = MockClient(
             (_) async => loadCustom

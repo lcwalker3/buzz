@@ -21,7 +21,7 @@ async fn cli_signin_aliases_reuse_legacy_cache_without_runtime_configuration() {
             tokio::process::Command::new(env!("CARGO_BIN_EXE_buzz-agent"))
                 .args(["auth", provider])
                 .env_clear()
-                .env("BUZZ_AGENT_CONFIG_DIR", root.path())
+                .env("HIVE_AGENT_CONFIG_DIR", root.path())
                 .env("HOME", root.path())
                 .env("DATABRICKS_HOST", host)
                 .kill_on_drop(true)

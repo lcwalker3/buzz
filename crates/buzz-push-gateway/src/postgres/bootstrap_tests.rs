@@ -4,7 +4,7 @@ use sqlx::postgres::PgPoolOptions;
 #[tokio::test]
 #[ignore = "requires PostgreSQL"]
 async fn bootstrap_refuses_legacy_data_before_migrations_and_allows_initialized_data() {
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL").expect("test database URL");
+    let url = std::env::var("HIVE_TEST_DATABASE_URL").expect("test database URL");
     let pool = PgPoolOptions::new()
         .max_connections(1)
         .connect(&url)
@@ -80,7 +80,7 @@ async fn bootstrap_refuses_legacy_data_before_migrations_and_allows_initialized_
 #[tokio::test]
 #[ignore = "requires PostgreSQL"]
 async fn single_application_cutover_refuses_populated_v5_authority() {
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL").expect("test database URL");
+    let url = std::env::var("HIVE_TEST_DATABASE_URL").expect("test database URL");
     let pool = PgPoolOptions::new()
         .max_connections(1)
         .connect(&url)
@@ -141,7 +141,7 @@ async fn single_application_cutover_refuses_populated_v5_authority() {
 #[tokio::test]
 #[ignore = "requires PostgreSQL"]
 async fn platform_migration_marks_existing_and_old_gateway_rows_ios() {
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL").expect("test database URL");
+    let url = std::env::var("HIVE_TEST_DATABASE_URL").expect("test database URL");
     let pool = PgPoolOptions::new()
         .max_connections(1)
         .connect(&url)

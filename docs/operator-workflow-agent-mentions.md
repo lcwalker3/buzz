@@ -8,7 +8,7 @@ other than the owner could have steered.
 
 | Setting | Values | Default |
 |---------|--------|---------|
-| `BUZZ_WORKFLOW_AGENT_MENTIONS` | `any`, `owner` | `any` |
+| `HIVE_WORKFLOW_AGENT_MENTIONS` | `any`, `owner` | `any` |
 
 Any other value fails startup. With `any`, the relay adds the tags for every
 run. With `owner`, a `send_message` step adds them only when the run is

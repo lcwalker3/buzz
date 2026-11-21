@@ -44,7 +44,7 @@ fn inventory_digest(value: &Value) -> Result<String> {
 }
 
 async fn fixture() -> (TestStore, Uuid) {
-    let url = std::env::var("BUZZ_TEST_DATABASE_URL")
+    let url = std::env::var("HIVE_TEST_DATABASE_URL")
         .or_else(|_| std::env::var("DATABASE_URL"))
         .unwrap();
     let pool = PgPool::connect(&url).await.unwrap();

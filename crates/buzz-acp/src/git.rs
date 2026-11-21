@@ -62,7 +62,7 @@ impl GitEnvironment {
         // `user` mode keeps only relay auth; its commits carry the operator's
         // own identity, so no attribution or signing is installed.
         let managed = if agent {
-            let display_name = std::env::var("BUZZ_ACP_DISPLAY_NAME").ok();
+            let display_name = std::env::var("HIVE_ACP_DISPLAY_NAME").ok();
             identity_entries(&info, relay, display_name.as_deref())
         } else {
             vec![("nostr.keyfile".into(), info.keyfile_path.clone())]
@@ -96,8 +96,8 @@ impl GitEnvironment {
         ));
         env.push(("GIT_TERMINAL_PROMPT".into(), "0".into()));
         // CLI flags must work even when the caller did not export these variables.
-        env.push(("BUZZ_PRIVATE_KEY".into(), secret.to_string()));
-        env.push(("BUZZ_RELAY_URL".into(), relay_url.to_owned()));
+        env.push(("HIVE_PRIVATE_KEY".into(), secret.to_string()));
+        env.push(("HIVE_RELAY_URL".into(), relay_url.to_owned()));
         // MCP children start from a cleared env; forward the resolved mode so a
         // nested harness keeps it instead of defaulting to `agent`.
         env.push((
@@ -132,7 +132,7 @@ fn inherited_config() -> anyhow::Result<Vec<(String, String)>> {
 }
 
 /// Operator selector for commit identity, read once at harness startup.
-const GIT_IDENTITY_ENV: &str = "BUZZ_GIT_IDENTITY";
+const GIT_IDENTITY_ENV: &str = "HIVE_GIT_IDENTITY";
 
 #[derive(Debug, PartialEq, Eq)]
 enum GitIdentityMode {
@@ -227,7 +227,7 @@ fn write_keyfile_atomic(path: &Path, data: &[u8]) -> std::io::Result<()> {
 /// Stable identity contract for git attribution: the bare agent display name,
 /// never channel-qualified, safe to embed in commit history.
 ///
-/// Deliberately distinct from `BUZZ_ACP_SESSION_TITLE`, which is per-session UI
+/// Deliberately distinct from `HIVE_ACP_SESSION_TITLE`, which is per-session UI
 /// chrome and may be composed (`Agent · #channel`) by consumers. Commits
 /// outlive sessions, so git attribution must not follow a mutable title.
 ///
@@ -386,8 +386,8 @@ pub(crate) fn is_managed_env(name: &str) -> bool {
             name,
             "PATH"
                 | "GIT_TERMINAL_PROMPT"
-                | "BUZZ_PRIVATE_KEY"
-                | "BUZZ_RELAY_URL"
+                | "HIVE_PRIVATE_KEY"
+                | "HIVE_RELAY_URL"
                 | GIT_IDENTITY_ENV
         )
 }

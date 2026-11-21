@@ -19,7 +19,7 @@ that the worker is absent. Snapshot reads have a five-second budget, including
 connection acquisition, and retry on the next usage tick. They do not run on
 the relay startup path and never fall back to an S3 scan.
 
-`BUZZ_STORAGE_METRICS` accepts:
+`HIVE_STORAGE_METRICS` accepts:
 
 | Value | Behavior |
 |---|---|
@@ -31,7 +31,7 @@ the relay startup path and never fall back to an S3 scan.
 Relay-local scans have been removed. Existing chart values that set `inline`
 need no coordinated configuration change. Environments without a worker will
 stop producing storage totals when this relay version arrives. The former
-`BUZZ_STORAGE_SWEEP_*` settings no longer apply; size and bound the worker
+`HIVE_STORAGE_SWEEP_*` settings no longer apply; size and bound the worker
 instead. An intentional `off` override still requires an operator to enable it.
 
 ## Freshness and failures
@@ -56,7 +56,7 @@ needs that permission and its database configuration.
 
 ## Usage delivery
 
-Set `BUZZ_STORAGE_USAGE_URL` to push each new snapshot's per-community totals
+Set `HIVE_STORAGE_USAGE_URL` to push each new snapshot's per-community totals
 to an operator endpoint. kgoose's `POST {prefix}/v1/buzz/storage-usage/record`
 receives them and bills sponsored communities in Orb. Unset, nothing is sent.
 Every five minutes, one relay pod (elected by a PostgreSQL session advisory

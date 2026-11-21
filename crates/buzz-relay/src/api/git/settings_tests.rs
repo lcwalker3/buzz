@@ -1158,12 +1158,12 @@ mod external_infra {
 
     impl Fixture {
         async fn new() -> Self {
-            let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
-                .expect("explicit isolated BUZZ_TEST_DATABASE_URL");
-            let redis_url = std::env::var("BUZZ_TEST_REDIS_URL")
-                .expect("explicit isolated BUZZ_TEST_REDIS_URL");
-            let endpoint = std::env::var("BUZZ_TEST_S3_ENDPOINT")
-                .expect("explicit isolated BUZZ_TEST_S3_ENDPOINT");
+            let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
+                .expect("explicit isolated HIVE_TEST_DATABASE_URL");
+            let redis_url = std::env::var("HIVE_TEST_REDIS_URL")
+                .expect("explicit isolated HIVE_TEST_REDIS_URL");
+            let endpoint = std::env::var("HIVE_TEST_S3_ENDPOINT")
+                .expect("explicit isolated HIVE_TEST_S3_ENDPOINT");
             let scratch = tempfile::tempdir().unwrap();
             let mut config = crate::config::Config::for_test(); // [FI-TRACE-ENV-RACE]
             config.database_url = database_url;
@@ -1174,14 +1174,14 @@ mod external_infra {
             config.git_pack_cache_path = scratch.path().join("cache");
             config.media.s3_endpoint = endpoint;
             config.media.s3_bucket =
-                std::env::var("BUZZ_TEST_S3_BUCKET").unwrap_or_else(|_| "buzz-git".into());
+                std::env::var("HIVE_TEST_S3_BUCKET").unwrap_or_else(|_| "buzz-git".into());
             config.media.s3_access_key = "buzz_dev".into();
             config.media.s3_secret_key = "buzz_dev_secret".into();
             let pool = sqlx::PgPool::connect(&config.database_url).await.unwrap();
             let db = buzz_db::Db::from_pool(pool.clone());
             // CI provisions schema/schema.sql with pgschema before this suite.
             // Only migration-backed local fixtures own the migration lifecycle.
-            if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
+            if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
                 db.migrate().await.unwrap();
             }
             let redis_pool = buzz_pubsub::redis_connection(&config.redis_url).unwrap();

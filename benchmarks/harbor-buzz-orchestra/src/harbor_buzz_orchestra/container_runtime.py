@@ -29,7 +29,7 @@ from .runtime import RuntimeResult
 from .task_fixtures import fixture_for
 
 DEFAULT_MAX_AGENT_ROUNDS = (
-    0  # 0 = unbounded (BUZZ_AGENT_MAX_ROUNDS=0); the trial budget is the clock
+    0  # 0 = unbounded (HIVE_AGENT_MAX_ROUNDS=0); the trial budget is the clock
 )
 # Reasoning effort for a roster entry that does not pin one. Pinned here rather
 # than left to the provider so an unset effort still means a recorded, stable
@@ -430,37 +430,37 @@ class BuzzContainerRuntime:
         return {
             **endpoint.env,
             "RUST_LOG": self._rust_log(endpoint.env.get("RUST_LOG")),
-            "BUZZ_RELAY_URL": trial.relay_ws_url,
-            "BUZZ_PRIVATE_KEY": credential.nostr_secret_key,
+            "HIVE_RELAY_URL": trial.relay_ws_url,
+            "HIVE_PRIVATE_KEY": credential.nostr_secret_key,
             # Desktop parity: the GUI also sets NOSTR_PRIVATE_KEY on buzz-acp
             # so buzz-dev-mcp's shim can wire git auth/signing for the agent.
             "NOSTR_PRIVATE_KEY": credential.nostr_secret_key,
-            "BUZZ_AUTH_TAG": credential.nostr_auth_tag,
-            "BUZZ_ACP_AGENT_COMMAND": f"{REMOTE_BIN}/buzz-agent",
-            "BUZZ_ACP_AGENT_ARGS": "",
-            "BUZZ_ACP_MCP_COMMAND": f"{REMOTE_BIN}/buzz-dev-mcp",
-            "BUZZ_ACP_CHANNELS": trial.channel_id,
-            "BUZZ_ACP_SUBSCRIBE": "mentions",
-            "BUZZ_ACP_RESPOND_TO": "anyone",
-            "BUZZ_ACP_NO_MEMORY": "true",
-            "BUZZ_ACP_SYSTEM_PROMPT_FILE": remote_prompt,
-            "BUZZ_AGENT_PROVIDER": endpoint.provider,
-            "BUZZ_AGENT_MODEL": credential.llm_endpoint,
-            "BUZZ_AGENT_THINKING_EFFORT": (
+            "HIVE_AUTH_TAG": credential.nostr_auth_tag,
+            "HIVE_ACP_AGENT_COMMAND": f"{REMOTE_BIN}/buzz-agent",
+            "HIVE_ACP_AGENT_ARGS": "",
+            "HIVE_ACP_MCP_COMMAND": f"{REMOTE_BIN}/buzz-dev-mcp",
+            "HIVE_ACP_CHANNELS": trial.channel_id,
+            "HIVE_ACP_SUBSCRIBE": "mentions",
+            "HIVE_ACP_RESPOND_TO": "anyone",
+            "HIVE_ACP_NO_MEMORY": "true",
+            "HIVE_ACP_SYSTEM_PROMPT_FILE": remote_prompt,
+            "HIVE_AGENT_PROVIDER": endpoint.provider,
+            "HIVE_AGENT_MODEL": credential.llm_endpoint,
+            "HIVE_AGENT_THINKING_EFFORT": (
                 agent_class.generation.thinking_effort or THINKING_EFFORT
             ),
-            "BUZZ_AGENT_MAX_OUTPUT_TOKENS": str(
+            "HIVE_AGENT_MAX_OUTPUT_TOKENS": str(
                 agent_class.generation.max_output_tokens
             ),
-            "BUZZ_AGENT_MAX_CONTEXT_TOKENS": str(
+            "HIVE_AGENT_MAX_CONTEXT_TOKENS": str(
                 agent_class.generation.context_window_tokens
             ),
-            "BUZZ_AGENT_MAX_ROUNDS": str(
+            "HIVE_AGENT_MAX_ROUNDS": str(
                 agent_class.budget.max_calls or self.max_agent_rounds
             ),
             # The pinned persona is the whole prompt: no hint-file or skill
             # discovery from the task filesystem (metadata reports this).
-            "BUZZ_AGENT_NO_HINTS": "1",
+            "HIVE_AGENT_NO_HINTS": "1",
             endpoint.api_key_env: credential.llm_api_key,
         }
 
@@ -805,9 +805,9 @@ class BuzzContainerRuntime:
                     stderr=asyncio.subprocess.PIPE,
                     env={
                         **os.environ,
-                        "BUZZ_RELAY_URL": self._user_relay_url(trial),
-                        "BUZZ_PRIVATE_KEY": credential.nostr_secret_key,
-                        "BUZZ_AUTH_TAG": credential.nostr_auth_tag,
+                        "HIVE_RELAY_URL": self._user_relay_url(trial),
+                        "HIVE_PRIVATE_KEY": credential.nostr_secret_key,
+                        "HIVE_AUTH_TAG": credential.nostr_auth_tag,
                     },
                 )
                 _, stderr = await process.communicate(seed.value.encode())
@@ -913,9 +913,9 @@ class BuzzContainerRuntime:
             stderr=asyncio.subprocess.PIPE,
             env={
                 **os.environ,
-                "BUZZ_RELAY_URL": self._user_relay_url(trial),
-                "BUZZ_PRIVATE_KEY": credential.nostr_secret_key,
-                "BUZZ_AUTH_TAG": credential.nostr_auth_tag,
+                "HIVE_RELAY_URL": self._user_relay_url(trial),
+                "HIVE_PRIVATE_KEY": credential.nostr_secret_key,
+                "HIVE_AUTH_TAG": credential.nostr_auth_tag,
             },
         )
         stdout, stderr = await process.communicate()
@@ -1030,12 +1030,12 @@ class BuzzContainerRuntime:
     @staticmethod
     def _reject_identity_overrides(endpoint: EndpointLaunchConfig) -> None:
         forbidden = {
-            "BUZZ_RELAY_URL",
-            "BUZZ_PRIVATE_KEY",
-            "BUZZ_AUTH_TAG",
-            "BUZZ_ACP_CHANNELS",
-            "BUZZ_ACP_MCP_COMMAND",
-            "BUZZ_ACP_AGENT_COMMAND",
+            "HIVE_RELAY_URL",
+            "HIVE_PRIVATE_KEY",
+            "HIVE_AUTH_TAG",
+            "HIVE_ACP_CHANNELS",
+            "HIVE_ACP_MCP_COMMAND",
+            "HIVE_ACP_AGENT_COMMAND",
         }
         overlap = forbidden & endpoint.env.keys()
         if overlap:

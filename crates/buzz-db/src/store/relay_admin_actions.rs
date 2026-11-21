@@ -2414,7 +2414,7 @@ mod postgres_tests {
 
     async fn setup_pool() -> PgPool {
         let url =
-            std::env::var("BUZZ_TEST_DATABASE_URL").unwrap_or_else(|_| TEST_DB_URL.to_string());
+            std::env::var("HIVE_TEST_DATABASE_URL").unwrap_or_else(|_| TEST_DB_URL.to_string());
         PgPool::connect(&url).await.expect("connect to test DB")
     }
 

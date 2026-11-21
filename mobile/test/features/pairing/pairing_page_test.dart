@@ -64,7 +64,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 400));
         await tester.pumpAndSettle();
         expect(tester.element(action), same(originalAction));
-        expect(find.bySemanticsLabel('Buzz'), findsNothing);
+        expect(find.bySemanticsLabel('The Hive'), findsNothing);
         expect(
           find.text('Choose an address for your community.'),
           findsOneWidget,
@@ -149,7 +149,7 @@ void main() {
             ),
           );
           await tester.pumpAndSettle();
-          expect(find.bySemanticsLabel('Buzz'), findsNothing);
+          expect(find.bySemanticsLabel('The Hive'), findsNothing);
           expect(find.text('Scan a QR code'), findsOneWidget);
           expect(find.text('Enter community link'), findsOneWidget);
           expect(find.text('Create a community'), findsOneWidget);
@@ -224,8 +224,8 @@ void main() {
         WidgetHelpers.testable(child: const PairingPage()),
       );
 
-      expect(find.bySemanticsLabel('Buzz'), findsOneWidget);
-      expect(find.text('Welcome to Buzz'), findsNothing);
+      expect(find.bySemanticsLabel('The Hive'), findsOneWidget);
+      expect(find.text('Welcome to The Hive'), findsNothing);
       expect(
         find.text(
           'Your people, your agents, your projects —\nall in one place.',
@@ -492,7 +492,7 @@ void main() {
       expect(find.text('Enter pairing code'), findsOneWidget);
       expect(
         find.text(
-          'Make sure the six-digit code matches on both devices. Your Buzz identity will transfer to this device. Only continue if you started this pairing from your desktop.',
+          'Make sure the six-digit code matches on both devices. Your The Hive identity will transfer to this device. Only continue if you started this pairing from your desktop.',
         ),
         findsNothing,
       );
@@ -857,7 +857,7 @@ void main() {
         ),
       );
 
-      expect(find.textContaining('full Buzz identity'), findsNothing);
+      expect(find.textContaining('full The Hive identity'), findsNothing);
       expect(find.textContaining('permanent access'), findsNothing);
       expect(find.textContaining('started this recovery'), findsNothing);
       expect(find.text('Continue'), findsNothing);
@@ -879,7 +879,7 @@ void main() {
       expect(find.text('Enter pairing code'), findsOneWidget);
       expect(
         find.text(
-          'Make sure the six-digit code matches on both devices. Your Buzz identity will transfer to this device. Only continue if you started this pairing from your desktop.',
+          'Make sure the six-digit code matches on both devices. Your The Hive identity will transfer to this device. Only continue if you started this pairing from your desktop.',
         ),
         findsNothing,
       );
@@ -1087,7 +1087,10 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('Enter pairing code'), findsOneWidget);
       expect(find.textContaining('matches on both devices'), findsNothing);
-      expect(find.textContaining('Buzz identity will transfer'), findsNothing);
+      expect(
+        find.textContaining('The Hive identity will transfer'),
+        findsNothing,
+      );
       expect(find.text('Continue'), findsNothing);
     });
   });

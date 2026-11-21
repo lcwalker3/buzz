@@ -71,7 +71,7 @@ assert!(d.dig("spec", "template", "metadata", "annotations").nil?)
 assert!(j.dig("spec", "template", "metadata", "labels") == migration)
 assert!(svc.dig("spec", "selector") != j.dig("spec", "template", "metadata", "labels"))
 jenv = j.dig("spec", "template", "spec", "containers", 0, "env").to_h { |entry| [entry["name"], entry] }
-assert!(jenv.dig("BUZZ_PUSH_RUNTIME_DATABASE_ROLE", "value") == "buzz_push_gateway_runtime")
+assert!(jenv.dig("HIVE_PUSH_RUNTIME_DATABASE_ROLE", "value") == "buzz_push_gateway_runtime")
 assert!(jenv.fetch("DATABASE_URL").key?("valueFrom"))
 assert!(j.dig("spec", "template", "spec", "containers", 0, "args") == ["--migrate-only"])
 assert!(j.dig("metadata", "annotations") == {
@@ -82,12 +82,12 @@ assert!(j.dig("metadata", "annotations") == {
 env_names = d.dig("spec", "template", "spec", "containers", 0, "env")
   .map { |entry| entry["name"] }.to_set
 required = Set.new(%w[
-  DATABASE_URL BUZZ_PUSH_APNS_CERT_PATH
-  BUZZ_PUSH_APNS_TOPIC BUZZ_PUSH_APP_ATTEST_APP_ID
-  BUZZ_PUSH_GRANT_KEYS BUZZ_PUSH_TOKEN_KEYS BUZZ_PUSH_MAX_GRANT_LIFETIME_SECONDS
+  DATABASE_URL HIVE_PUSH_APNS_CERT_PATH
+  HIVE_PUSH_APNS_TOPIC HIVE_PUSH_APP_ATTEST_APP_ID
+  HIVE_PUSH_GRANT_KEYS HIVE_PUSH_TOKEN_KEYS HIVE_PUSH_MAX_GRANT_LIFETIME_SECONDS
 ])
 assert!(required.subset?(env_names))
-assert!(!env_names.include?("BUZZ_PUSH_GATEWAY_ORIGIN"))
+assert!(!env_names.include?("HIVE_PUSH_GATEWAY_ORIGIN"))
 assert!(!env_names.any? { |name| name.include?("APP_STORE") })
 apns_volume = d.dig("spec", "template", "spec", "volumes").find { |volume| volume["name"] == "apns" }
 assert!(apns_volume.dig("secret", "defaultMode") == 0o400, apns_volume.inspect)
@@ -122,7 +122,7 @@ production_deployment = production.find { |x| x["kind"] == "Deployment" }
 production_image = production_deployment.dig("spec", "template", "spec", "containers", 0, "image")
 assert!(production_image == "ghcr.io/block/buzz-push-gateway@sha256:#{"a" * 64}", production_image.inspect)
 production_env = production_deployment.dig("spec", "template", "spec", "containers", 0, "env")
-assert!(production_env.find { |env| env["name"] == "BUZZ_PUSH_APNS_TOPIC" }["value"] == "com.example.production")
+assert!(production_env.find { |env| env["name"] == "HIVE_PUSH_APNS_TOPIC" }["value"] == "com.example.production")
 route = YAML.load_stream(File.read(ARGV[2])).compact.find { |x| x["kind"] == "HTTPRoute" }
 assert!(!route.dig("spec", "parentRefs").empty?)
 assert!(route.dig("spec", "hostnames") == ["push.example"])

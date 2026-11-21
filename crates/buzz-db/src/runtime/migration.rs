@@ -319,7 +319,7 @@ mod postgres_tests {
     /// Connection parameters parsed out of a PostgreSQL URL so the parity test
     /// can pass them to the `bin/pgschema` binary, which
     /// takes discrete `--host/--port/--user/--password/--db` flags rather than a
-    /// URL. Only the shapes this test emits (`BUZZ_TEST_DATABASE_URL` /
+    /// URL. Only the shapes this test emits (`HIVE_TEST_DATABASE_URL` /
     /// `DATABASE_URL` / `TEST_DB_URL`) are supported.
     struct PgConn {
         host: String,
@@ -2766,7 +2766,7 @@ mod postgres_tests {
 
         // Dedicated database: the probe table and the orphaned backend must
         // stay invisible to concurrent tests in the shared database.
-        let base_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let base_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| TEST_DB_URL.to_owned());
         let probe_db = ScratchDb::create(&base_url, "buzz_lock_cancel").await;
@@ -2906,7 +2906,7 @@ mod postgres_tests {
     }
 
     pub(super) async fn connect_test_pool() -> PgPool {
-        let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| TEST_DB_URL.to_owned());
 
@@ -3065,7 +3065,7 @@ mod postgres_tests {
             .expect("read trigger shapes")
         }
 
-        let base_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let base_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| TEST_DB_URL.to_owned());
         let conn = parse_pg_url(&base_url);

@@ -18,7 +18,7 @@
 //! ```
 //!
 //! On a database built from the desired-state schema (`schema/schema.sql`),
-//! which indexes kind:5 content, also set `BUZZ_TEST_SEARCH_INDEXES_DELETIONS=1`.
+//! which indexes kind:5 content, also set `HIVE_TEST_SEARCH_INDEXES_DELETIONS=1`.
 //! Without it, the search test only checks that results stay within the
 //! permitted sets, not that search actually returns them.
 
@@ -260,7 +260,7 @@ async fn assert_deletion_visibility(
 /// schema (`schema/schema.sql`, which CI applies) does; an empty database
 /// initialized through migration 0008 gets a positive allowlist that doesn't.
 fn search_indexes_deletions() -> bool {
-    std::env::var("BUZZ_TEST_SEARCH_INDEXES_DELETIONS").is_ok_and(|v| v == "1")
+    std::env::var("HIVE_TEST_SEARCH_INDEXES_DELETIONS").is_ok_and(|v| v == "1")
 }
 
 /// Search results for `filter` over WS REQ and HTTP `/query`, as hex ids.

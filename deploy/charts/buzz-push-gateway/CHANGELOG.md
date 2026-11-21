@@ -39,7 +39,7 @@ Implemented in [#8113](https://github.com/block/buzz/pull/8113).
 
 `gatewayOrigin` is now only an HTTPRoute routing input. It is optional unless
 `httpRoute.enabled=true`, and is no longer passed to the gateway container as
-`BUZZ_PUSH_GATEWAY_ORIGIN`. Implemented in
+`HIVE_PUSH_GATEWAY_ORIGIN`. Implemented in
 [#7877](https://github.com/block/buzz/pull/7877).
 
 Adds optional `migration.podAnnotations` for the migration Job's Pod template.

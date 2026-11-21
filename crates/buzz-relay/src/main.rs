@@ -67,11 +67,11 @@ fn connect_search_pool(config: &DbConfig) -> anyhow::Result<sqlx::PgPool> {
 fn relay_keypair_from_config(relay_private_key: Option<&str>) -> anyhow::Result<nostr::Keys> {
     let hex = relay_private_key.ok_or_else(|| {
         anyhow::anyhow!(
-            "BUZZ_RELAY_PRIVATE_KEY must be set. Run `just bootstrap` for local \
+            "HIVE_RELAY_PRIVATE_KEY must be set. Run `just bootstrap` for local \
              development or configure a stable 32-byte hex private key."
         )
     })?;
-    nostr::Keys::parse(hex).map_err(|e| anyhow::anyhow!("invalid BUZZ_RELAY_PRIVATE_KEY: {e}"))
+    nostr::Keys::parse(hex).map_err(|e| anyhow::anyhow!("invalid HIVE_RELAY_PRIVATE_KEY: {e}"))
 }
 
 const USAGE_METRICS_LOCK_KEY: i64 = 0x4255_5A5A_4D45_5452;
@@ -257,7 +257,7 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
         )
         .with(otel_layer.map(|layer| {
             layer.with_filter(telemetry::otel_filter(
-                std::env::var("BUZZ_OTEL_FILTER").ok().as_deref(),
+                std::env::var("HIVE_OTEL_FILTER").ok().as_deref(),
             ))
         }))
         .with(trace_context_lookup_layer)
@@ -373,7 +373,7 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
     }
 
     let auto_migrate =
-        buzz_auto_migrate_enabled(std::env::var("BUZZ_AUTO_MIGRATE").ok().as_deref());
+        buzz_auto_migrate_enabled(std::env::var("HIVE_AUTO_MIGRATE").ok().as_deref());
     if auto_migrate {
         let step = StepTimer::start(StartupStep::DbMigrate);
         db.migrate().await.map_err(|e| {
@@ -383,7 +383,7 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
         step.finish();
         info!("Database migrations complete");
     } else {
-        info!("Skipping database migrations because BUZZ_AUTO_MIGRATE is not enabled");
+        info!("Skipping database migrations because HIVE_AUTO_MIGRATE is not enabled");
     }
 
     let partition_policy = buzz_db::partition::PartitionMaintenancePolicy {
@@ -424,11 +424,11 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
     // that no one can administer.
     if config.require_relay_membership && config.relay_owner_pubkey.is_none() {
         error!(
-            "BUZZ_REQUIRE_RELAY_MEMBERSHIP=true but RELAY_OWNER_PUBKEY is not set or invalid. \
+            "HIVE_REQUIRE_RELAY_MEMBERSHIP=true but RELAY_OWNER_PUBKEY is not set or invalid. \
              Set RELAY_OWNER_PUBKEY to a valid 64-char hex pubkey."
         );
         return Err(anyhow::anyhow!(
-            "RELAY_OWNER_PUBKEY required when BUZZ_REQUIRE_RELAY_MEMBERSHIP=true"
+            "RELAY_OWNER_PUBKEY required when HIVE_REQUIRE_RELAY_MEMBERSHIP=true"
         ));
     }
 
@@ -437,7 +437,7 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
     // or bootstrapping if we'll reject the config anyway.
     if config.require_relay_membership && config.relay_private_key.is_none() {
         return Err(anyhow::anyhow!(
-            "BUZZ_RELAY_PRIVATE_KEY is required when BUZZ_REQUIRE_RELAY_MEMBERSHIP=true. \
+            "HIVE_RELAY_PRIVATE_KEY is required when HIVE_REQUIRE_RELAY_MEMBERSHIP=true. \
              NIP-43 events signed with an ephemeral key become unverifiable after restart."
         ));
     }
@@ -464,7 +464,7 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
         let host = buzz_relay::tenant::relay_url_authority(&config.relay_url);
         if host.is_empty() && config.require_relay_membership {
             return Err(anyhow::anyhow!(
-                "Cannot derive a community host from BUZZ_RELAY_URL ({:?}); a resolvable host is required when BUZZ_REQUIRE_RELAY_MEMBERSHIP=true",
+                "Cannot derive a community host from HIVE_RELAY_URL ({:?}); a resolvable host is required when HIVE_REQUIRE_RELAY_MEMBERSHIP=true",
                 config.relay_url
             ));
         }
@@ -490,7 +490,7 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
                 if config.require_relay_membership {
                     error!("Fatal: failed to ensure deployment community with membership enforcement enabled: {e}");
                     return Err(anyhow::anyhow!(
-                        "Failed to ensure deployment community (required when BUZZ_REQUIRE_RELAY_MEMBERSHIP=true): {e}"
+                        "Failed to ensure deployment community (required when HIVE_REQUIRE_RELAY_MEMBERSHIP=true): {e}"
                     ));
                 }
                 step.degrade();
@@ -527,7 +527,7 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
                         "Fatal: failed to backfill allowlist with membership enforcement enabled: {e}"
                     );
                     return Err(anyhow::anyhow!(
-                        "Failed to backfill pubkey_allowlist (required when BUZZ_REQUIRE_RELAY_MEMBERSHIP=true): {e}"
+                        "Failed to backfill pubkey_allowlist (required when HIVE_REQUIRE_RELAY_MEMBERSHIP=true): {e}"
                     ));
                 } else {
                     step.degrade();
@@ -559,7 +559,7 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
                     // in a broken state.
                     error!("Fatal: failed to bootstrap relay owner with membership enforcement enabled: {e}");
                     return Err(anyhow::anyhow!(
-                        "Failed to bootstrap relay owner (required when BUZZ_REQUIRE_RELAY_MEMBERSHIP=true): {e}"
+                        "Failed to bootstrap relay owner (required when HIVE_REQUIRE_RELAY_MEMBERSHIP=true): {e}"
                     ));
                 } else {
                     step.degrade();
@@ -582,7 +582,7 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
         let metrics_pool = audit_pool.clone();
         (Some(AuditService::new(audit_pool)), Some(metrics_pool))
     } else {
-        info!("Audit logging disabled by BUZZ_AUDIT_ENABLED");
+        info!("Audit logging disabled by HIVE_AUDIT_ENABLED");
         (None, None)
     };
 
@@ -866,15 +866,15 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
     // the manifest-pointer protocol. This is a deployment gate, not a proof.
     // It runs before the mesh boots so a pod that fails it never publishes a
     // mesh ready record for peers to dial.
-    if std::env::var("BUZZ_GIT_CONFORMANCE_PROBE")
+    if std::env::var("HIVE_GIT_CONFORMANCE_PROBE")
         .map(|v| v != "false")
         .unwrap_or(true)
     {
-        let race_width = std::env::var("BUZZ_GIT_PROBE_WRITERS")
+        let race_width = std::env::var("HIVE_GIT_PROBE_WRITERS")
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(32);
-        let race_rounds = std::env::var("BUZZ_GIT_PROBE_ROUNDS")
+        let race_rounds = std::env::var("HIVE_GIT_PROBE_ROUNDS")
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(3);
@@ -902,7 +902,7 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
         );
     }
 
-    // Inter-relay mesh (BUZZ_MESH seam). `boot_mesh` returns None when the
+    // Inter-relay mesh (HIVE_MESH seam). `boot_mesh` returns None when the
     // kill switch is off — nothing is bound, published, or spawned, so the
     // relay behaves byte-identically to a build without the mesh. When
     // enabled, a misconfigured mesh is fatal here (bind/Redis failure): an
@@ -920,7 +920,7 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
         let runtime_id = handle.local_runtime_id;
         // Register the per-profile inbound consumers (huddle datagram fan-in,
         // HuddleControl accept loop, reliable-stream accept + optional
-        // BUZZ_MESH_DEMO_ECHO) before peers can route traffic here.
+        // HIVE_MESH_DEMO_ECHO) before peers can route traffic here.
         handle.wire_consumers(
             Arc::clone(&state.audio_rooms),
             state.config.mesh_demo_echo,
@@ -959,9 +959,9 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
 
     // Emit kind:39000/39002 discovery events for channels that exist in the DB
     // but don't have corresponding events (e.g. seeded via direct SQL inserts).
-    // Only runs when BUZZ_RECONCILE_CHANNELS=true (dev/CI environments).
+    // Only runs when HIVE_RECONCILE_CHANNELS=true (dev/CI environments).
     // Production relays create channels through the event pipeline and don't need this.
-    if std::env::var("BUZZ_RECONCILE_CHANNELS").is_ok() {
+    if std::env::var("HIVE_RECONCILE_CHANNELS").is_ok() {
         let reconcile_state = Arc::clone(&state);
         tokio::spawn(async move {
             // Resolve the deployment's community from the configured relay URL
@@ -1021,7 +1021,7 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
     // together with the workflow engine in a future multi-pod coordination pass.
     {
         let reaper_state = Arc::clone(&state);
-        let reaper_interval_secs: u64 = std::env::var("BUZZ_REAPER_INTERVAL_SECS")
+        let reaper_interval_secs: u64 = std::env::var("HIVE_REAPER_INTERVAL_SECS")
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(60);
@@ -1106,7 +1106,7 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
         info!("NIP-PL push matcher and delivery worker started");
         Some((matcher, delivery))
     } else {
-        info!("NIP-PL push disabled by BUZZ_PUSH_ENABLED");
+        info!("NIP-PL push disabled by HIVE_PUSH_ENABLED");
         None
     };
 
@@ -1124,7 +1124,7 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
             "operator-listener mention delivery worker started"
         );
     } else {
-        info!("operator-listener mention delivery disabled by BUZZ_OPERATOR_LISTENERS");
+        info!("operator-listener mention delivery disabled by HIVE_OPERATOR_LISTENERS");
     }
     info!("operator-listener registration cleanup started");
 
@@ -1332,7 +1332,7 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
     // so missed archive commands still converge without a global DB scan.
     {
         let lifecycle_state = Arc::clone(&state);
-        let interval_secs = std::env::var("BUZZ_COMMUNITY_REVALIDATE_INTERVAL_SECS")
+        let interval_secs = std::env::var("HIVE_COMMUNITY_REVALIDATE_INTERVAL_SECS")
             .ok()
             .and_then(|value| value.parse::<u64>().ok())
             .unwrap_or(30)
@@ -1415,7 +1415,7 @@ async fn run_relay_main(boot: BootTracker) -> anyhow::Result<()> {
     // the shared Redis command connection.
     {
         let pool_state = Arc::clone(&state);
-        let interval_secs = std::env::var("BUZZ_POOL_METRICS_INTERVAL_SECS")
+        let interval_secs = std::env::var("HIVE_POOL_METRICS_INTERVAL_SECS")
             .ok()
             .and_then(|v| v.parse::<u64>().ok())
             .unwrap_or(10)
@@ -1790,7 +1790,7 @@ mod env_filter_tests {
             "warn,buzz_relay=info,buzz_relay=debug",
             "buzz_relay=ERROR,buzz_datastore=Debug",
             "buzz_relay=info,buzz_db::store=DEBUG,off",
-            "BUZZ_RELAY=info",
+            "HIVE_RELAY=info",
         ] {
             let enabled = |filter: DirectiveFilter<Registry>| {
                 let logs = logged(filter, emit_matrix_events);
@@ -1995,8 +1995,8 @@ async fn run_periodic_until_cancelled<Tick, TickFuture>(
 ///
 /// ```text
 /// ┌─────────────────────────────────────────────────────────┐
-/// │  Listener 1: TCP BUZZ_BIND_ADDR:3000  (app router)   │
-/// │  Listener 2: UDS BUZZ_UDS_PATH        (app, optional)│
+/// │  Listener 1: TCP HIVE_BIND_ADDR:3000  (app router)   │
+/// │  Listener 2: UDS HIVE_UDS_PATH        (app, optional)│
 /// │  Listener 3: TCP 0.0.0.0:8080           (health only)  │
 /// │  Listener 4: TCP 0.0.0.0:9102           (metrics, via  │
 /// │              PrometheusBuilder — already bound)         │
@@ -2037,7 +2037,7 @@ async fn run_periodic_until_cancelled<Tick, TickFuture>(
 /// forced exit, is 5s + 30s = 35s, which fits within the chart's
 /// `terminationGracePeriodSeconds: 60` (`deploy/charts/buzz/values.yaml`).
 /// That leaves headroom but assumes no `preStop` hook adds further delay.
-/// With jitter off (`BUZZ_DRAIN_JITTER_MS=0`, the default), `drain_all()`
+/// With jitter off (`HIVE_DRAIN_JITTER_MS=0`, the default), `drain_all()`
 /// queues every restart Close right after the grace and cancels the
 /// connections immediately, without waiting for any acknowledgement. The
 /// terminal-flush and peer-wait budgets then apply only to sockets whose
@@ -2146,7 +2146,7 @@ async fn serve(
             }
             Ok(_) => {
                 return Err(anyhow::anyhow!(
-                    "BUZZ_UDS_PATH {uds_path} exists but is not a socket"
+                    "HIVE_UDS_PATH {uds_path} exists but is not a socket"
                 ));
             }
             Err(_) => {}
@@ -2195,7 +2195,7 @@ async fn serve(
 
     #[cfg(not(unix))]
     if config.uds_path.is_some() {
-        tracing::warn!("BUZZ_UDS_PATH set but UDS not supported on this platform");
+        tracing::warn!("HIVE_UDS_PATH set but UDS not supported on this platform");
     }
 
     // TCP-only path.
@@ -2258,7 +2258,7 @@ fn reminder_to_event(reminder: &buzz_db::event::DueReminder) -> nostr::Event {
 
 /// Return the usage poll interval, with a floor that prevents a busy loop.
 fn usage_metrics_interval_secs() -> u64 {
-    std::env::var("BUZZ_USAGE_METRICS_INTERVAL_SECS")
+    std::env::var("HIVE_USAGE_METRICS_INTERVAL_SECS")
         .ok()
         .and_then(|value| value.parse().ok())
         .unwrap_or(300)
@@ -2267,7 +2267,7 @@ fn usage_metrics_interval_secs() -> u64 {
 
 /// Return a gauge lifetime that always outlives several usage-poller ticks.
 fn usage_metrics_idle_timeout_secs(interval_secs: u64) -> u64 {
-    let configured = std::env::var("BUZZ_USAGE_METRICS_IDLE_TIMEOUT_SECS")
+    let configured = std::env::var("HIVE_USAGE_METRICS_IDLE_TIMEOUT_SECS")
         .ok()
         .and_then(|value| value.parse().ok());
     idle_timeout_secs(configured, interval_secs)

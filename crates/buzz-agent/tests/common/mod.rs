@@ -125,14 +125,14 @@ impl Harness {
     ) -> Self {
         let bin = env!("CARGO_BIN_EXE_buzz-agent");
         let mut cmd = tokio::process::Command::new(bin);
-        cmd.env("BUZZ_AGENT_PROVIDER", "openai")
+        cmd.env("HIVE_AGENT_PROVIDER", "openai")
             .env("OPENAI_COMPAT_API_KEY", "test")
             .env("OPENAI_COMPAT_MODEL", "fake-model")
             .env("OPENAI_COMPAT_BASE_URL", base_url)
-            .env("BUZZ_AGENT_LLM_TIMEOUT_SECS", "5")
-            .env("BUZZ_AGENT_TOOL_TIMEOUT_SECS", "5")
-            .env("BUZZ_AGENT_MAX_ROUNDS", "8")
-            .env("BUZZ_AGENT_MCP_INIT_TIMEOUT_SECS", "2");
+            .env("HIVE_AGENT_LLM_TIMEOUT_SECS", "5")
+            .env("HIVE_AGENT_TOOL_TIMEOUT_SECS", "5")
+            .env("HIVE_AGENT_MAX_ROUNDS", "8")
+            .env("HIVE_AGENT_MCP_INIT_TIMEOUT_SECS", "2");
         for (k, v) in extra {
             cmd.env(k, v);
         }

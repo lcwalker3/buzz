@@ -69,7 +69,7 @@ async fn scripted_model(command: String) -> (String, tokio::task::JoinHandle<()>
 
 async fn check_runtime(goose: bool) {
     let binaries = PathBuf::from(
-        std::env::var("BUZZ_TEST_BIN_DIR").expect("set BUZZ_TEST_BIN_DIR to built binaries"),
+        std::env::var("HIVE_TEST_BIN_DIR").expect("set HIVE_TEST_BIN_DIR to built binaries"),
     );
     let temp = tempfile::tempdir().unwrap();
     let mut config = build_mcp_servers_tests::test_config();
@@ -123,7 +123,7 @@ printf 'passed' > ../result
         )
     } else {
         config.persona_env_vars.extend([
-            ("BUZZ_AGENT_PROVIDER".into(), "openai".into()),
+            ("HIVE_AGENT_PROVIDER".into(), "openai".into()),
             ("OPENAI_COMPAT_BASE_URL".into(), url),
             ("OPENAI_COMPAT_API_KEY".into(), "test".into()),
             ("OPENAI_COMPAT_MODEL".into(), "probe".into()),
@@ -170,13 +170,13 @@ printf 'passed' > ../result
 }
 
 #[tokio::test]
-#[ignore = "requires built buzz-acp, buzz-agent and buzz-dev-mcp; BUZZ_TEST_BIN_DIR"]
+#[ignore = "requires built buzz-acp, buzz-agent and buzz-dev-mcp; HIVE_TEST_BIN_DIR"]
 async fn real_buzz_agent_git_shell() {
     check_runtime(false).await;
 }
 
 #[tokio::test]
-#[ignore = "requires installed/configured Goose and built buzz-acp; BUZZ_TEST_BIN_DIR"]
+#[ignore = "requires installed/configured Goose and built buzz-acp; HIVE_TEST_BIN_DIR"]
 async fn real_goose_native_git_shell() {
     check_runtime(true).await;
 }

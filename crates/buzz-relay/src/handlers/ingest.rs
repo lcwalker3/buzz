@@ -4543,12 +4543,12 @@ mod postgres_tests {
             DEFAULT_LEASE_DURATION,
         };
 
-        let url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| "postgres://buzz:buzz_dev@localhost:5432/buzz".to_string()); // sadscan:disable np.postgres.1
         let pool = sqlx::PgPool::connect(&url).await.expect("connect test DB");
         let db = buzz_db::Db::from_pool(pool);
-        if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
+        if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() != Ok("desired") {
             db.migrate().await.expect("migrate test DB");
         }
         let store = buzz_deletion::store(&db);
@@ -6660,7 +6660,7 @@ mod postgres_tests {
         const FAKE_REDIS_URL: &str = "redis://127.0.0.1:1"; // no Redis needed for this path
 
         // ── Postgres connection ──────────────────────────────────────────────
-        let db_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let db_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| "postgres://buzz:buzz_dev@localhost:5432/buzz".to_string()); // sadscan:disable np.postgres.1
         let pool = sqlx::PgPool::connect(&db_url).await.expect(
@@ -7072,7 +7072,7 @@ mod postgres_tests {
         use buzz_db::channel::{ChannelType, ChannelVisibility};
         use nostr::{Keys, Tag};
 
-        let db_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let db_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| "postgres://buzz:buzz_dev@localhost:5432/buzz".to_string()); // sadscan:disable np.postgres.1
         let admin = sqlx::PgPool::connect(&db_url)
@@ -7191,7 +7191,7 @@ mod postgres_tests {
         use buzz_db::channel::{ChannelType, ChannelVisibility};
         use nostr::{Keys, Tag};
 
-        let db_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let db_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| "postgres://buzz:buzz_dev@localhost:5432/buzz".to_string()); // sadscan:disable np.postgres.1
         let admin = sqlx::PgPool::connect(&db_url)
@@ -7296,7 +7296,7 @@ mod postgres_tests {
         use buzz_db::channel::{ChannelType, ChannelVisibility};
         use nostr::{Keys, Kind, Tag, Timestamp};
 
-        let db_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let db_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| "postgres://buzz:buzz_dev@localhost:5432/buzz".to_string()); // sadscan:disable np.postgres.1
         let pool = sqlx::PgPool::connect(&db_url).await.expect(
@@ -7431,7 +7431,7 @@ mod postgres_tests {
         use buzz_db::channel::{ChannelType, ChannelVisibility};
         use nostr::{Keys, Kind, Tag};
 
-        let db_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let db_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| "postgres://buzz:buzz_dev@localhost:5432/buzz".to_string()); // sadscan:disable np.postgres.1
         let pool = sqlx::PgPool::connect(&db_url)

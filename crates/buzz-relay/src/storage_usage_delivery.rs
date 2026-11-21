@@ -1,7 +1,7 @@
 //! Push each new per-community storage snapshot to an operator endpoint.
 //!
 //! `buzz-admin storage-snapshot` replaces one durable snapshot row per run.
-//! When `BUZZ_STORAGE_USAGE_URL` is set, one relay pod (a session advisory
+//! When `HIVE_STORAGE_USAGE_URL` is set, one relay pod (a session advisory
 //! lock) checks that row every few minutes and, when its `completed_at` is
 //! new, POSTs the per-community totals in batches, in the request shape of
 //! kgoose's `POST /v1/buzz/storage-usage/record`. Each batch is NIP-98 signed
@@ -34,11 +34,11 @@ const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 /// each request body, not how many communities a snapshot reports.
 const BATCH_SIZE: usize = 50;
 
-/// Parse `BUZZ_STORAGE_USAGE_URL`: an HTTP(S) URL without credentials, query,
+/// Parse `HIVE_STORAGE_USAGE_URL`: an HTTP(S) URL without credentials, query,
 /// or fragment, the same shape operator-listener endpoints must have.
 pub fn parse_delivery_url(raw: &str) -> Result<url::Url, String> {
     let url = url::Url::parse(raw.trim())
-        .map_err(|e| format!("BUZZ_STORAGE_USAGE_URL is not a valid URL: {e}"))?;
+        .map_err(|e| format!("HIVE_STORAGE_USAGE_URL is not a valid URL: {e}"))?;
     if !matches!(url.scheme(), "http" | "https")
         || url.host().is_none()
         || !url.username().is_empty()
@@ -47,7 +47,7 @@ pub fn parse_delivery_url(raw: &str) -> Result<url::Url, String> {
         || url.fragment().is_some()
     {
         return Err(
-            "BUZZ_STORAGE_USAGE_URL must be an HTTP(S) URL without credentials, query, or fragment"
+            "HIVE_STORAGE_USAGE_URL must be an HTTP(S) URL without credentials, query, or fragment"
                 .to_string(),
         );
     }

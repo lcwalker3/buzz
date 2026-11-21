@@ -696,7 +696,7 @@ pub const MAX_COMMUNITIES_PER_OWNER: i64 = 50;
 
 /// Effective per-owner community limit for this deployment.
 ///
-/// Reads `BUZZ_MAX_COMMUNITIES_PER_OWNER` once (cached for the process
+/// Reads `HIVE_MAX_COMMUNITIES_PER_OWNER` once (cached for the process
 /// lifetime); a missing, unparsable, or non-positive value falls back to
 /// [`MAX_COMMUNITIES_PER_OWNER`]. Lets multi-tenant operators raise the active
 /// cap without a source change while keeping the stock default for everyone
@@ -707,7 +707,7 @@ pub fn max_communities_per_owner() -> i64 {
     static LIMIT: std::sync::OnceLock<i64> = std::sync::OnceLock::new();
     *LIMIT.get_or_init(|| {
         effective_owner_limit(
-            std::env::var("BUZZ_MAX_COMMUNITIES_PER_OWNER")
+            std::env::var("HIVE_MAX_COMMUNITIES_PER_OWNER")
                 .ok()
                 .as_deref(),
         )
@@ -738,7 +738,7 @@ pub fn owner_count_advisory_lock_key(pubkey_hex: &str) -> i64 {
 /// Lifetime cap on communities a pubkey may own, counting owner-deleted
 /// communities whose tombstones permanently retain their hosts. Bounds
 /// create-then-delete host squatting. Absolute: it does not scale with
-/// `BUZZ_MAX_COMMUNITIES_PER_OWNER`.
+/// `HIVE_MAX_COMMUNITIES_PER_OWNER`.
 pub const MAX_LIFETIME_COMMUNITIES_PER_OWNER: i64 = 50;
 
 /// One owner's quota usage, read inside the admitting transaction.
@@ -1716,7 +1716,7 @@ mod postgres_tests {
     const TEST_DB_URL: &str = "postgres://buzz:buzz_dev@localhost:5432/buzz"; // sadscan:disable np.postgres.1 -- local test-only credentials
 
     async fn setup_pool() -> PgPool {
-        let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+        let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
             .or_else(|_| std::env::var("DATABASE_URL"))
             .unwrap_or_else(|_| TEST_DB_URL.to_owned());
         PgPool::connect(&database_url)

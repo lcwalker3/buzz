@@ -45,7 +45,7 @@ pub(crate) fn describe_metrics() {
 pub enum StartupStep {
     /// Connect the Postgres writer (and lazy reader) pools.
     DbConnect,
-    /// Apply database migrations (only when `BUZZ_AUTO_MIGRATE` is on).
+    /// Apply database migrations (only when `HIVE_AUTO_MIGRATE` is on).
     DbMigrate,
     /// Ensure or audit future event partitions.
     PartitionEnsure,

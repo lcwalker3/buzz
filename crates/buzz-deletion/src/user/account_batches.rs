@@ -148,13 +148,13 @@ fn store(
     if mode == ExecutionMode::ReadOnly {
         return Ok(store);
     }
-    match std::env::var("BUZZ_RELAY_PRIVATE_KEY") {
+    match std::env::var("HIVE_RELAY_PRIVATE_KEY") {
         Ok(value) => Ok(store.with_account_snapshot_signer(
             nostr::Keys::parse(&value)
-                .map_err(|_| anyhow::anyhow!("invalid BUZZ_RELAY_PRIVATE_KEY"))?,
+                .map_err(|_| anyhow::anyhow!("invalid HIVE_RELAY_PRIVATE_KEY"))?,
         )),
         Err(std::env::VarError::NotPresent) => Ok(store),
-        Err(_) => anyhow::bail!("invalid BUZZ_RELAY_PRIVATE_KEY"),
+        Err(_) => anyhow::bail!("invalid HIVE_RELAY_PRIVATE_KEY"),
     }
 }
 

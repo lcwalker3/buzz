@@ -3,12 +3,12 @@ use std::process::Command;
 #[test]
 fn startup_and_failure_diagnostics_never_enter_acp_stdout() {
     let output = Command::new(env!("CARGO_BIN_EXE_buzz-acp"))
-        .env("BUZZ_RELAY_URL", "ws://127.0.0.1:1")
+        .env("HIVE_RELAY_URL", "ws://127.0.0.1:1")
         .env(
-            "BUZZ_PRIVATE_KEY",
+            "HIVE_PRIVATE_KEY",
             "0000000000000000000000000000000000000000000000000000000000000001",
         )
-        .env("BUZZ_AGENT_COMMAND", "/definitely/missing/buzz-agent")
+        .env("HIVE_AGENT_COMMAND", "/definitely/missing/buzz-agent")
         .env("RUST_LOG", "buzz_acp=info")
         .output()
         .expect("buzz-acp process should start");

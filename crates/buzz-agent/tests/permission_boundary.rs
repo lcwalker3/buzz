@@ -460,7 +460,7 @@ async fn test_crossed_parallel_decisions_authorize_only_matching_call() {
         openai_text("done"),
     ])
     .await;
-    let mut h = Harness::spawn_with_env(&llm.url, &[("BUZZ_AGENT_MAX_PARALLEL_TOOLS", "1")]).await;
+    let mut h = Harness::spawn_with_env(&llm.url, &[("HIVE_AGENT_MAX_PARALLEL_TOOLS", "1")]).await;
     let sid = init(
         &mut h,
         1,
@@ -558,7 +558,7 @@ async fn test_stop_hook_reaches_mcp_without_permission_ask() {
         &llm.url,
         &[
             ("MCP_HOOK_SERVERS", "fake"),
-            ("BUZZ_AGENT_STOP_MAX_REJECTIONS", "10"),
+            ("HIVE_AGENT_STOP_MAX_REJECTIONS", "10"),
         ],
     )
     .await;

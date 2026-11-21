@@ -217,7 +217,7 @@ pub(crate) async fn run() -> i32 {
         http: reqwest::Client::new(),
         base_url: crate::relay::relay_ws_to_http(&config.relay_url),
         keys: config.keys.clone(),
-        auth_tag_json: std::env::var("BUZZ_AUTH_TAG")
+        auth_tag_json: std::env::var("HIVE_AUTH_TAG")
             .ok()
             .filter(|s| !s.is_empty()),
     };

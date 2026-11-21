@@ -44,7 +44,7 @@ fn relay_http_url() -> String {
 }
 
 fn test_owner_keys() -> Keys {
-    std::env::var("BUZZ_TEST_OWNER_PRIVATE_KEY")
+    std::env::var("HIVE_TEST_OWNER_PRIVATE_KEY")
         .ok()
         .and_then(|secret| Keys::parse(&secret).ok())
         .unwrap_or_else(Keys::generate)
@@ -329,7 +329,7 @@ async fn test_invite_mint_and_claim_admits_new_pubkey() {
 /// repeat claim is a no-op.
 ///
 /// The claimer opens no WebSocket until the claim has answered. The e2e
-/// relay runs without `BUZZ_REQUIRE_RELAY_MEMBERSHIP`, so a NIP-42 admission
+/// relay runs without `HIVE_REQUIRE_RELAY_MEMBERSHIP`, so a NIP-42 admission
 /// would join them to the default channels itself and leave the claim
 /// nothing to join.
 #[tokio::test]

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'observer_models.dart';
+import '../../../shared/brand.dart';
 
 const _buzzReadTools = <String>{
   'get_messages',
@@ -234,7 +235,7 @@ _parsePromptText(String text) {
     userText: eventContent,
     userTitle: eventKind != null && eventKind.isNotEmpty
         ? _titleCase(eventKind)
-        : 'Buzz event',
+        : '$appName event',
   );
 }
 

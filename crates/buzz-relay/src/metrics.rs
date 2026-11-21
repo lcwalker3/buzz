@@ -1543,7 +1543,7 @@ mod tests {
 
     #[tokio::test]
     async fn recorder_conflict_is_typed_in_an_isolated_process() {
-        const CHILD_ENV: &str = "BUZZ_TEST_METRICS_RECORDER_CONFLICT";
+        const CHILD_ENV: &str = "HIVE_TEST_METRICS_RECORDER_CONFLICT";
         if std::env::var_os(CHILD_ENV).is_some() {
             let recorder = configured_prometheus_builder(300).build_recorder();
             metrics::set_global_recorder(recorder).expect("install first recorder");

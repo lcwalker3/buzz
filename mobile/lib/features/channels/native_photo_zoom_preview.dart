@@ -19,7 +19,7 @@ class NativePhotoActions {
 /// UIKit gallery presentation with the Flutter viewer as a fallback.
 class NativePhotoZoomPreview {
   static const enabled = bool.fromEnvironment(
-    'BUZZ_NATIVE_PHOTO_ZOOM',
+    'HIVE_NATIVE_PHOTO_ZOOM',
     defaultValue: true,
   );
   static const channel = MethodChannel('buzz/native_photo_zoom');

@@ -331,13 +331,13 @@ if [[ -f .env ]]; then
     set +o allexport
 fi
 
-export BUZZ_GIT_REPO_PATH="${REPO_ROOT}/repos"
-export BUZZ_GIT_HOOK_HMAC_SECRET="${HMAC_SECRET}"
-export BUZZ_BIND_ADDR="${RELAY_HOST}:${RELAY_PORT}"
+export HIVE_GIT_REPO_PATH="${REPO_ROOT}/repos"
+export HIVE_GIT_HOOK_HMAC_SECRET="${HMAC_SECRET}"
+export HIVE_BIND_ADDR="${RELAY_HOST}:${RELAY_PORT}"
 export RELAY_URL="${RELAY_WS}"
 export RUST_LOG="buzz_relay=warn"
-export BUZZ_RELAY_PRIVATE_KEY="${BUZZ_RELAY_PRIVATE_KEY:-$(openssl rand -hex 32)}"
-export BUZZ_REQUIRE_AUTH_TOKEN=false
+export HIVE_RELAY_PRIVATE_KEY="${HIVE_RELAY_PRIVATE_KEY:-$(openssl rand -hex 32)}"
+export HIVE_REQUIRE_AUTH_TOKEN=false
 
 # Clean repos dir (isolated test state)
 rm -rf "${REPO_ROOT}/repos"
@@ -646,7 +646,7 @@ fi
 
 # ── Test: Signed commit with owner attestation (NIP-OA) ──────────────────────
 
-log "Signing with owner attestation (BUZZ_AUTH_TAG)..."
+log "Signing with owner attestation (HIVE_AUTH_TAG)..."
 OA_DIR="$WORK_DIR/oa-signed"
 
 git_clone "$BOT1_PRIVKEY" "${RELAY_HTTP}/git/${OWNER_PUBKEY}/${REPO_NAME}" "$OA_DIR" \
@@ -716,7 +716,7 @@ print(json.dumps(["auth", owner_pubkey, "", sig]))
 PYEOF
 )
 
-NOSTR_PRIVATE_KEY="$BOT1_PRIVKEY" BUZZ_AUTH_TAG="$OA_TAG" \
+NOSTR_PRIVATE_KEY="$BOT1_PRIVKEY" HIVE_AUTH_TAG="$OA_TAG" \
 git -C "$OA_DIR" \
     -c user.name="Bot1" \
     -c user.email="bot1@buzz.test" \
@@ -732,7 +732,7 @@ DECODED_SIG=$(echo "$COMMIT_SIG" | base64 -d 2>/dev/null || echo "$COMMIT_SIG" |
 if echo "$DECODED_SIG" | grep -q '"oa"'; then
     success "Owner attestation (oa field) present in signature"
 else
-    fail "Owner attestation missing from signature — BUZZ_AUTH_TAG not picked up"
+    fail "Owner attestation missing from signature — HIVE_AUTH_TAG not picked up"
 fi
 
 # Push it

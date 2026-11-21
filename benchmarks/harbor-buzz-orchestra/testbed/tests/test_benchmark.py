@@ -65,7 +65,7 @@ def test_selectors_pass_through():
 
 
 def test_buzz_task_metadata_defines_the_expected_layers():
-    tasks = benchmark.buzz_tasks_for_path(benchmark.BUZZ_DATASET_ROOT)
+    tasks = benchmark.buzz_tasks_for_path(benchmark.HIVE_DATASET_ROOT)
     assert tasks is not None
     by_layer = {
         layer: {task.path.name for task in tasks if task.layer == layer}
@@ -102,7 +102,7 @@ def test_buzz_task_metadata_rejects_missing_or_unknown_layers(
         '[task]\nname = "buzz-native/example"\n\n'
         f'[metadata]\n{metadata}difficulty = "easy"\n'
     )
-    monkeypatch.setattr(benchmark, "BUZZ_DATASET_ROOT", dataset)
+    monkeypatch.setattr(benchmark, "HIVE_DATASET_ROOT", dataset)
 
     with pytest.raises(SystemExit, match="evaluation_layer|metadata"):
         benchmark.buzz_tasks_for_path(dataset)
@@ -111,12 +111,12 @@ def test_buzz_task_metadata_rejects_missing_or_unknown_layers(
 @pytest.mark.parametrize(("layer", "attempts"), [("regression", 1), ("workflow", 3)])
 def test_layer_selects_metadata_and_uses_its_default_attempts(layer, attempts):
     args = benchmark.parse_args(
-        ["--path", str(benchmark.BUZZ_DATASET_ROOT), "--layer", layer]
+        ["--path", str(benchmark.HIVE_DATASET_ROOT), "--layer", layer]
     )
     (run,) = benchmark.plan_benchmark_runs(args)
 
     assert run.attempts == attempts
-    selected = benchmark.buzz_tasks_for_path(benchmark.BUZZ_DATASET_ROOT)
+    selected = benchmark.buzz_tasks_for_path(benchmark.HIVE_DATASET_ROOT)
     assert selected is not None
     assert set(run.include_task) == {
         task.path.name for task in selected if task.layer == layer
@@ -126,13 +126,13 @@ def test_layer_selects_metadata_and_uses_its_default_attempts(layer, attempts):
 @pytest.mark.parametrize("layer", benchmark.EVALUATION_LAYERS)
 def test_layer_selectors_resolve_through_harbor_local_dataset_filter(layer):
     args = benchmark.parse_args(
-        ["--path", str(benchmark.BUZZ_DATASET_ROOT), "--layer", layer]
+        ["--path", str(benchmark.HIVE_DATASET_ROOT), "--layer", layer]
     )
     (run,) = benchmark.plan_benchmark_runs(args)
 
     configs = asyncio.run(
         DatasetConfig(
-            path=benchmark.BUZZ_DATASET_ROOT,
+            path=benchmark.HIVE_DATASET_ROOT,
             task_names=run.include_task,
         ).get_task_configs(disable_verification=True)
     )
@@ -141,7 +141,7 @@ def test_layer_selectors_resolve_through_harbor_local_dataset_filter(layer):
 
 
 def test_omitted_layer_splits_buzz_dataset_into_two_jobs():
-    args = benchmark.parse_args(["--path", str(benchmark.BUZZ_DATASET_ROOT)])
+    args = benchmark.parse_args(["--path", str(benchmark.HIVE_DATASET_ROOT)])
     runs = benchmark.plan_benchmark_runs(args, stamp="20260825T120000Z")
 
     assert [run.attempts for run in runs] == [1, 3]
@@ -153,7 +153,7 @@ def test_omitted_layer_splits_buzz_dataset_into_two_jobs():
 
 
 def test_single_buzz_task_infers_its_layer_default():
-    task_path = benchmark.BUZZ_DATASET_ROOT / "cross-thread-requests"
+    task_path = benchmark.HIVE_DATASET_ROOT / "cross-thread-requests"
     args = benchmark.parse_args(["--path", str(task_path)])
     (run,) = benchmark.plan_benchmark_runs(args)
 
@@ -163,7 +163,7 @@ def test_single_buzz_task_infers_its_layer_default():
 
 def test_explicit_attempts_override_keeps_one_mixed_buzz_job():
     args = benchmark.parse_args(
-        ["--path", str(benchmark.BUZZ_DATASET_ROOT), "--attempts", "7"]
+        ["--path", str(benchmark.HIVE_DATASET_ROOT), "--attempts", "7"]
     )
     (run,) = benchmark.plan_benchmark_runs(args)
 
@@ -173,7 +173,7 @@ def test_explicit_attempts_override_keeps_one_mixed_buzz_job():
     layered = benchmark.parse_args(
         [
             "--path",
-            str(benchmark.BUZZ_DATASET_ROOT),
+            str(benchmark.HIVE_DATASET_ROOT),
             "--layer",
             "workflow",
             "-k",
@@ -200,7 +200,7 @@ def test_layer_dry_run_constructs_exact_task_selectors_and_attempts():
     args = benchmark.parse_args(
         [
             "--path",
-            str(benchmark.BUZZ_DATASET_ROOT),
+            str(benchmark.HIVE_DATASET_ROOT),
             "--layer",
             "workflow",
             "--dry-run",
@@ -286,9 +286,9 @@ def test_env_file_wires_owner_and_ports(state_dir):
     env_path = benchmark.write_env_file(state)
     env = dict(line.split("=", 1) for line in env_path.read_text().splitlines() if line)
     assert env["RELAY_OWNER_PUBKEY"] == state["owner_pubkey"]
-    assert env["BUZZ_HTTP_PORT"] == str(benchmark.RELAY_HTTP_PORT)
-    assert env["BUZZ_PG_HOST_PORT"] == str(benchmark.PG_HOST_PORT)
-    assert env["BUZZ_REQUIRE_RELAY_MEMBERSHIP"] == "true"
+    assert env["HIVE_HTTP_PORT"] == str(benchmark.RELAY_HTTP_PORT)
+    assert env["HIVE_PG_HOST_PORT"] == str(benchmark.PG_HOST_PORT)
+    assert env["HIVE_REQUIRE_RELAY_MEMBERSHIP"] == "true"
 
 
 def test_compose_command_isolates_the_project(state_dir):

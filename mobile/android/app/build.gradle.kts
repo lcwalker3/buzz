@@ -9,21 +9,21 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-val uploadKeystorePath = providers.environmentVariable("BUZZ_ANDROID_UPLOAD_KEYSTORE_PATH").orNull
-val uploadKeystorePassword = providers.environmentVariable("BUZZ_ANDROID_UPLOAD_KEYSTORE_PASSWORD").orNull
-val uploadKeyAlias = providers.environmentVariable("BUZZ_ANDROID_UPLOAD_KEY_ALIAS").orNull
-val uploadKeyPassword = providers.environmentVariable("BUZZ_ANDROID_UPLOAD_KEY_PASSWORD").orNull
+val uploadKeystorePath = providers.environmentVariable("HIVE_ANDROID_UPLOAD_KEYSTORE_PATH").orNull
+val uploadKeystorePassword = providers.environmentVariable("HIVE_ANDROID_UPLOAD_KEYSTORE_PASSWORD").orNull
+val uploadKeyAlias = providers.environmentVariable("HIVE_ANDROID_UPLOAD_KEY_ALIAS").orNull
+val uploadKeyPassword = providers.environmentVariable("HIVE_ANDROID_UPLOAD_KEY_PASSWORD").orNull
 val uploadSigningValues =
     mapOf(
-        "BUZZ_ANDROID_UPLOAD_KEYSTORE_PATH" to uploadKeystorePath,
-        "BUZZ_ANDROID_UPLOAD_KEYSTORE_PASSWORD" to uploadKeystorePassword,
-        "BUZZ_ANDROID_UPLOAD_KEY_ALIAS" to uploadKeyAlias,
-        "BUZZ_ANDROID_UPLOAD_KEY_PASSWORD" to uploadKeyPassword,
+        "HIVE_ANDROID_UPLOAD_KEYSTORE_PATH" to uploadKeystorePath,
+        "HIVE_ANDROID_UPLOAD_KEYSTORE_PASSWORD" to uploadKeystorePassword,
+        "HIVE_ANDROID_UPLOAD_KEY_ALIAS" to uploadKeyAlias,
+        "HIVE_ANDROID_UPLOAD_KEY_PASSWORD" to uploadKeyPassword,
     )
 val missingUploadSigningValues = uploadSigningValues.filterValues { it.isNullOrBlank() }.keys
 val hasUploadSigning = missingUploadSigningValues.isEmpty()
 val dartDefines = providers.gradleProperty("dart-defines").orNull.orEmpty()
-val pushGatewayDefinePrefix = "BUZZ_PUSH_GATEWAY_URL="
+val pushGatewayDefinePrefix = "HIVE_PUSH_GATEWAY_URL="
 val pushGatewayOrigins =
     dartDefines.split(',').mapNotNull { encoded ->
         val define = runCatching { String(Base64.getDecoder().decode(encoded)) }.getOrNull()
@@ -52,7 +52,7 @@ tasks.matching { it.name.startsWith("compileFlutterBuild") }.configureEach {
                     isValidPushGatewayOrigin(pushGatewayOrigins.single(), requireHttps))
         if (!hasValidPushGatewayOrigin) {
             throw GradleException(
-                "When supplied, BUZZ_PUSH_GATEWAY_URL must be an " +
+                "When supplied, HIVE_PUSH_GATEWAY_URL must be an " +
                     (if (requireHttps) "HTTPS" else "HTTP(S)") +
                     " origin without " + (if (requireHttps) "an explicit port, " else "") +
                     "credentials, path, query, or fragment.",
@@ -121,18 +121,18 @@ if (
 //     pipeline that signs through the central APK Signer service (Cashkite,
 //     BOT-1234). No keystore material may be present in this mode.
 val releaseSigningMode =
-    providers.environmentVariable("BUZZ_ANDROID_RELEASE_SIGNING").orNull ?: "upload-keystore"
+    providers.environmentVariable("HIVE_ANDROID_RELEASE_SIGNING").orNull ?: "upload-keystore"
 val externalReleaseSigning = releaseSigningMode == "external"
 if (releaseSigningMode !in setOf("upload-keystore", "external")) {
     throw GradleException(
-        "BUZZ_ANDROID_RELEASE_SIGNING must be \"upload-keystore\" or \"external\", got: " +
+        "HIVE_ANDROID_RELEASE_SIGNING must be \"upload-keystore\" or \"external\", got: " +
             releaseSigningMode,
     )
 }
 if (externalReleaseSigning && uploadSigningValues.values.any { !it.isNullOrBlank() }) {
     throw GradleException(
-        "BUZZ_ANDROID_RELEASE_SIGNING=external must not be combined with " +
-            "BUZZ_ANDROID_UPLOAD_* credentials; unset one of them.",
+        "HIVE_ANDROID_RELEASE_SIGNING=external must not be combined with " +
+            "HIVE_ANDROID_UPLOAD_* credentials; unset one of them.",
     )
 }
 
@@ -215,33 +215,33 @@ gradle.taskGraph.whenReady {
     if (buildsRelease && externalReleaseSigning) {
         // External signing: the unsigned bundle goes to the central APK
         // Signer. All keystore checks are intentionally skipped; the
-        // guard above already rejected any BUZZ_ANDROID_UPLOAD_* values.
+        // guard above already rejected any HIVE_ANDROID_UPLOAD_* values.
         return@whenReady
     }
     if (buildsRelease && !hasUploadSigning) {
         throw GradleException(
             "Release builds require Android upload signing credentials. Missing: " +
                 missingUploadSigningValues.sorted().joinToString(", ") +
-                ". For central APK Signer pipelines set BUZZ_ANDROID_RELEASE_SIGNING=external.",
+                ". For central APK Signer pipelines set HIVE_ANDROID_RELEASE_SIGNING=external.",
         )
     }
     if (buildsRelease) {
         val configuredKeystore = File(requireNotNull(uploadKeystorePath))
         if (!configuredKeystore.isAbsolute) {
             throw GradleException(
-                "BUZZ_ANDROID_UPLOAD_KEYSTORE_PATH must be absolute: $configuredKeystore",
+                "HIVE_ANDROID_UPLOAD_KEYSTORE_PATH must be absolute: $configuredKeystore",
             )
         }
         val keystore = file(configuredKeystore)
         val repositoryRoot = rootProject.projectDir.parentFile.parentFile.canonicalFile
         if (keystore.canonicalFile.toPath().startsWith(repositoryRoot.toPath())) {
             throw GradleException(
-                "BUZZ_ANDROID_UPLOAD_KEYSTORE_PATH must be outside the repository: $keystore",
+                "HIVE_ANDROID_UPLOAD_KEYSTORE_PATH must be outside the repository: $keystore",
             )
         }
         if (!keystore.isFile || !keystore.canRead()) {
             throw GradleException(
-                "BUZZ_ANDROID_UPLOAD_KEYSTORE_PATH is not a readable file: $keystore",
+                "HIVE_ANDROID_UPLOAD_KEYSTORE_PATH is not a readable file: $keystore",
             )
         }
     }

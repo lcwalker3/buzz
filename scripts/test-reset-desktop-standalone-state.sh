@@ -5,7 +5,7 @@ repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 export HOME="$tmp/home"
-export BUZZ_TEST_PLATFORM=Darwin
+export HIVE_TEST_PLATFORM=Darwin
 mkdir -p "$HOME/Library/Application Support/xyz.block.buzz.app.dev.example"
 mkdir -p "$HOME/Library/Application Support/xyz.block.buzz.app.dev.other"
 mkdir -p "$HOME/Library/Application Support/xyz.block.buzz.app"

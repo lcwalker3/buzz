@@ -485,7 +485,7 @@ impl AdminAccess {
             Self::NetworkTrusted => {
                 slot.finish(AuthResult::Denied(AuthReason::NotStaff));
                 Err(ApiError::forbidden_with_message(
-                    "this endpoint requires BUZZ_ADMIN_AUTH=nip98",
+                    "this endpoint requires HIVE_ADMIN_AUTH=nip98",
                 ))
             }
         }

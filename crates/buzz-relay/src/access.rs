@@ -19,7 +19,7 @@
 //! DEBUG: polling clients make most of them. WebSocket `req` lines stay at
 //! INFO, because an empty subscription can still deliver live events.
 //!
-//! With `BUZZ_CLIENT_IP_HEADER` set, `http`, `auth` and `close` lines also
+//! With `HIVE_CLIENT_IP_HEADER` set, `http`, `auth` and `close` lines also
 //! carry `client_ip`: the rightmost entry of that request header, only when it
 //! parses as an IP address. It never replaces `peer_addr`.
 
@@ -618,7 +618,7 @@ pub(crate) enum AuthMethod {
     Blossom,
     /// Dev-mode `X-Pubkey` header: a claimed key that nothing signed.
     XPubkey,
-    /// Admitted by network position alone (`BUZZ_ADMIN_AUTH=disabled`):
+    /// Admitted by network position alone (`HIVE_ADMIN_AUTH=disabled`):
     /// no proof and no key.
     NetworkTrusted,
 }

@@ -13,7 +13,7 @@ use tokio::time::timeout;
 use uuid::Uuid;
 
 async fn connect(migration_schema: bool) -> Db {
-    let database_url = std::env::var("BUZZ_TEST_DATABASE_URL")
+    let database_url = std::env::var("HIVE_TEST_DATABASE_URL")
         .expect("Postgres wrapper must provide an isolated database URL");
     let expected_mode = if migration_schema {
         "migration"
@@ -21,7 +21,7 @@ async fn connect(migration_schema: bool) -> Db {
         "desired"
     };
     assert_eq!(
-        std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref(),
+        std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref(),
         Ok(expected_mode)
     );
     let config = DbConfig {
@@ -865,7 +865,7 @@ async fn assert_rollback(db: &Db, community: CommunityId, channel: Uuid, keys: &
     .unwrap();
 
     let disabled = Db::new(&DbConfig {
-        database_url: std::env::var("BUZZ_TEST_DATABASE_URL").unwrap(),
+        database_url: std::env::var("HIVE_TEST_DATABASE_URL").unwrap(),
         push_enabled: false,
         max_connections: 1,
         min_connections: 0,
@@ -933,7 +933,7 @@ async fn assert_rollback(db: &Db, community: CommunityId, channel: Uuid, keys: &
     // It must be replaced before operators declare rollback complete.
     let legacy_pool = sqlx::postgres::PgPoolOptions::new()
         .max_connections(1)
-        .connect(&std::env::var("BUZZ_TEST_DATABASE_URL").unwrap())
+        .connect(&std::env::var("HIVE_TEST_DATABASE_URL").unwrap())
         .await
         .unwrap();
     let legacy = Db::from_pool(legacy_pool);
@@ -971,7 +971,7 @@ async fn assert_async_isolation(db: &Db, community: CommunityId, keys: &Keys) {
     // A one-connection serving pool proves a stalled push job cannot monopolize
     // its only connection. The lock holder uses the independent fixture pool.
     let isolated = Db::new(&DbConfig {
-        database_url: std::env::var("BUZZ_TEST_DATABASE_URL").unwrap(),
+        database_url: std::env::var("HIVE_TEST_DATABASE_URL").unwrap(),
         max_connections: 1,
         min_connections: 0,
         lock_timeout_ms: 100,

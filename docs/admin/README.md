@@ -3,14 +3,14 @@
 Buzz can expose a private, deployment-wide moderation dashboard from the existing
 relay process. It shows open moderation reports and recent product feedback.
 
-Configure `BUZZ_ADMIN_HOST` to activate the dashboard. A private ingress limits
+Configure `HIVE_ADMIN_HOST` to activate the dashboard. A private ingress limits
 access to the operator VPN or approved source IPs.
 
 Required configuration:
 
 ```text
-BUZZ_ADMIN_HOST=admin.example.com
-BUZZ_ADMIN_WEB_DIR=/srv/buzz/admin-web
+HIVE_ADMIN_HOST=admin.example.com
+HIVE_ADMIN_WEB_DIR=/srv/buzz/admin-web
 ```
 
 Plus one of the authentication modes below.
@@ -18,16 +18,16 @@ Plus one of the authentication modes below.
 ## Authentication
 
 The admin API requires explicit authentication configuration. Setting only
-`BUZZ_ADMIN_HOST` activates the dashboard in the default `nip98` mode. Configure
-the mode with `BUZZ_ADMIN_AUTH`, which accepts `nip98` (default when unset) or
+`HIVE_ADMIN_HOST` activates the dashboard in the default `nip98` mode. Configure
+the mode with `HIVE_ADMIN_AUTH`, which accepts `nip98` (default when unset) or
 `disabled`.
 
-`BUZZ_ADMIN_TOKEN` is no longer recognised: token authentication was removed.
+`HIVE_ADMIN_TOKEN` is no longer recognised: token authentication was removed.
 Setting it is ignored with a startup warning, so a stale token variable cannot
 silently run a deployment on a removed auth path — remove it from the environment
 and use `nip98` (or `disabled` behind a network boundary).
 
-### NIP-98 mode (`BUZZ_ADMIN_AUTH=nip98`, default)
+### NIP-98 mode (`HIVE_ADMIN_AUTH=nip98`, default)
 
 Every `/api/admin/v1` request must carry a NIP-98 HTTP Auth header containing a
 signed kind-27235 event. The signer's pubkey is resolved against a two-tier
@@ -35,7 +35,7 @@ principal model — **Operator** or **Moderator** — that grants capabilities
 accordingly.
 
 ```text
-BUZZ_ADMIN_AUTH=nip98
+HIVE_ADMIN_AUTH=nip98
 RELAY_OPERATOR_PUBKEYS=<64-char hex pubkey>[,<64-char hex pubkey>...]
 ```
 
@@ -57,7 +57,7 @@ operator is responsible for choosing the appropriate member pubkey.
 
 #### Auto-discovery via NIP-11
 
-When `BUZZ_ADMIN_HOST` is set, the relay advertises the admin API origin in its
+When `HIVE_ADMIN_HOST` is set, the relay advertises the admin API origin in its
 NIP-11 relay-information document under an optional `admin_api` field:
 
 ```json
@@ -159,13 +159,13 @@ then demote or delete the outgoing one. Config-backed operators are unaffected �
 while any config operator or owner fallback is effective, the DB roster may be
 emptied freely because config still guarantees an operator.
 
-### Disabled mode (`BUZZ_ADMIN_AUTH=disabled`)
+### Disabled mode (`HIVE_ADMIN_AUTH=disabled`)
 
 Disabled mode turns the admin API into a read-only window with no request
 authentication:
 
 ```text
-BUZZ_ADMIN_AUTH=disabled
+HIVE_ADMIN_AUTH=disabled
 ```
 
 Only the exact value `disabled` is accepted.
@@ -204,7 +204,7 @@ Disabled mode records no reader identity. To act on anything, switch to `nip98`.
 The relay logs a `WARN` on every startup in this mode:
 
 ```
-BUZZ_ADMIN_AUTH=disabled — the admin API serves every moderation read without
+HIVE_ADMIN_AUTH=disabled — the admin API serves every moderation read without
 authentication to anyone who can reach the relay: reports, feedback and
 attachments, restrictions, the community directory, member profiles and any
 stored message by ID, in every community. Writes and staffing are refused. Keep
@@ -217,17 +217,17 @@ dashboard detects that no credential is needed on first load (probe returns
 
 ### Mode selection and error behaviour
 
-`BUZZ_ADMIN_AUTH` accepts exactly `nip98` or `disabled`. Any other non-empty
-value is a startup error (typo-proofing). `BUZZ_ADMIN_TOKEN` is no longer
+`HIVE_ADMIN_AUTH` accepts exactly `nip98` or `disabled`. Any other non-empty
+value is a startup error (typo-proofing). `HIVE_ADMIN_TOKEN` is no longer
 recognised and its presence is ignored with a startup warning regardless of the
 other variables:
 
 | Combination | Result |
 |---|---|
-| `BUZZ_ADMIN_TOKEN` set (with or without `BUZZ_ADMIN_HOST`) | warn + ignore |
-| `BUZZ_ADMIN_AUTH=nip98` with a malformed `RELAY_OWNER_PUBKEY` | startup error |
-| `BUZZ_ADMIN_AUTH` junk value | startup error |
-| `BUZZ_ADMIN_AUTH` without `BUZZ_ADMIN_HOST` | warn + ignore |
+| `HIVE_ADMIN_TOKEN` set (with or without `HIVE_ADMIN_HOST`) | warn + ignore |
+| `HIVE_ADMIN_AUTH=nip98` with a malformed `RELAY_OWNER_PUBKEY` | startup error |
+| `HIVE_ADMIN_AUTH` junk value | startup error |
+| `HIVE_ADMIN_AUTH` without `HIVE_ADMIN_HOST` | warn + ignore |
 
 ## Content Security Policy
 
@@ -265,27 +265,27 @@ relay path.
 ## Operator migration
 
 **Upgrading from a pre-auth release (Buzz prior to the introduction of this
-`BUZZ_ADMIN_HOST` requirement):** any deployed relay with `BUZZ_ADMIN_HOST` set
-boots in `nip98` mode after upgrade unless `BUZZ_ADMIN_AUTH=disabled` is set.
+`HIVE_ADMIN_HOST` requirement):** any deployed relay with `HIVE_ADMIN_HOST` set
+boots in `nip98` mode after upgrade unless `HIVE_ADMIN_AUTH=disabled` is set.
 Choose the mode that fits your deployment:
 
-- **Nostr principal model (default):** set `BUZZ_ADMIN_AUTH=nip98` (or leave it
+- **Nostr principal model (default):** set `HIVE_ADMIN_AUTH=nip98` (or leave it
   unset) and populate `RELAY_OPERATOR_PUBKEYS` with at least one operator pubkey
   (or rely on owner fallback if `RELAY_OWNER_PUBKEY` is already set) in your
   deploy config, then roll the new version. In a single config rollout, both set
-  `BUZZ_ADMIN_AUTH=nip98` and add the operator pubkey(s) — never split these
+  `HIVE_ADMIN_AUTH=nip98` and add the operator pubkey(s) — never split these
   across separate rollouts, as a mode-flip without operators configured leaves
   no-one able to authenticate.
 - **Network-layer mode (e.g. Block's `bb-public` behind WARP+Okta):** set
-  `BUZZ_ADMIN_AUTH=disabled` in your deploy config, then roll the new version.
+  `HIVE_ADMIN_AUTH=disabled` in your deploy config, then roll the new version.
 
 **Upgrading from a token-mode release:** token authentication was removed.
-Remove `BUZZ_ADMIN_TOKEN` from the environment — leaving it set is ignored with
+Remove `HIVE_ADMIN_TOKEN` from the environment — leaving it set is ignored with
 a startup warning — and adopt `nip98` (populate `RELAY_OPERATOR_PUBKEYS`) or
 `disabled` before rolling the new version.
 
-**Upgrading from the previous `BUZZ_ADMIN_INSECURE_NO_AUTH=true` variable:**
-replace it with `BUZZ_ADMIN_AUTH=disabled`. Behavior is identical; the old
+**Upgrading from the previous `HIVE_ADMIN_INSECURE_NO_AUTH=true` variable:**
+replace it with `HIVE_ADMIN_AUTH=disabled`. Behavior is identical; the old
 variable is no longer recognised.
 
 **Member restriction routes now take `communityHost`, not `communityId`:**
@@ -301,8 +301,8 @@ There is no compatibility shim:
 - Rolling the relay back to a `communityId` build breaks the desktop
   Admin → Staffing → Restrictions UI until the relay is rolled forward again.
 
-Relays without `BUZZ_ADMIN_HOST` are completely unaffected, except that a
-lingering `BUZZ_ADMIN_TOKEN` now logs a startup warning and must be removed.
+Relays without `HIVE_ADMIN_HOST` are completely unaffected, except that a
+lingering `HIVE_ADMIN_TOKEN` now logs a startup warning and must be removed.
 
 Any non-browser client of `/api/admin/v1` (monitoring probes, scripts, cron
 jobs) must sign each request with a NIP-98 `Authorization: Nostr` header after
@@ -314,11 +314,11 @@ rolling.
 ## Local development
 
 For local review, run `just admin-seed` before `just admin`. `just admin`
-defaults to `BUZZ_ADMIN_AUTH=disabled`, so the dashboard renders without a
+defaults to `HIVE_ADMIN_AUTH=disabled`, so the dashboard renders without a
 credential. Unless the mode is exactly `nip98`, it binds the relay to
-`127.0.0.1` on the port from `BUZZ_BIND_ADDR` (default 3000), so
+`127.0.0.1` on the port from `HIVE_BIND_ADDR` (default 3000), so
 unauthenticated moderation reads stay local even when the value is padded or
-misspelled; `BUZZ_ADMIN_AUTH=nip98` keeps `BUZZ_BIND_ADDR` as configured. The
+misspelled; `HIVE_ADMIN_AUTH=nip98` keeps `HIVE_BIND_ADDR` as configured. The
 seed command also uploads real image and diagnostic fixtures to local MinIO.
 Feedback search and filters run over the bounded browser result
 set. The feedback **status** control (`new`/`reviewed`/`archived`) is
@@ -337,8 +337,8 @@ cancel it first. To use it from the desktop admin console with `just dev`, add
 these to `.env` and restart `just dev`:
 
 ```bash
-BUZZ_ADMIN_HOST=admin.localhost:3000
-BUZZ_ADMIN_AUTH=nip98
+HIVE_ADMIN_HOST=admin.localhost:3000
+HIVE_ADMIN_AUTH=nip98
 RELAY_OPERATOR_PUBKEYS=<your dev app pubkey, hex>
 ```
 

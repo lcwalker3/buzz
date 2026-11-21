@@ -16,8 +16,8 @@ pub const DEFAULT_MAX_FRAME_BYTES: usize = 512 * 1024;
 /// Errors that can occur while loading relay configuration.
 #[derive(Debug, Error)]
 pub enum ConfigError {
-    /// The `BUZZ_BIND_ADDR` environment variable could not be parsed as a socket address.
-    #[error("invalid BUZZ_BIND_ADDR: {0}")]
+    /// The `HIVE_BIND_ADDR` environment variable could not be parsed as a socket address.
+    #[error("invalid HIVE_BIND_ADDR: {0}")]
     InvalidBindAddr(String),
     /// A configuration value failed validation.
     #[error("invalid config: {0}")]
@@ -26,7 +26,7 @@ pub enum ConfigError {
 
 /// Authentication mode for the deployment-admin API.
 ///
-/// Configured by `BUZZ_ADMIN_AUTH`: unset/empty/`nip98` → `Nip98` (fail-secure
+/// Configured by `HIVE_ADMIN_AUTH`: unset/empty/`nip98` → `Nip98` (fail-secure
 /// default), `disabled` → `Disabled`, anything else is a startup error.
 ///
 /// # Role resolution (nip98 mode only)
@@ -46,7 +46,7 @@ pub enum AdminAuth {
     /// Authentication disabled. The operator has explicitly asserted
     /// that the admin API is protected at the network layer (reverse proxy,
     /// VPN, firewall). `Host`/`Origin` checks remain active as defense-in-depth.
-    /// Selected by `BUZZ_ADMIN_AUTH=disabled`.
+    /// Selected by `HIVE_ADMIN_AUTH=disabled`.
     /// Every moderation read is served to anyone who can reach the relay;
     /// `authorize()` returns `NetworkTrusted` with no identity, so write and
     /// staffing routes always 403.
@@ -54,8 +54,8 @@ pub enum AdminAuth {
     /// NIP-98 HTTP Auth. Every request must carry an `Authorization: Nostr`
     /// header containing a signed kind-27235 event. The authenticated pubkey
     /// is resolved to an [`crate::api::admin::auth::AdminPrincipal`] at request
-    /// time from config + DB. Selected by `BUZZ_ADMIN_AUTH=nip98` or by leaving
-    /// `BUZZ_ADMIN_AUTH` unset (fail-secure default). Read-write per resolved
+    /// time from config + DB. Selected by `HIVE_ADMIN_AUTH=nip98` or by leaving
+    /// `HIVE_ADMIN_AUTH` unset (fail-secure default). Read-write per resolved
     /// principal; attributes mutations to a distinct human operator.
     Nip98,
 }
@@ -123,19 +123,19 @@ pub struct Config {
     /// Optional read-replica connection URL (e.g. an Aurora `cluster-ro-`
     /// endpoint). Unset means all reads stay on the writer.
     pub read_database_url: Option<String>,
-    /// Replica read budget `B` in milliseconds (`BUZZ_REPLICA_READ_MAX_AGE_MS`).
+    /// Replica read budget `B` in milliseconds (`HIVE_REPLICA_READ_MAX_AGE_MS`).
     /// `0` (the default) disables bounded-staleness replica routing; see
     /// [`buzz_db::DbConfig::replica_read_max_age_ms`].
     pub replica_read_max_age_ms: u64,
     /// Replica fence heartbeat interval in milliseconds
-    /// (`BUZZ_REPLICA_FENCE_PROBE_INTERVAL_MS`). Unset (`0`) selects the
+    /// (`HIVE_REPLICA_FENCE_PROBE_INTERVAL_MS`). Unset (`0`) selects the
     /// default; set values must lie within the accepted range. See
     /// [`buzz_db::DbConfig::replica_fence_probe_interval_ms`].
     pub replica_fence_probe_interval_ms: u64,
 
     /// Upper bound, in milliseconds, of the per-connection random delay applied
     /// when sending the `1012 Service Restart` close frame during graceful
-    /// shutdown (`BUZZ_DRAIN_JITTER_MS`). Each live connection is closed after
+    /// shutdown (`HIVE_DRAIN_JITTER_MS`). Each live connection is closed after
     /// an independent delay drawn uniformly from `[1, drain_jitter_ms]` when
     /// jitter is enabled, which
     /// spreads client reconnects across the window instead of releasing the
@@ -157,7 +157,7 @@ pub struct Config {
     /// database sits idle.
     pub db_pool_size: u32,
     /// Maximum connections in the Postgres read-replica pool
-    /// (`BUZZ_DB_READ_POOL_SIZE`). Defaults to `db_pool_size`. Sized
+    /// (`HIVE_DB_READ_POOL_SIZE`). Defaults to `db_pool_size`. Sized
     /// independently so reader capacity can be tuned against the replica's
     /// headroom without touching the writer pool.
     pub db_read_pool_size: Option<u32>,
@@ -175,7 +175,7 @@ pub struct Config {
     pub max_frame_bytes: usize,
     /// Number of consecutive buffer-full events tolerated before cancelling a slow client.
     pub slow_client_grace_limit: u8,
-    /// `BUZZ_CLIENT_IP_HEADER`: the request header whose IP access lines log
+    /// `HIVE_CLIENT_IP_HEADER`: the request header whose IP access lines log
     /// as `client_ip`. `None` logs only the TCP `peer_addr`.
     pub client_ip_header: Option<axum::http::HeaderName>,
     /// Authentication provider configuration.
@@ -241,22 +241,22 @@ pub struct Config {
     ///
     /// Defaults to `true` so single-pod deployments (the N=1 case) keep today's
     /// behavior unchanged. Operators running multiple relay pods MUST set
-    /// `BUZZ_HUDDLE_AUDIO_AVAILABLE=false` until the out-of-relay media/SFU
+    /// `HIVE_HUDDLE_AUDIO_AVAILABLE=false` until the out-of-relay media/SFU
     /// service lands.
     pub huddle_audio_available: bool,
 
-    /// Inter-relay mesh configuration (`BUZZ_MESH`, `BUZZ_MESH_BIND_ADDR`).
-    /// Opt-in: mesh forms only when `BUZZ_MESH=on` is explicit. The default
+    /// Inter-relay mesh configuration (`HIVE_MESH`, `HIVE_MESH_BIND_ADDR`).
+    /// Opt-in: mesh forms only when `HIVE_MESH=on` is explicit. The default
     /// (absent/off) is exact single-instance behavior — no bind, no Redis
     /// registry write — so an image upgrade with untouched env is a strict
     /// no-regression rollout.
     pub mesh: buzz_relay_mesh::MeshConfig,
 
-    /// Testbed-only reliable-stream echo consumer (`BUZZ_MESH_DEMO_ECHO`).
+    /// Testbed-only reliable-stream echo consumer (`HIVE_MESH_DEMO_ECHO`).
     /// When `on`, the owner side of an inbound reliable mesh stream echoes
     /// every validated `Data` frame back to the sender — a transport/
     /// session-routing smoke for cross-pod evidence runs, NOT a product flow.
-    /// Same strict opt-in as `BUZZ_MESH`; default off means inbound reliable
+    /// Same strict opt-in as `HIVE_MESH`; default off means inbound reliable
     /// streams are accepted, logged, and closed (no session consumer yet).
     pub mesh_demo_echo: bool,
 
@@ -295,14 +295,14 @@ pub struct Config {
     /// normalized `relay_url` authority serves ordinary traffic; existing extra
     /// communities remain available to authenticated management and cleanup.
     /// Canonical startup bootstrap is preserved. Changes require a restart.
-    /// Set via `BUZZ_MULTI_COMMUNITY_RELAY=true|false`.
+    /// Set via `HIVE_MULTI_COMMUNITY_RELAY=true|false`.
     pub multi_community_relay: bool,
 
     /// Configured operator-listener identities and their HTTP(S) delivery URLs.
     pub operator_listener_delivery_urls: HashMap<String, url::Url>,
 
     /// Endpoint receiving each new per-community storage snapshot
-    /// (`BUZZ_STORAGE_USAGE_URL`). Unset disables storage-usage delivery.
+    /// (`HIVE_STORAGE_USAGE_URL`). Unset disables storage-usage delivery.
     pub storage_usage_delivery_url: Option<url::Url>,
 
     /// Allow NIP-OA owner attestation for relay membership.
@@ -316,7 +316,7 @@ pub struct Config {
     /// signature is cryptographically self-proving). This flag only controls
     /// whether NIP-OA can grant membership access on closed relays.
     ///
-    /// Default: `false`. Set via `BUZZ_ALLOW_NIP_OA_AUTH=true`.
+    /// Default: `false`. Set via `HIVE_ALLOW_NIP_OA_AUTH=true`.
     pub allow_nip_oa_auth: bool,
 
     /// Relay-owned KLIPY integration. Unset means GIF search is not advertised
@@ -336,7 +336,7 @@ pub struct Config {
 
     /// Whether tamper-evident event/media audit logging is enabled. Defaults to true.
     /// This does not control the separate `moderation_actions` audit trail.
-    /// Set `BUZZ_AUDIT_ENABLED=false` for deployments that do not require it.
+    /// Set `HIVE_AUDIT_ENABLED=false` for deployments that do not require it.
     pub audit_enabled: bool,
 
     /// Which workflow runs may direct agents. With `owner` (owner-only agent
@@ -345,13 +345,13 @@ pub struct Config {
     /// step of the definition is `send_message` or `delay`. Use `owner` when
     /// people other than a workflow's owner can trigger it.
     ///
-    /// Default: `any`. Set via `BUZZ_WORKFLOW_AGENT_MENTIONS=any|owner`.
+    /// Default: `any`. Set via `HIVE_WORKFLOW_AGENT_MENTIONS=any|owner`.
     pub workflow_agent_mentions: buzz_workflow::AgentMentions,
 
     /// Optional override for ephemeral channel TTL (in seconds).
     /// When set, any channel created with a TTL tag will use this value instead
     /// of the client-provided one. Useful for testing ephemeral expiry quickly.
-    /// Example: `BUZZ_EPHEMERAL_TTL_OVERRIDE=60` → all ephemeral channels expire
+    /// Example: `HIVE_EPHEMERAL_TTL_OVERRIDE=60` → all ephemeral channels expire
     /// 60 seconds after the last message.
     pub ephemeral_ttl_override: Option<i32>,
 
@@ -419,7 +419,7 @@ pub struct Config {
 
     /// NIP-FI federated-identity enforcement configuration.
     ///
-    /// Selected by `BUZZ_NIP_FI_MODE`: `enforce` validates assertions at HTTP
+    /// Selected by `HIVE_NIP_FI_MODE`: `enforce` validates assertions at HTTP
     /// ingress and (via S3) at WebSocket upgrade; `deny_protected` denies
     /// protected requests without evaluating; `shadow` evaluates and records
     /// the enforce verdict but admits exactly as `off`. `Off` (the default)
@@ -427,16 +427,16 @@ pub struct Config {
     pub nip_fi: crate::nip_fi_config::NipFiRelayConfig,
 
     /// Issuer binding written to communities created under a host suffix
-    /// (`BUZZ_NIP_FI_PROVISION_BINDING`). `None` binds nothing at creation.
+    /// (`HIVE_NIP_FI_PROVISION_BINDING`). `None` binds nothing at creation.
     /// Parsed whatever the NIP-FI mode, since creation happens in every mode.
     pub nip_fi_provision_binding: Option<buzz_auth::ProvisionBindingPolicy>,
 
     /// Permit new community FI policy enables and disables. Default off; receipt
-    /// recovery/status remain available (`BUZZ_NIP_FI_CHANGES`).
+    /// recovery/status remain available (`HIVE_NIP_FI_CHANGES`).
     pub nip_fi_changes: bool,
 
-    /// Database resolver bounds (`BUZZ_NIP_FI_RESOLVER_*`,
-    /// `BUZZ_NIP_FI_SNAPSHOT_*`). Validated in every mode, so a bad value
+    /// Database resolver bounds (`HIVE_NIP_FI_RESOLVER_*`,
+    /// `HIVE_NIP_FI_SNAPSHOT_*`). Validated in every mode, so a bad value
     /// fails the deploy that sets it, not the later switch to shadow.
     pub nip_fi_resolver_bounds: crate::nip_fi_resolver::ResolverBounds,
 }
@@ -453,17 +453,17 @@ fn parse_invite_v1_cutoff(raw: Option<&str>) -> Result<Option<u64>, ConfigError>
             .filter(|time| time.offset().local_minus_utc() == 0 && time.timestamp_subsec_nanos() == 0)
             .and_then(|time| u64::try_from(time.timestamp()).ok())
             .ok_or_else(|| ConfigError::InvalidValue(
-                "BUZZ_INVITE_V1_INVALID_AFTER must be a UTC RFC3339 timestamp with whole seconds".into(),
+                "HIVE_INVITE_V1_INVALID_AFTER must be a UTC RFC3339 timestamp with whole seconds".into(),
             ))
     }).transpose()
 }
 
 fn invite_v1_cutoff_from_env() -> Result<Option<u64>, ConfigError> {
-    match std::env::var("BUZZ_INVITE_V1_INVALID_AFTER") {
+    match std::env::var("HIVE_INVITE_V1_INVALID_AFTER") {
         Ok(raw) => parse_invite_v1_cutoff(Some(&raw)),
         Err(std::env::VarError::NotPresent) => Ok(None),
         Err(std::env::VarError::NotUnicode(_)) => Err(ConfigError::InvalidValue(
-            "BUZZ_INVITE_V1_INVALID_AFTER must be valid Unicode".into(),
+            "HIVE_INVITE_V1_INVALID_AFTER must be valid Unicode".into(),
         )),
     }
 }
@@ -477,7 +477,7 @@ fn parse_client_ip_header(raw: &str) -> Result<Option<axum::http::HeaderName>, C
     axum::http::HeaderName::from_bytes(raw.to_ascii_lowercase().as_bytes())
         .map(Some)
         .map_err(|_| {
-            ConfigError::InvalidValue(format!("BUZZ_CLIENT_IP_HEADER is not a header name: {raw}"))
+            ConfigError::InvalidValue(format!("HIVE_CLIENT_IP_HEADER is not a header name: {raw}"))
         })
 }
 
@@ -499,35 +499,35 @@ fn rate_limit_config_from_env() -> Result<buzz_auth::RateLimitConfig, ConfigErro
     let defaults = buzz_auth::RateLimitConfig::default();
     Ok(buzz_auth::RateLimitConfig {
         human_messages_per_min: positive_u64_from_env(
-            "BUZZ_RATE_LIMIT_HUMAN_MESSAGES_PER_MIN",
+            "HIVE_RATE_LIMIT_HUMAN_MESSAGES_PER_MIN",
             defaults.human_messages_per_min,
         )?,
         gif_searches_per_min: positive_u64_from_env(
-            "BUZZ_RATE_LIMIT_GIF_SEARCHES_PER_MIN",
+            "HIVE_RATE_LIMIT_GIF_SEARCHES_PER_MIN",
             defaults.gif_searches_per_min,
         )?,
         human_api_calls_per_min: positive_u64_from_env(
-            "BUZZ_RATE_LIMIT_HUMAN_API_CALLS_PER_MIN",
+            "HIVE_RATE_LIMIT_HUMAN_API_CALLS_PER_MIN",
             defaults.human_api_calls_per_min,
         )?,
         human_ws_events_per_sec: positive_u64_from_env(
-            "BUZZ_RATE_LIMIT_HUMAN_WS_EVENTS_PER_SEC",
+            "HIVE_RATE_LIMIT_HUMAN_WS_EVENTS_PER_SEC",
             defaults.human_ws_events_per_sec,
         )?,
         agent_standard_messages_per_min: positive_u64_from_env(
-            "BUZZ_RATE_LIMIT_AGENT_STANDARD_MESSAGES_PER_MIN",
+            "HIVE_RATE_LIMIT_AGENT_STANDARD_MESSAGES_PER_MIN",
             defaults.agent_standard_messages_per_min,
         )?,
         agent_standard_api_calls_per_min: positive_u64_from_env(
-            "BUZZ_RATE_LIMIT_AGENT_STANDARD_API_CALLS_PER_MIN",
+            "HIVE_RATE_LIMIT_AGENT_STANDARD_API_CALLS_PER_MIN",
             defaults.agent_standard_api_calls_per_min,
         )?,
         agent_elevated_messages_per_min: positive_u64_from_env(
-            "BUZZ_RATE_LIMIT_AGENT_ELEVATED_MESSAGES_PER_MIN",
+            "HIVE_RATE_LIMIT_AGENT_ELEVATED_MESSAGES_PER_MIN",
             defaults.agent_elevated_messages_per_min,
         )?,
         agent_platform_messages_per_min: positive_u64_from_env(
-            "BUZZ_RATE_LIMIT_AGENT_PLATFORM_MESSAGES_PER_MIN",
+            "HIVE_RATE_LIMIT_AGENT_PLATFORM_MESSAGES_PER_MIN",
             defaults.agent_platform_messages_per_min,
         )?,
     })
@@ -561,7 +561,7 @@ const PUSH_GATEWAY_DELIVERY_PATHS: [&str; 2] = ["/v1/deliveries", "/v1/deliverie
 fn parse_push_gateway_delivery_url(raw: &str) -> Result<url::Url, ConfigError> {
     let url = url::Url::parse(raw.trim()).map_err(|e| {
         ConfigError::InvalidValue(format!(
-            "BUZZ_PUSH_GATEWAY_DELIVERY_URL is not a valid URL: {e}"
+            "HIVE_PUSH_GATEWAY_DELIVERY_URL is not a valid URL: {e}"
         ))
     })?;
     if !matches!(url.scheme(), "http" | "https")
@@ -574,7 +574,7 @@ fn parse_push_gateway_delivery_url(raw: &str) -> Result<url::Url, ConfigError> {
         || url.fragment().is_some()
     {
         return Err(ConfigError::InvalidValue(
-            "BUZZ_PUSH_GATEWAY_DELIVERY_URL must be an exact HTTP(S) /v1/deliveries (or the older /v1/deliveries/apns) URL without credentials, query, or fragment; explicit ports are supported only for HTTP"
+            "HIVE_PUSH_GATEWAY_DELIVERY_URL must be an exact HTTP(S) /v1/deliveries (or the older /v1/deliveries/apns) URL without credentials, query, or fragment; explicit ports are supported only for HTTP"
                 .to_string(),
         ));
     }
@@ -592,24 +592,24 @@ fn parse_operator_listener_delivery_urls(
         .collect();
     if !raw.trim().is_empty() && entries.is_empty() {
         return Err(ConfigError::InvalidValue(
-            "BUZZ_OPERATOR_LISTENERS must contain pubkey:delivery_url pairs".to_string(),
+            "HIVE_OPERATOR_LISTENERS must contain pubkey:delivery_url pairs".to_string(),
         ));
     }
     for entry in entries {
         let (pubkey, delivery_url) = entry.split_once(':').ok_or_else(|| {
             ConfigError::InvalidValue(
-                "BUZZ_OPERATOR_LISTENERS entries must be pubkey:delivery_url pairs".to_string(),
+                "HIVE_OPERATOR_LISTENERS entries must be pubkey:delivery_url pairs".to_string(),
             )
         })?;
         let pubkey = pubkey.trim().to_ascii_lowercase();
         if pubkey.len() != 64 || !pubkey.chars().all(|c| c.is_ascii_hexdigit()) {
             return Err(ConfigError::InvalidValue(format!(
-                "BUZZ_OPERATOR_LISTENERS entry has an invalid pubkey: {pubkey:?}"
+                "HIVE_OPERATOR_LISTENERS entry has an invalid pubkey: {pubkey:?}"
             )));
         }
         let url = url::Url::parse(delivery_url.trim()).map_err(|e| {
             ConfigError::InvalidValue(format!(
-                "BUZZ_OPERATOR_LISTENERS endpoint is not a valid URL: {e}"
+                "HIVE_OPERATOR_LISTENERS endpoint is not a valid URL: {e}"
             ))
         })?;
         if !matches!(url.scheme(), "http" | "https")
@@ -620,13 +620,13 @@ fn parse_operator_listener_delivery_urls(
             || url.fragment().is_some()
         {
             return Err(ConfigError::InvalidValue(
-                "BUZZ_OPERATOR_LISTENERS endpoints must be HTTP(S) URLs without credentials, query, or fragment"
+                "HIVE_OPERATOR_LISTENERS endpoints must be HTTP(S) URLs without credentials, query, or fragment"
                     .to_string(),
             ));
         }
         if endpoints.insert(pubkey.clone(), url).is_some() {
             return Err(ConfigError::InvalidValue(format!(
-                "BUZZ_OPERATOR_LISTENERS contains duplicate pubkey: {pubkey}"
+                "HIVE_OPERATOR_LISTENERS contains duplicate pubkey: {pubkey}"
             )));
         }
     }
@@ -650,7 +650,7 @@ fn parse_bool(name: &str, default: bool) -> Result<bool, ConfigError> {
 }
 
 fn parse_workflow_agent_mentions() -> Result<buzz_workflow::AgentMentions, ConfigError> {
-    const NAME: &str = "BUZZ_WORKFLOW_AGENT_MENTIONS";
+    const NAME: &str = "HIVE_WORKFLOW_AGENT_MENTIONS";
     match std::env::var(NAME) {
         Err(std::env::VarError::NotPresent) => Ok(buzz_workflow::AgentMentions::Any),
         Err(error) => Err(ConfigError::InvalidValue(format!(
@@ -669,7 +669,7 @@ fn parse_optional_bool(name: &str) -> Result<bool, ConfigError> {
 fn ensure_git_repo_path(
     raw: impl Into<std::path::PathBuf>,
 ) -> Result<std::path::PathBuf, ConfigError> {
-    ensure_git_path("BUZZ_GIT_REPO_PATH", raw)
+    ensure_git_path("HIVE_GIT_REPO_PATH", raw)
 }
 
 fn ensure_git_path(
@@ -688,14 +688,14 @@ fn ensure_git_path(
 
 /// Env vars that once gated authenticated media reads.
 ///
-/// `BUZZ_REQUIRE_MEDIA_GET_AUTH` was the real flag; `BUZZ_REQUIRE_MEDIA_READ_AUTH`
+/// `HIVE_REQUIRE_MEDIA_GET_AUTH` was the real flag; `HIVE_REQUIRE_MEDIA_READ_AUTH`
 /// was documented in `.env.example` as an accepted alias but was never read by
 /// the relay. Media reads are now unconditionally authenticated, so both are
 /// inert and an operator still setting either — especially to `false` — holds a
 /// belief about their deployment that is no longer true.
 const INERT_MEDIA_READ_AUTH_VARS: [&str; 2] = [
-    "BUZZ_REQUIRE_MEDIA_GET_AUTH",
-    "BUZZ_REQUIRE_MEDIA_READ_AUTH",
+    "HIVE_REQUIRE_MEDIA_GET_AUTH",
+    "HIVE_REQUIRE_MEDIA_READ_AUTH",
 ];
 
 /// Which of `names` are present, so startup can warn that they do nothing.
@@ -715,7 +715,7 @@ impl Config {
     /// Loads configuration from environment variables, falling back to development defaults.
     pub fn from_env() -> Result<Self, ConfigError> {
         let bind_addr_raw =
-            std::env::var("BUZZ_BIND_ADDR").unwrap_or_else(|_| "0.0.0.0:3000".to_string());
+            std::env::var("HIVE_BIND_ADDR").unwrap_or_else(|_| "0.0.0.0:3000".to_string());
         let bind_addr = parse_bind_addr(&bind_addr_raw)?;
 
         let database_url = std::env::var("DATABASE_URL")
@@ -728,9 +728,9 @@ impl Config {
 
         // The old seconds-denominated name is a hard startup error, not an
         // alias: silently honouring it would mean 1000x the intended budget.
-        if std::env::var("BUZZ_REPLICA_HEAD_MAX_AGE_SECS").is_ok() {
+        if std::env::var("HIVE_REPLICA_HEAD_MAX_AGE_SECS").is_ok() {
             return Err(ConfigError::InvalidValue(
-                "BUZZ_REPLICA_HEAD_MAX_AGE_SECS was renamed to BUZZ_REPLICA_READ_MAX_AGE_MS \
+                "HIVE_REPLICA_HEAD_MAX_AGE_SECS was renamed to HIVE_REPLICA_READ_MAX_AGE_MS \
                  (note: milliseconds, not seconds); refusing to start"
                     .to_string(),
             ));
@@ -738,10 +738,10 @@ impl Config {
 
         // Replica read budget: 0 = off (the rollout default), so this is a
         // non-negative parse, unlike `positive_u64_from_env`.
-        let replica_read_max_age_ms = match std::env::var("BUZZ_REPLICA_READ_MAX_AGE_MS") {
+        let replica_read_max_age_ms = match std::env::var("HIVE_REPLICA_READ_MAX_AGE_MS") {
             Ok(raw) => raw.trim().parse::<u64>().map_err(|_| {
                 ConfigError::InvalidValue(
-                    "BUZZ_REPLICA_READ_MAX_AGE_MS must be a non-negative integer".to_string(),
+                    "HIVE_REPLICA_READ_MAX_AGE_MS must be a non-negative integer".to_string(),
                 )
             })?,
             Err(_) => 0,
@@ -751,7 +751,7 @@ impl Config {
         // out-of-range value fails startup rather than being clamped, so the
         // deployed cadence is always the configured one.
         let replica_fence_probe_interval_ms =
-            match std::env::var("BUZZ_REPLICA_FENCE_PROBE_INTERVAL_MS") {
+            match std::env::var("HIVE_REPLICA_FENCE_PROBE_INTERVAL_MS") {
                 Ok(raw) if !raw.trim().is_empty() => {
                     let min = buzz_db::replica_fence::MIN_PROBE_INTERVAL.as_millis() as u64;
                     let max = buzz_db::replica_fence::MAX_PROBE_INTERVAL.as_millis() as u64;
@@ -761,7 +761,7 @@ impl Config {
                         .filter(|ms| (min..=max).contains(ms))
                         .ok_or_else(|| {
                             ConfigError::InvalidValue(format!(
-                                "BUZZ_REPLICA_FENCE_PROBE_INTERVAL_MS must be an integer \
+                                "HIVE_REPLICA_FENCE_PROBE_INTERVAL_MS must be an integer \
                                  between {min} and {max}"
                             ))
                         })?
@@ -774,14 +774,14 @@ impl Config {
         // hard-drain budget. An empty/whitespace-only value is treated as unset
         // (jitter off), matching the sibling vars in this file — so setting the
         // var to "" is a valid kill switch, not a crashloop.
-        let drain_jitter_ms = match std::env::var("BUZZ_DRAIN_JITTER_MS") {
+        let drain_jitter_ms = match std::env::var("HIVE_DRAIN_JITTER_MS") {
             Ok(raw) if raw.trim().is_empty() => 0,
             Ok(raw) => raw
                 .trim()
                 .parse::<u64>()
                 .map_err(|_| {
                     ConfigError::InvalidValue(
-                        "BUZZ_DRAIN_JITTER_MS must be a non-negative integer".to_string(),
+                        "HIVE_DRAIN_JITTER_MS must be a non-negative integer".to_string(),
                     )
                 })?
                 .min(MAX_DRAIN_JITTER_MS),
@@ -791,13 +791,13 @@ impl Config {
         let redis_url =
             std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://localhost:6379".to_string());
 
-        let db_pool_size = std::env::var("BUZZ_DB_POOL_SIZE")
+        let db_pool_size = std::env::var("HIVE_DB_POOL_SIZE")
             .ok()
             .and_then(|v| v.parse::<u32>().ok())
             .filter(|&v| v > 0)
             .unwrap_or(50);
 
-        let db_read_pool_size = std::env::var("BUZZ_DB_READ_POOL_SIZE")
+        let db_read_pool_size = std::env::var("HIVE_DB_READ_POOL_SIZE")
             .ok()
             .and_then(|v| v.parse::<u32>().ok())
             .filter(|&v| v > 0);
@@ -805,84 +805,84 @@ impl Config {
         let relay_url =
             std::env::var("RELAY_URL").unwrap_or_else(|_| "ws://localhost:3000".to_string());
 
-        let pairing_relay_url = std::env::var("BUZZ_PAIRING_RELAY_URL")
+        let pairing_relay_url = std::env::var("HIVE_PAIRING_RELAY_URL")
             .ok()
             .map(|value| value.trim().to_string())
             .filter(|value| !value.is_empty())
             .map(|value| {
                 let parsed = url::Url::parse(&value).map_err(|e| {
                     ConfigError::InvalidValue(format!(
-                        "BUZZ_PAIRING_RELAY_URL must be a valid ws:// or wss:// URL: {e}"
+                        "HIVE_PAIRING_RELAY_URL must be a valid ws:// or wss:// URL: {e}"
                     ))
                 })?;
                 if !matches!(parsed.scheme(), "ws" | "wss") || parsed.host_str().is_none() {
                     return Err(ConfigError::InvalidValue(
-                        "BUZZ_PAIRING_RELAY_URL must be a valid ws:// or wss:// URL".to_string(),
+                        "HIVE_PAIRING_RELAY_URL must be a valid ws:// or wss:// URL".to_string(),
                     ));
                 }
                 Ok(value)
             })
             .transpose()?;
 
-        let max_connections = std::env::var("BUZZ_MAX_CONNECTIONS")
+        let max_connections = std::env::var("HIVE_MAX_CONNECTIONS")
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(10_000);
 
-        let max_concurrent_handlers = std::env::var("BUZZ_MAX_CONCURRENT_HANDLERS")
+        let max_concurrent_handlers = std::env::var("HIVE_MAX_CONCURRENT_HANDLERS")
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(1024);
 
-        let send_buffer_size = std::env::var("BUZZ_SEND_BUFFER")
+        let send_buffer_size = std::env::var("HIVE_SEND_BUFFER")
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(1_000);
 
-        let max_frame_bytes = std::env::var("BUZZ_MAX_FRAME_BYTES")
+        let max_frame_bytes = std::env::var("HIVE_MAX_FRAME_BYTES")
             .ok()
             .and_then(|v| v.parse::<usize>().ok())
             .filter(|&v| v > 0)
             .unwrap_or(DEFAULT_MAX_FRAME_BYTES);
 
-        let slow_client_grace_limit = std::env::var("BUZZ_SLOW_CLIENT_GRACE_LIMIT")
+        let slow_client_grace_limit = std::env::var("HIVE_SLOW_CLIENT_GRACE_LIMIT")
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(15);
 
         let client_ip_header =
-            parse_client_ip_header(&std::env::var("BUZZ_CLIENT_IP_HEADER").unwrap_or_default())?;
+            parse_client_ip_header(&std::env::var("HIVE_CLIENT_IP_HEADER").unwrap_or_default())?;
 
-        let require_auth_token = std::env::var("BUZZ_REQUIRE_AUTH_TOKEN")
+        let require_auth_token = std::env::var("HIVE_REQUIRE_AUTH_TOKEN")
             .map(|v| v == "true" || v == "1")
             .unwrap_or(false);
 
-        let pubkey_allowlist_enabled = std::env::var("BUZZ_PUBKEY_ALLOWLIST")
+        let pubkey_allowlist_enabled = std::env::var("HIVE_PUBKEY_ALLOWLIST")
             .map(|v| v == "true" || v == "1")
             .unwrap_or(false);
 
-        let require_relay_membership = std::env::var("BUZZ_REQUIRE_RELAY_MEMBERSHIP")
+        let require_relay_membership = std::env::var("HIVE_REQUIRE_RELAY_MEMBERSHIP")
             .map(|v| v == "true" || v == "1")
             .unwrap_or(false);
 
         // Defaults true → single-pod (N=1) keeps today's huddle behavior. A
         // horizontally-scaled deployment sets this false; see the field doc.
-        let huddle_audio_available = std::env::var("BUZZ_HUDDLE_AUDIO_AVAILABLE")
+        let huddle_audio_available = std::env::var("HIVE_HUDDLE_AUDIO_AVAILABLE")
             .map(|v| !(v == "false" || v == "0"))
             .unwrap_or(true);
 
         // Mesh opt-in: default OFF. Strict rollout no-regression — an image
         // upgrade with untouched env must not bind a new UDP port or write a
         // new Redis key. Horizontally-scaled deployments explicitly set
-        // `BUZZ_MESH=on`; anything else (absent, `off`, other values) keeps
+        // `HIVE_MESH=on`; anything else (absent, `off`, other values) keeps
         // exact single-instance behavior.
-        let mesh_enabled = std::env::var("BUZZ_MESH")
+        let mesh_enabled = std::env::var("HIVE_MESH")
             .map(|v| v.eq_ignore_ascii_case("on") || v == "true" || v == "1")
             .unwrap_or(false);
-        let mesh_bind_addr = std::env::var("BUZZ_MESH_BIND_ADDR")
+        let mesh_bind_addr = std::env::var("HIVE_MESH_BIND_ADDR")
             .map(|raw| {
                 raw.parse::<SocketAddr>().map_err(|e| {
-                    ConfigError::InvalidValue(format!("invalid BUZZ_MESH_BIND_ADDR: {e}"))
+                    ConfigError::InvalidValue(format!("invalid HIVE_MESH_BIND_ADDR: {e}"))
                 })
             })
             .unwrap_or_else(|_| Ok("0.0.0.0:3478".parse().expect("static default parses")))?;
@@ -892,23 +892,23 @@ impl Config {
             registry_refresh: std::time::Duration::from_secs(15),
         };
 
-        // Demo echo opt-in: same strict pattern as BUZZ_MESH — explicit
+        // Demo echo opt-in: same strict pattern as HIVE_MESH — explicit
         // `on`/`true`/`1` only, anything else (absent, `off`, typos) is off.
-        let mesh_demo_echo = std::env::var("BUZZ_MESH_DEMO_ECHO")
+        let mesh_demo_echo = std::env::var("HIVE_MESH_DEMO_ECHO")
             .map(|v| v.eq_ignore_ascii_case("on") || v == "true" || v == "1")
             .unwrap_or(false);
 
-        let allow_nip_oa_auth = std::env::var("BUZZ_ALLOW_NIP_OA_AUTH")
+        let allow_nip_oa_auth = std::env::var("HIVE_ALLOW_NIP_OA_AUTH")
             .map(|v| v == "true" || v == "1")
             .unwrap_or(false);
 
-        let klipy = std::env::var("BUZZ_KLIPY_API_KEY")
+        let klipy = std::env::var("HIVE_KLIPY_API_KEY")
             .ok()
             .map(|value| value.trim().to_string())
             .filter(|value| !value.is_empty())
             .map(|api_key| KlipyConfig { api_key });
 
-        // Note: intentionally not prefixed with BUZZ_ — this is a relay-identity
+        // Note: intentionally not prefixed with HIVE_ — this is a relay-identity
         // config that may be shared across multiple services (e.g., ACP agent).
         let relay_owner_pubkey = std::env::var("RELAY_OWNER_PUBKEY")
             .ok()
@@ -933,7 +933,7 @@ impl Config {
             })
             .transpose()?;
 
-        // Note: intentionally not prefixed with BUZZ_ — same relay-identity
+        // Note: intentionally not prefixed with HIVE_ — same relay-identity
         // config family as RELAY_OWNER_PUBKEY. Comma-separated 64-char hex
         // pubkeys. Unlike RELAY_OWNER_PUBKEY (warn-and-ignore), an invalid
         // entry here is a hard config error: silently dropping an operator
@@ -944,22 +944,22 @@ impl Config {
             .map(|raw| parse_operator_api_origin(&raw))
             .transpose()?;
 
-        let multi_community_relay = match std::env::var("BUZZ_MULTI_COMMUNITY_RELAY") {
+        let multi_community_relay = match std::env::var("HIVE_MULTI_COMMUNITY_RELAY") {
             Ok(value) => value.parse::<bool>().map_err(|_| {
                 ConfigError::InvalidValue(
-                    "BUZZ_MULTI_COMMUNITY_RELAY must be true or false".to_string(),
+                    "HIVE_MULTI_COMMUNITY_RELAY must be true or false".to_string(),
                 )
             })?,
             Err(std::env::VarError::NotPresent) => true,
             Err(std::env::VarError::NotUnicode(_)) => {
                 return Err(ConfigError::InvalidValue(
-                    "BUZZ_MULTI_COMMUNITY_RELAY must be true or false".to_string(),
+                    "HIVE_MULTI_COMMUNITY_RELAY must be true or false".to_string(),
                 ))
             }
         };
         if !multi_community_relay && crate::tenant::relay_url_authority(&relay_url).is_empty() {
             return Err(ConfigError::InvalidValue(
-                "RELAY_URL must have a host when BUZZ_MULTI_COMMUNITY_RELAY=false".to_owned(),
+                "RELAY_URL must have a host when HIVE_MULTI_COMMUNITY_RELAY=false".to_owned(),
             ));
         }
         let relay_operator_pubkeys = match std::env::var("RELAY_OPERATOR_PUBKEYS") {
@@ -1002,16 +1002,16 @@ impl Config {
             );
         }
 
-        let operator_listener_delivery_urls = match std::env::var("BUZZ_OPERATOR_LISTENERS") {
+        let operator_listener_delivery_urls = match std::env::var("HIVE_OPERATOR_LISTENERS") {
             Ok(raw) => parse_operator_listener_delivery_urls(&raw)?,
             Err(std::env::VarError::NotPresent) => HashMap::new(),
             Err(error) => {
                 return Err(ConfigError::InvalidValue(format!(
-                    "BUZZ_OPERATOR_LISTENERS must be valid UTF-8: {error}"
+                    "HIVE_OPERATOR_LISTENERS must be valid UTF-8: {error}"
                 )));
             }
         };
-        let storage_usage_delivery_url = match std::env::var("BUZZ_STORAGE_USAGE_URL") {
+        let storage_usage_delivery_url = match std::env::var("HIVE_STORAGE_USAGE_URL") {
             Ok(raw) => Some(
                 crate::storage_usage_delivery::parse_delivery_url(&raw)
                     .map_err(ConfigError::InvalidValue)?,
@@ -1019,13 +1019,13 @@ impl Config {
             Err(std::env::VarError::NotPresent) => None,
             Err(error) => {
                 return Err(ConfigError::InvalidValue(format!(
-                    "BUZZ_STORAGE_USAGE_URL must be valid UTF-8: {error}"
+                    "HIVE_STORAGE_USAGE_URL must be valid UTF-8: {error}"
                 )));
             }
         };
         if !operator_listener_delivery_urls.is_empty() && relay_operator_api_origin.is_none() {
             error!(
-                "BUZZ_OPERATOR_LISTENERS is set but RELAY_OPERATOR_API_ORIGIN is not — operator-listener registration requests will reject every request until RELAY_OPERATOR_API_ORIGIN is set"
+                "HIVE_OPERATOR_LISTENERS is set but RELAY_OPERATOR_API_ORIGIN is not — operator-listener registration requests will reject every request until RELAY_OPERATOR_API_ORIGIN is set"
             );
         }
 
@@ -1035,31 +1035,31 @@ impl Config {
 
         if !require_auth_token {
             warn!(
-                "BUZZ_REQUIRE_AUTH_TOKEN is false — REST API requests bypass token auth. \
+                "HIVE_REQUIRE_AUTH_TOKEN is false — REST API requests bypass token auth. \
                  WebSocket protocol auth is unaffected. Set to true for production."
             );
         }
 
-        let cors_origins = std::env::var("BUZZ_CORS_ORIGINS")
+        let cors_origins = std::env::var("HIVE_CORS_ORIGINS")
             .unwrap_or_default()
             .split(',')
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
             .collect();
 
-        let relay_private_key = std::env::var("BUZZ_RELAY_PRIVATE_KEY").ok();
+        let relay_private_key = std::env::var("HIVE_RELAY_PRIVATE_KEY").ok();
 
-        let uds_path = std::env::var("BUZZ_UDS_PATH")
+        let uds_path = std::env::var("HIVE_UDS_PATH")
             .ok()
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty());
 
-        let health_port = std::env::var("BUZZ_HEALTH_PORT")
+        let health_port = std::env::var("HIVE_HEALTH_PORT")
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(8080);
 
-        let metrics_port = std::env::var("BUZZ_METRICS_PORT")
+        let metrics_port = std::env::var("HIVE_METRICS_PORT")
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(9102);
@@ -1067,97 +1067,97 @@ impl Config {
         // Catalog-only and cheap, but clamp operator mistakes away from a hot
         // loop or a multi-day observability gap.
         let partition_audit_interval = Duration::from_secs(
-            std::env::var("BUZZ_PARTITION_AUDIT_INTERVAL_SECS")
+            std::env::var("HIVE_PARTITION_AUDIT_INTERVAL_SECS")
                 .ok()
                 .and_then(|value| value.parse::<u64>().ok())
                 .unwrap_or(15 * 60)
                 .clamp(60, 24 * 60 * 60),
         );
         let partition_manager_create_enabled =
-            parse_bool("BUZZ_PARTITION_MANAGER_CREATE_ENABLED", true)?;
+            parse_bool("HIVE_PARTITION_MANAGER_CREATE_ENABLED", true)?;
         // On by default: a fresh install's migrated catch-all covers months
         // from 2026-07, and only advancement replaces it with monthlies.
         let partition_manager_advance_enabled =
-            parse_bool("BUZZ_PARTITION_MANAGER_ADVANCE_ENABLED", true)?;
+            parse_bool("HIVE_PARTITION_MANAGER_ADVANCE_ENABLED", true)?;
 
-        let s3_addressing_style = match std::env::var("BUZZ_S3_ADDRESSING_STYLE") {
+        let s3_addressing_style = match std::env::var("HIVE_S3_ADDRESSING_STYLE") {
             Ok(value) => value.parse().map_err(ConfigError::InvalidValue)?,
             Err(std::env::VarError::NotPresent) => buzz_media::config::S3AddressingStyle::default(),
             Err(std::env::VarError::NotUnicode(_)) => {
                 return Err(ConfigError::InvalidValue(
-                    "BUZZ_S3_ADDRESSING_STYLE must be valid Unicode and one of 'path' or 'virtual'"
+                    "HIVE_S3_ADDRESSING_STYLE must be valid Unicode and one of 'path' or 'virtual'"
                         .to_string(),
                 ));
             }
         };
-        let media_read_mode = match std::env::var("BUZZ_MEDIA_READ_MODE") {
+        let media_read_mode = match std::env::var("HIVE_MEDIA_READ_MODE") {
             Ok(value) => value.parse().map_err(ConfigError::InvalidValue)?,
             Err(std::env::VarError::NotPresent) => crate::api::media_access::MediaReadMode::Off,
             Err(_) => {
                 return Err(ConfigError::InvalidValue(
-                    "BUZZ_MEDIA_READ_MODE must be valid Unicode".into(),
+                    "HIVE_MEDIA_READ_MODE must be valid Unicode".into(),
                 ))
             }
         };
         let media = buzz_media::MediaConfig {
-            s3_endpoint: std::env::var("BUZZ_S3_ENDPOINT")
+            s3_endpoint: std::env::var("HIVE_S3_ENDPOINT")
                 .unwrap_or_else(|_| "http://localhost:9000".to_string()),
-            s3_access_key: std::env::var("BUZZ_S3_ACCESS_KEY")
+            s3_access_key: std::env::var("HIVE_S3_ACCESS_KEY")
                 .unwrap_or_else(|_| "buzz_dev".to_string()),
-            s3_secret_key: std::env::var("BUZZ_S3_SECRET_KEY")
+            s3_secret_key: std::env::var("HIVE_S3_SECRET_KEY")
                 .unwrap_or_else(|_| "buzz_dev_secret".to_string()),
-            s3_bucket: std::env::var("BUZZ_S3_BUCKET").unwrap_or_else(|_| "buzz-media".to_string()),
-            s3_region: std::env::var("BUZZ_S3_REGION")
+            s3_bucket: std::env::var("HIVE_S3_BUCKET").unwrap_or_else(|_| "buzz-media".to_string()),
+            s3_region: std::env::var("HIVE_S3_REGION")
                 .or_else(|_| std::env::var("AWS_REGION"))
                 .unwrap_or_else(|_| "us-east-1".to_string()),
             s3_addressing_style,
-            max_image_bytes: std::env::var("BUZZ_MAX_IMAGE_BYTES")
+            max_image_bytes: std::env::var("HIVE_MAX_IMAGE_BYTES")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(50 * 1024 * 1024),
-            max_gif_bytes: std::env::var("BUZZ_MAX_GIF_BYTES")
+            max_gif_bytes: std::env::var("HIVE_MAX_GIF_BYTES")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(10 * 1024 * 1024),
-            max_video_bytes: std::env::var("BUZZ_MAX_VIDEO_BYTES")
+            max_video_bytes: std::env::var("HIVE_MAX_VIDEO_BYTES")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(500 * 1024 * 1024),
-            max_file_bytes: std::env::var("BUZZ_MAX_FILE_BYTES")
+            max_file_bytes: std::env::var("HIVE_MAX_FILE_BYTES")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(100 * 1024 * 1024),
-            public_base_url: std::env::var("BUZZ_MEDIA_BASE_URL")
+            public_base_url: std::env::var("HIVE_MEDIA_BASE_URL")
                 .unwrap_or_else(|_| "http://localhost:3000/media".to_string()),
             // Per-upload-event records (`_uploads/` moderation side channel).
             // Off by default; coherence between the three knobs is enforced in
             // MediaConfig::validate at startup.
-            upload_records_enabled: std::env::var("BUZZ_MEDIA_UPLOAD_RECORDS")
+            upload_records_enabled: std::env::var("HIVE_MEDIA_UPLOAD_RECORDS")
                 .map(|v| v == "true" || v == "1")
                 .unwrap_or(false),
-            upload_ip_header: std::env::var("BUZZ_MEDIA_UPLOAD_IP_HEADER")
+            upload_ip_header: std::env::var("HIVE_MEDIA_UPLOAD_IP_HEADER")
                 .ok()
                 .map(|s| s.trim().to_lowercase())
                 .filter(|s| !s.is_empty()),
-            upload_port_header: std::env::var("BUZZ_MEDIA_UPLOAD_PORT_HEADER")
+            upload_port_header: std::env::var("HIVE_MEDIA_UPLOAD_PORT_HEADER")
                 .ok()
                 .map(|s| s.trim().to_lowercase())
                 .filter(|s| !s.is_empty()),
         };
         let media_max_concurrent_uploads: usize =
-            std::env::var("BUZZ_MEDIA_MAX_CONCURRENT_UPLOADS")
+            std::env::var("HIVE_MEDIA_MAX_CONCURRENT_UPLOADS")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .filter(|&v| v > 0)
                 .unwrap_or(8);
         let media_max_concurrent_uploads_per_pubkey: u32 =
-            std::env::var("BUZZ_MEDIA_MAX_CONCURRENT_UPLOADS_PER_PUBKEY")
+            std::env::var("HIVE_MEDIA_MAX_CONCURRENT_UPLOADS_PER_PUBKEY")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .filter(|&v| v > 0)
                 .unwrap_or(2)
                 .min(u32::try_from(media_max_concurrent_uploads).unwrap_or(u32::MAX));
-        let media_uploads_per_minute: u32 = std::env::var("BUZZ_MEDIA_UPLOADS_PER_MINUTE")
+        let media_uploads_per_minute: u32 = std::env::var("HIVE_MEDIA_UPLOADS_PER_MINUTE")
             .ok()
             .and_then(|v| v.parse().ok())
             .filter(|&v| v > 0)
@@ -1171,72 +1171,72 @@ impl Config {
             );
         }
 
-        let ephemeral_ttl_override = std::env::var("BUZZ_EPHEMERAL_TTL_OVERRIDE")
+        let ephemeral_ttl_override = std::env::var("HIVE_EPHEMERAL_TTL_OVERRIDE")
             .ok()
             .and_then(|v| v.parse::<i32>().ok())
             .filter(|&v| v > 0);
 
         if let Some(ttl) = ephemeral_ttl_override {
             warn!(
-                "BUZZ_EPHEMERAL_TTL_OVERRIDE={ttl}s — all ephemeral channels will use \
+                "HIVE_EPHEMERAL_TTL_OVERRIDE={ttl}s — all ephemeral channels will use \
                  this TTL instead of the client-provided value."
             );
         }
 
         // Git server config
         let git_repo_path = ensure_git_repo_path(
-            std::env::var("BUZZ_GIT_REPO_PATH").unwrap_or_else(|_| "./repos".to_string()),
+            std::env::var("HIVE_GIT_REPO_PATH").unwrap_or_else(|_| "./repos".to_string()),
         )?;
         let git_pack_cache_path = ensure_git_path(
-            "BUZZ_GIT_PACK_CACHE_PATH",
-            std::env::var("BUZZ_GIT_PACK_CACHE_PATH")
+            "HIVE_GIT_PACK_CACHE_PATH",
+            std::env::var("HIVE_GIT_PACK_CACHE_PATH")
                 .map(std::path::PathBuf::from)
                 .unwrap_or_else(|_| git_repo_path.join(".pack-cache")),
         )?;
-        let git_max_pack_bytes: u64 = std::env::var("BUZZ_GIT_MAX_PACK_BYTES")
+        let git_max_pack_bytes: u64 = std::env::var("HIVE_GIT_MAX_PACK_BYTES")
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(500 * 1024 * 1024); // 500 MB
-        let git_max_repo_bytes: u64 = std::env::var("BUZZ_GIT_MAX_REPO_BYTES")
+        let git_max_repo_bytes: u64 = std::env::var("HIVE_GIT_MAX_REPO_BYTES")
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or_else(|| git_max_pack_bytes.saturating_mul(2)); // 1 GB at defaults
-        let git_pack_cache_max_bytes: u64 = std::env::var("BUZZ_GIT_PACK_CACHE_MAX_BYTES")
+        let git_pack_cache_max_bytes: u64 = std::env::var("HIVE_GIT_PACK_CACHE_MAX_BYTES")
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or_else(|| git_max_repo_bytes.saturating_mul(5)); // 5 GB at defaults
         let git_pack_cache_max_concurrent_populations: usize =
-            std::env::var("BUZZ_GIT_PACK_CACHE_MAX_CONCURRENT_POPULATIONS")
+            std::env::var("HIVE_GIT_PACK_CACHE_MAX_CONCURRENT_POPULATIONS")
                 .ok()
                 .and_then(|v| v.parse().ok())
                 .filter(|value| *value > 0)
                 .unwrap_or(2);
-        let git_max_repos_per_pubkey: u32 = std::env::var("BUZZ_GIT_MAX_REPOS_PER_PUBKEY")
+        let git_max_repos_per_pubkey: u32 = std::env::var("HIVE_GIT_MAX_REPOS_PER_PUBKEY")
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(100);
-        let git_max_concurrent_ops: usize = std::env::var("BUZZ_GIT_MAX_CONCURRENT_OPS")
+        let git_max_concurrent_ops: usize = std::env::var("HIVE_GIT_MAX_CONCURRENT_OPS")
             .ok()
             .and_then(|v| v.parse().ok())
             .unwrap_or(20);
-        let git_hook_hmac_secret: String = std::env::var("BUZZ_GIT_HOOK_HMAC_SECRET")
+        let git_hook_hmac_secret: String = std::env::var("HIVE_GIT_HOOK_HMAC_SECRET")
             .unwrap_or_else(|_| {
                 // Generate a random secret if not configured (dev mode).
                 let secret: [u8; 32] = rand::random();
                 hex::encode(secret)
             });
-        let push_enabled = parse_bool("BUZZ_PUSH_ENABLED", false)?;
+        let push_enabled = parse_bool("HIVE_PUSH_ENABLED", false)?;
         let push_executor_key_id =
-            std::env::var("BUZZ_PUSH_EXECUTOR_KEY_ID").unwrap_or_else(|_| "relay-v1".to_string());
+            std::env::var("HIVE_PUSH_EXECUTOR_KEY_ID").unwrap_or_else(|_| "relay-v1".to_string());
         if push_executor_key_id.is_empty() || push_executor_key_id.len() > 64 {
             return Err(ConfigError::InvalidValue(
-                "BUZZ_PUSH_EXECUTOR_KEY_ID must contain 1..=64 bytes".to_string(),
+                "HIVE_PUSH_EXECUTOR_KEY_ID must contain 1..=64 bytes".to_string(),
             ));
         }
-        let push_gateway_delivery_url = match std::env::var("BUZZ_PUSH_GATEWAY_DELIVERY_URL") {
+        let push_gateway_delivery_url = match std::env::var("HIVE_PUSH_GATEWAY_DELIVERY_URL") {
             Ok(raw) if raw.trim().is_empty() && push_enabled => {
                 return Err(ConfigError::InvalidValue(
-                    "BUZZ_PUSH_GATEWAY_DELIVERY_URL must not be empty when BUZZ_PUSH_ENABLED=true"
+                    "HIVE_PUSH_GATEWAY_DELIVERY_URL must not be empty when HIVE_PUSH_ENABLED=true"
                         .to_string(),
                 ));
             }
@@ -1244,25 +1244,25 @@ impl Config {
             Ok(raw) => Some(parse_push_gateway_delivery_url(&raw)?),
             Err(std::env::VarError::NotPresent) if push_enabled => {
                 return Err(ConfigError::InvalidValue(
-                    "BUZZ_PUSH_GATEWAY_DELIVERY_URL must be configured when BUZZ_PUSH_ENABLED=true"
+                    "HIVE_PUSH_GATEWAY_DELIVERY_URL must be configured when HIVE_PUSH_ENABLED=true"
                         .to_string(),
                 ));
             }
             Err(std::env::VarError::NotPresent) => None,
             Err(error) => {
                 return Err(ConfigError::InvalidValue(format!(
-                    "BUZZ_PUSH_GATEWAY_DELIVERY_URL must be valid UTF-8: {error}"
+                    "HIVE_PUSH_GATEWAY_DELIVERY_URL must be valid UTF-8: {error}"
                 )));
             }
         };
-        let push_gateway_timeout_millis = match std::env::var("BUZZ_PUSH_GATEWAY_TIMEOUT_MS") {
+        let push_gateway_timeout_millis = match std::env::var("HIVE_PUSH_GATEWAY_TIMEOUT_MS") {
             Ok(raw) => raw
                 .parse::<u64>()
                 .ok()
                 .filter(|millis| (100..=10_000).contains(millis))
                 .ok_or_else(|| {
                     ConfigError::InvalidValue(
-                        "BUZZ_PUSH_GATEWAY_TIMEOUT_MS must be an integer in 100..=10000"
+                        "HIVE_PUSH_GATEWAY_TIMEOUT_MS must be an integer in 100..=10000"
                             .to_string(),
                     )
                 })?,
@@ -1270,7 +1270,7 @@ impl Config {
         };
         let push_gateway_timeout = Duration::from_millis(push_gateway_timeout_millis);
         let operator_listener_timeout_millis = match std::env::var(
-            "BUZZ_OPERATOR_LISTENER_TIMEOUT_MS",
+            "HIVE_OPERATOR_LISTENER_TIMEOUT_MS",
         ) {
             Ok(raw) => match raw
                 .parse::<u64>()
@@ -1281,7 +1281,7 @@ impl Config {
                 None => {
                     error!(
                         value = %raw,
-                        "invalid BUZZ_OPERATOR_LISTENER_TIMEOUT_MS; using default 5000ms (expected integer in 100..=10000)"
+                        "invalid HIVE_OPERATOR_LISTENER_TIMEOUT_MS; using default 5000ms (expected integer in 100..=10000)"
                     );
                     5_000
                 }
@@ -1290,7 +1290,7 @@ impl Config {
             Err(err) => {
                 error!(
                     error = %err,
-                    "invalid BUZZ_OPERATOR_LISTENER_TIMEOUT_MS; using default 5000ms"
+                    "invalid HIVE_OPERATOR_LISTENER_TIMEOUT_MS; using default 5000ms"
                 );
                 5_000
             }
@@ -1313,10 +1313,10 @@ impl Config {
             }
             Ok(value)
         };
-        let terms_markdown = read_policy_markdown("BUZZ_TERMS_OF_SERVICE_MARKDOWN")?;
-        let privacy_markdown = read_policy_markdown("BUZZ_PRIVACY_POLICY_MARKDOWN")?;
-        let age_attestation_required = parse_optional_bool("BUZZ_AGE_ATTESTATION_REQUIRED")?;
-        let audit_enabled = parse_bool("BUZZ_AUDIT_ENABLED", true)?;
+        let terms_markdown = read_policy_markdown("HIVE_TERMS_OF_SERVICE_MARKDOWN")?;
+        let privacy_markdown = read_policy_markdown("HIVE_PRIVACY_POLICY_MARKDOWN")?;
+        let age_attestation_required = parse_optional_bool("HIVE_AGE_ATTESTATION_REQUIRED")?;
+        let audit_enabled = parse_bool("HIVE_AUDIT_ENABLED", true)?;
         let workflow_agent_mentions = parse_workflow_agent_mentions()?;
         let join_policy = if terms_markdown.is_none()
             && privacy_markdown.is_none()
@@ -1338,23 +1338,23 @@ impl Config {
         };
 
         // Deployment-admin surface. The route is absent when the host is unset.
-        let admin = match std::env::var("BUZZ_ADMIN_HOST")
+        let admin = match std::env::var("HIVE_ADMIN_HOST")
             .ok()
             .map(|value| value.trim().to_owned())
             .filter(|value| !value.is_empty())
         {
             None => {
-                if std::env::var_os("BUZZ_ADMIN_TOKEN").is_some() {
+                if std::env::var_os("HIVE_ADMIN_TOKEN").is_some() {
                     tracing::warn!(
-                        "BUZZ_ADMIN_TOKEN is set but token authentication was removed — \
+                        "HIVE_ADMIN_TOKEN is set but token authentication was removed — \
                          the value is ignored; the admin API now supports only \
-                         BUZZ_ADMIN_AUTH=nip98 (default) or disabled; remove \
-                         BUZZ_ADMIN_TOKEN from the environment"
+                         HIVE_ADMIN_AUTH=nip98 (default) or disabled; remove \
+                         HIVE_ADMIN_TOKEN from the environment"
                     );
                 }
-                if std::env::var_os("BUZZ_ADMIN_AUTH").is_some() {
+                if std::env::var_os("HIVE_ADMIN_AUTH").is_some() {
                     tracing::warn!(
-                        "BUZZ_ADMIN_AUTH is set without BUZZ_ADMIN_HOST — \
+                        "HIVE_ADMIN_AUTH is set without HIVE_ADMIN_HOST — \
                          the admin dashboard and API stay disabled and the value is ignored"
                     );
                 }
@@ -1363,7 +1363,7 @@ impl Config {
             Some(host) => {
                 if host.contains(['/', '\\', '@']) {
                     return Err(ConfigError::InvalidValue(
-                        "BUZZ_ADMIN_HOST must be an exact authority".to_string(),
+                        "HIVE_ADMIN_HOST must be an exact authority".to_string(),
                     ));
                 }
 
@@ -1375,7 +1375,7 @@ impl Config {
                 // so every accepted host yields usable discovery and signing URLs.
                 if !host.starts_with('[') && host.matches(':').count() > 1 {
                     return Err(ConfigError::InvalidValue(format!(
-                        "BUZZ_ADMIN_HOST={host} looks like a bare IPv6 literal; \
+                        "HIVE_ADMIN_HOST={host} looks like a bare IPv6 literal; \
                          wrap IPv6 addresses in brackets, e.g. [::1] or [::1]:3000"
                     )));
                 }
@@ -1392,7 +1392,7 @@ impl Config {
                 // both the advertised origin and the canonical `u`-tag URL. Mirrors
                 // `parse_operator_api_origin`. After passing the gate the host is
                 // lowercased (hostnames are case-insensitive per RFC 4343) so a
-                // mixed-case BUZZ_ADMIN_HOST round-trips correctly through desktop
+                // mixed-case HIVE_ADMIN_HOST round-trips correctly through desktop
                 // URL parsing, which always lowercases hostnames (the `url` crate
                 // normalizes an empty path to `/`, so a bare authority satisfies
                 // `path == "/"`).
@@ -1407,7 +1407,7 @@ impl Config {
                     });
                 if !is_bare_authority {
                     return Err(ConfigError::InvalidValue(format!(
-                        "BUZZ_ADMIN_HOST={host} is not a valid URL authority; \
+                        "HIVE_ADMIN_HOST={host} is not a valid URL authority; \
                          it must be a host with an optional port and nothing else \
                          (no path, query, fragment, or credentials), e.g. \
                          relay.example.com:8443 or [::1]:3000"
@@ -1415,22 +1415,22 @@ impl Config {
                 }
                 let host = host.to_lowercase();
 
-                // Parse BUZZ_ADMIN_AUTH. Accepted values: "nip98" (default when
+                // Parse HIVE_ADMIN_AUTH. Accepted values: "nip98" (default when
                 // unset or empty) and "disabled". Any other value is a startup
                 // error (typo-proofing). Token authentication was removed —
-                // BUZZ_ADMIN_TOKEN in the environment is ignored with a startup
+                // HIVE_ADMIN_TOKEN in the environment is ignored with a startup
                 // warning so a deploy that used to honor a credential learns the
                 // value is now inert without bricking the boot.
-                if std::env::var_os("BUZZ_ADMIN_TOKEN").is_some() {
+                if std::env::var_os("HIVE_ADMIN_TOKEN").is_some() {
                     tracing::warn!(
-                        "BUZZ_ADMIN_TOKEN is set but token authentication was removed — \
+                        "HIVE_ADMIN_TOKEN is set but token authentication was removed — \
                          the value is ignored; the admin API now supports only \
-                         BUZZ_ADMIN_AUTH=nip98 (default) or disabled; remove \
-                         BUZZ_ADMIN_TOKEN from the environment"
+                         HIVE_ADMIN_AUTH=nip98 (default) or disabled; remove \
+                         HIVE_ADMIN_TOKEN from the environment"
                     );
                 }
 
-                let auth = match std::env::var("BUZZ_ADMIN_AUTH")
+                let auth = match std::env::var("HIVE_ADMIN_AUTH")
                     .ok()
                     .as_deref()
                     .map(str::trim)
@@ -1438,7 +1438,7 @@ impl Config {
                     None | Some("") | Some("nip98") => AdminAuth::Nip98,
                     Some("disabled") => {
                         tracing::warn!(
-                            "BUZZ_ADMIN_AUTH=disabled — the admin API serves every \
+                            "HIVE_ADMIN_AUTH=disabled — the admin API serves every \
                              moderation read without authentication to anyone who can \
                              reach the relay: reports, feedback and attachments, \
                              restrictions, the community directory, member profiles and \
@@ -1450,19 +1450,19 @@ impl Config {
                     }
                     Some(other) => {
                         return Err(ConfigError::InvalidValue(format!(
-                            "BUZZ_ADMIN_AUTH must be \"nip98\" or \"disabled\"; got \"{other}\""
+                            "HIVE_ADMIN_AUTH must be \"nip98\" or \"disabled\"; got \"{other}\""
                         )))
                     }
                 };
 
-                let web_dir = std::env::var("BUZZ_ADMIN_WEB_DIR")
+                let web_dir = std::env::var("HIVE_ADMIN_WEB_DIR")
                     .ok()
                     .map(|value| std::path::PathBuf::from(value.trim()))
                     .filter(|value| !value.as_os_str().is_empty());
                 if let Some(ref dir) = web_dir {
                     if !dir.join("index.html").is_file() {
                         return Err(ConfigError::InvalidValue(format!(
-                            "BUZZ_ADMIN_WEB_DIR={} does not contain index.html",
+                            "HIVE_ADMIN_WEB_DIR={} does not contain index.html",
                             dir.display()
                         )));
                     }
@@ -1476,40 +1476,40 @@ impl Config {
         };
 
         // Web UI static file serving
-        let web_dir = std::env::var("BUZZ_WEB_DIR")
+        let web_dir = std::env::var("HIVE_WEB_DIR")
             .ok()
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
             .map(std::path::PathBuf::from);
-        let serve_git_web_gui = std::env::var("BUZZ_SERVE_GIT_WEB_GUI")
+        let serve_git_web_gui = std::env::var("HIVE_SERVE_GIT_WEB_GUI")
             .map(|value| value == "true" || value == "1")
             .unwrap_or(false);
 
         if let Some(ref dir) = web_dir {
             if !dir.join("index.html").is_file() {
                 return Err(ConfigError::InvalidValue(format!(
-                    "BUZZ_WEB_DIR={} does not contain index.html",
+                    "HIVE_WEB_DIR={} does not contain index.html",
                     dir.display()
                 )));
             }
-            tracing::info!("BUZZ_WEB_DIR={} — serving web UI from relay", dir.display());
+            tracing::info!("HIVE_WEB_DIR={} — serving web UI from relay", dir.display());
         }
 
         // Reject explicitly-configured secrets that are too short.
         // The auto-generated fallback is always 64 hex chars (32 bytes), so this
-        // only fires when someone sets BUZZ_GIT_HOOK_HMAC_SECRET to a weak value.
-        if std::env::var("BUZZ_GIT_HOOK_HMAC_SECRET").is_ok() && git_hook_hmac_secret.len() < 32 {
+        // only fires when someone sets HIVE_GIT_HOOK_HMAC_SECRET to a weak value.
+        if std::env::var("HIVE_GIT_HOOK_HMAC_SECRET").is_ok() && git_hook_hmac_secret.len() < 32 {
             return Err(ConfigError::InvalidValue(
-                "BUZZ_GIT_HOOK_HMAC_SECRET must be at least 32 characters (16 bytes hex)"
+                "HIVE_GIT_HOOK_HMAC_SECRET must be at least 32 characters (16 bytes hex)"
                     .to_string(),
             ));
         }
 
-        let buzz_v1_enabled = std::env::var("BUZZ_V1_ENABLED").is_ok_and(|v| v == "true");
+        let buzz_v1_enabled = std::env::var("HIVE_V1_ENABLED").is_ok_and(|v| v == "true");
         // Read only when enabled: a disabled relay ignores every v1 setting.
-        let buzz_v1_retention_seconds = match std::env::var("BUZZ_V1_RETENTION_SECONDS") {
+        let buzz_v1_retention_seconds = match std::env::var("HIVE_V1_RETENTION_SECONDS") {
             Ok(v) if buzz_v1_enabled => v.parse().ok().filter(|s| *s > 0).ok_or_else(|| {
-                ConfigError::InvalidValue("BUZZ_V1_RETENTION_SECONDS must be positive".into())
+                ConfigError::InvalidValue("HIVE_V1_RETENTION_SECONDS must be positive".into())
             })?,
             _ => buzz_db::personal_read::DEFAULT_RETENTION_SECONDS,
         };
@@ -1522,7 +1522,7 @@ impl Config {
             && nip_fi_provision_binding.is_none()
         {
             return Err(ConfigError::InvalidValue(
-                "BUZZ_NIP_FI_COMMUNITY_SOURCE=database requires BUZZ_NIP_FI_PROVISION_BINDING \
+                "HIVE_NIP_FI_COMMUNITY_SOURCE=database requires HIVE_NIP_FI_PROVISION_BINDING \
                  (the suffix and reserved host)"
                     .into(),
             ));
@@ -1548,9 +1548,9 @@ impl Config {
             auth,
             require_auth_token,
             buzz_v1_enabled,
-            membership_snapshot_enabled: std::env::var("BUZZ_MEMBERSHIP_SNAPSHOT_ENABLED")
+            membership_snapshot_enabled: std::env::var("HIVE_MEMBERSHIP_SNAPSHOT_ENABLED")
                 .is_ok_and(|v| v == "true"),
-            membership_public_enabled: std::env::var("BUZZ_MEMBERSHIP_PUBLIC_ENABLED")
+            membership_public_enabled: std::env::var("HIVE_MEMBERSHIP_PUBLIC_ENABLED")
                 .is_ok_and(|v| v == "true"),
             buzz_v1_retention_seconds,
             cors_origins,
@@ -1602,7 +1602,7 @@ impl Config {
             web_dir,
             serve_git_web_gui,
             nip_fi_provision_binding,
-            nip_fi_changes: parse_bool("BUZZ_NIP_FI_CHANGES", false)?,
+            nip_fi_changes: parse_bool("HIVE_NIP_FI_CHANGES", false)?,
             nip_fi_resolver_bounds,
             nip_fi,
         })
@@ -1678,25 +1678,25 @@ mod tests {
     #[test]
     fn nip_fi_changes_are_explicitly_default_off() {
         let (_fi, _cfg) = env_guards();
-        let before = std::env::var("BUZZ_NIP_FI_CHANGES").ok();
-        std::env::remove_var("BUZZ_NIP_FI_CHANGES");
+        let before = std::env::var("HIVE_NIP_FI_CHANGES").ok();
+        std::env::remove_var("HIVE_NIP_FI_CHANGES");
         assert!(!Config::from_env().unwrap().nip_fi_changes);
         for value in ["true", "TRUE", "1", "on", " On "] {
-            std::env::set_var("BUZZ_NIP_FI_CHANGES", value);
+            std::env::set_var("HIVE_NIP_FI_CHANGES", value);
             assert!(Config::from_env().unwrap().nip_fi_changes, "{value}");
         }
         for value in ["false", "FALSE", "0", "off", "", " Off "] {
-            std::env::set_var("BUZZ_NIP_FI_CHANGES", value);
+            std::env::set_var("HIVE_NIP_FI_CHANGES", value);
             assert!(!Config::from_env().unwrap().nip_fi_changes, "{value}");
         }
-        std::env::set_var("BUZZ_NIP_FI_CHANGES", "treu");
+        std::env::set_var("HIVE_NIP_FI_CHANGES", "treu");
         assert!(
             matches!(Config::from_env(), Err(ConfigError::InvalidValue(message))
-            if message.contains("BUZZ_NIP_FI_CHANGES must be true or false"))
+            if message.contains("HIVE_NIP_FI_CHANGES must be true or false"))
         );
         match before {
-            Some(value) => std::env::set_var("BUZZ_NIP_FI_CHANGES", value),
-            None => std::env::remove_var("BUZZ_NIP_FI_CHANGES"),
+            Some(value) => std::env::set_var("HIVE_NIP_FI_CHANGES", value),
+            None => std::env::remove_var("HIVE_NIP_FI_CHANGES"),
         }
     }
 
@@ -1705,12 +1705,12 @@ mod tests {
     #[test]
     fn database_source_config_guards_refuse_startup() {
         const VARS: [&str; 6] = [
-            "BUZZ_NIP_FI_COMMUNITY_SOURCE",
-            "BUZZ_NIP_FI_COMMUNITIES",
-            "BUZZ_NIP_FI_ISSUERS",
-            "BUZZ_NIP_FI_PROVISION_BINDING",
-            "BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS",
-            "BUZZ_NIP_FI_MODE",
+            "HIVE_NIP_FI_COMMUNITY_SOURCE",
+            "HIVE_NIP_FI_COMMUNITIES",
+            "HIVE_NIP_FI_ISSUERS",
+            "HIVE_NIP_FI_PROVISION_BINDING",
+            "HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS",
+            "HIVE_NIP_FI_MODE",
         ];
         struct Clear;
         impl Drop for Clear {
@@ -1727,16 +1727,16 @@ mod tests {
             other => panic!("expected a refusal, got {:?}", other.map(|_| ())),
         };
 
-        std::env::set_var("BUZZ_NIP_FI_COMMUNITY_SOURCE", "ldap");
+        std::env::set_var("HIVE_NIP_FI_COMMUNITY_SOURCE", "ldap");
         assert!(refusal().contains("must be \"env\" or \"database\""));
 
-        std::env::set_var("BUZZ_NIP_FI_COMMUNITY_SOURCE", "database");
-        std::env::set_var("BUZZ_NIP_FI_COMMUNITIES", "[]");
-        assert!(refusal().contains("BUZZ_NIP_FI_COMMUNITIES is set"));
+        std::env::set_var("HIVE_NIP_FI_COMMUNITY_SOURCE", "database");
+        std::env::set_var("HIVE_NIP_FI_COMMUNITIES", "[]");
+        assert!(refusal().contains("HIVE_NIP_FI_COMMUNITIES is set"));
 
-        std::env::remove_var("BUZZ_NIP_FI_COMMUNITIES");
+        std::env::remove_var("HIVE_NIP_FI_COMMUNITIES");
         std::env::set_var(
-            "BUZZ_NIP_FI_ISSUERS",
+            "HIVE_NIP_FI_ISSUERS",
             serde_json::json!([{
                 "issuer": "https://idp.example.com",
                 "command_audiences": ["https://relay.example.com"],
@@ -1751,11 +1751,11 @@ mod tests {
             }])
             .to_string(),
         );
-        std::env::set_var("BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
-        assert!(refusal().contains("requires BUZZ_NIP_FI_PROVISION_BINDING"));
+        std::env::set_var("HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600");
+        assert!(refusal().contains("requires HIVE_NIP_FI_PROVISION_BINDING"));
 
         std::env::set_var(
-            "BUZZ_NIP_FI_PROVISION_BINDING",
+            "HIVE_NIP_FI_PROVISION_BINDING",
             r#"{"host_suffix":"communities.example.com","authorized_issuers":["https://idp.example.com"]}"#,
         );
         let config = Config::from_env().expect("complete database-source config");
@@ -1767,11 +1767,11 @@ mod tests {
     #[test]
     fn resolver_bounds_are_validated_in_off_mode() {
         let _guards = env_guards();
-        std::env::set_var("BUZZ_NIP_FI_RESOLVER_MAX_INFLIGHT", "0");
+        std::env::set_var("HIVE_NIP_FI_RESOLVER_MAX_INFLIGHT", "0");
         let result = Config::from_env();
-        std::env::remove_var("BUZZ_NIP_FI_RESOLVER_MAX_INFLIGHT");
+        std::env::remove_var("HIVE_NIP_FI_RESOLVER_MAX_INFLIGHT");
         assert!(
-            matches!(result, Err(ref e) if e.to_string().contains("BUZZ_NIP_FI_RESOLVER_MAX_INFLIGHT")),
+            matches!(result, Err(ref e) if e.to_string().contains("HIVE_NIP_FI_RESOLVER_MAX_INFLIGHT")),
             "{:?}",
             result.map(|_| ())
         );
@@ -1792,13 +1792,13 @@ mod tests {
     fn inert_media_read_auth_vars_are_reported_even_when_false() {
         let found = inert_env_vars(
             &INERT_MEDIA_READ_AUTH_VARS,
-            env_of(&[("BUZZ_REQUIRE_MEDIA_GET_AUTH", "false")]),
+            env_of(&[("HIVE_REQUIRE_MEDIA_GET_AUTH", "false")]),
         );
 
-        assert_eq!(found, vec!["BUZZ_REQUIRE_MEDIA_GET_AUTH"]);
+        assert_eq!(found, vec!["HIVE_REQUIRE_MEDIA_GET_AUTH"]);
     }
 
-    /// `BUZZ_REQUIRE_MEDIA_READ_AUTH` was advertised in `.env.example` as an
+    /// `HIVE_REQUIRE_MEDIA_READ_AUTH` was advertised in `.env.example` as an
     /// accepted alias but the relay never read it, so operators may hold it
     /// today. It warns too.
     #[test]
@@ -1806,16 +1806,16 @@ mod tests {
         let found = inert_env_vars(
             &INERT_MEDIA_READ_AUTH_VARS,
             env_of(&[
-                ("BUZZ_REQUIRE_MEDIA_GET_AUTH", "true"),
-                ("BUZZ_REQUIRE_MEDIA_READ_AUTH", "false"),
+                ("HIVE_REQUIRE_MEDIA_GET_AUTH", "true"),
+                ("HIVE_REQUIRE_MEDIA_READ_AUTH", "false"),
             ]),
         );
 
         assert_eq!(
             found,
             vec![
-                "BUZZ_REQUIRE_MEDIA_GET_AUTH",
-                "BUZZ_REQUIRE_MEDIA_READ_AUTH"
+                "HIVE_REQUIRE_MEDIA_GET_AUTH",
+                "HIVE_REQUIRE_MEDIA_READ_AUTH"
             ]
         );
     }
@@ -1824,7 +1824,7 @@ mod tests {
     fn inert_media_read_auth_vars_stay_quiet_when_unset() {
         let found = inert_env_vars(
             &INERT_MEDIA_READ_AUTH_VARS,
-            env_of(&[("BUZZ_REQUIRE_RELAY_MEMBERSHIP", "true")]),
+            env_of(&[("HIVE_REQUIRE_RELAY_MEMBERSHIP", "true")]),
         );
 
         assert!(found.is_empty(), "unrelated vars must not warn: {found:?}");
@@ -1833,23 +1833,23 @@ mod tests {
     #[test]
     fn multi_community_relay_is_strict_and_default_enabled() {
         let _guards = env_guards();
-        std::env::remove_var("BUZZ_MULTI_COMMUNITY_RELAY");
+        std::env::remove_var("HIVE_MULTI_COMMUNITY_RELAY");
         assert!(Config::from_env().expect("unset").multi_community_relay);
         for (value, expected) in [("false", false), ("true", true)] {
-            std::env::set_var("BUZZ_MULTI_COMMUNITY_RELAY", value);
+            std::env::set_var("HIVE_MULTI_COMMUNITY_RELAY", value);
             let config = Config::from_env();
-            std::env::remove_var("BUZZ_MULTI_COMMUNITY_RELAY");
+            std::env::remove_var("HIVE_MULTI_COMMUNITY_RELAY");
             assert_eq!(
                 config.expect("valid policy").multi_community_relay,
                 expected
             );
         }
         for value in ["", "FALSE", "1", "typo"] {
-            std::env::set_var("BUZZ_MULTI_COMMUNITY_RELAY", value);
+            std::env::set_var("HIVE_MULTI_COMMUNITY_RELAY", value);
             let result = Config::from_env();
-            std::env::remove_var("BUZZ_MULTI_COMMUNITY_RELAY");
+            std::env::remove_var("HIVE_MULTI_COMMUNITY_RELAY");
             assert!(matches!(result, Err(ConfigError::InvalidValue(ref message))
-                if message.contains("BUZZ_MULTI_COMMUNITY_RELAY")));
+                if message.contains("HIVE_MULTI_COMMUNITY_RELAY")));
         }
     }
 
@@ -1914,7 +1914,7 @@ mod tests {
     /// so that FI writers cannot produce a partially-written env state while
     /// `Config::from_env()` reads it. [FI-TRACE-ENV-RACE]
     fn config_with_admin_env(values: &[(&str, Option<&str>)]) -> Result<Config, ConfigError> {
-        const KEYS: [&str; 3] = ["BUZZ_ADMIN_HOST", "BUZZ_ADMIN_TOKEN", "BUZZ_ADMIN_AUTH"];
+        const KEYS: [&str; 3] = ["HIVE_ADMIN_HOST", "HIVE_ADMIN_TOKEN", "HIVE_ADMIN_AUTH"];
         let previous: Vec<_> = KEYS
             .iter()
             .map(|key| (*key, std::env::var_os(key)))
@@ -1940,7 +1940,7 @@ mod tests {
 
     /// Like `config_with_admin_env`, but also captures the tracing output
     /// emitted during `Config::from_env()` so a test can assert the startup
-    /// warning fired. The `BUZZ_ADMIN_TOKEN` warning is the sole behavioral
+    /// warning fired. The `HIVE_ADMIN_TOKEN` warning is the sole behavioral
     /// value of retaining the guards (the variable is otherwise inert), so it
     /// must be regression-protected: deleting a warn block has to fail a test.
     fn config_with_admin_env_capturing_logs(
@@ -1989,27 +1989,27 @@ mod tests {
     }
 
     fn config_with_operator_listeners(raw: Option<&str>) -> Result<Config, ConfigError> {
-        let previous = std::env::var_os("BUZZ_OPERATOR_LISTENERS");
+        let previous = std::env::var_os("HIVE_OPERATOR_LISTENERS");
         match raw {
-            Some(value) => std::env::set_var("BUZZ_OPERATOR_LISTENERS", value),
-            None => std::env::remove_var("BUZZ_OPERATOR_LISTENERS"),
+            Some(value) => std::env::set_var("HIVE_OPERATOR_LISTENERS", value),
+            None => std::env::remove_var("HIVE_OPERATOR_LISTENERS"),
         }
         let result = Config::from_env();
         match previous {
-            Some(value) => std::env::set_var("BUZZ_OPERATOR_LISTENERS", value),
-            None => std::env::remove_var("BUZZ_OPERATOR_LISTENERS"),
+            Some(value) => std::env::set_var("HIVE_OPERATOR_LISTENERS", value),
+            None => std::env::remove_var("HIVE_OPERATOR_LISTENERS"),
         }
         result
     }
 
-    /// Assert `captured` contains a WARN naming the removal of `BUZZ_ADMIN_TOKEN`
+    /// Assert `captured` contains a WARN naming the removal of `HIVE_ADMIN_TOKEN`
     /// so the migration breadcrumb Will's ruling preserved cannot silently regress.
     fn assert_admin_token_removal_warning(captured: &str) {
         assert!(
             captured.contains("WARN"),
             "expected a WARN line: {captured:?}"
         );
-        for needle in ["BUZZ_ADMIN_TOKEN", "removed", "ignored"] {
+        for needle in ["HIVE_ADMIN_TOKEN", "removed", "ignored"] {
             assert!(
                 captured.contains(needle),
                 "WARN must mention {needle:?}: {captured:?}"
@@ -2018,7 +2018,7 @@ mod tests {
     }
 
     /// A valid-looking token value, used only to prove that setting
-    /// `BUZZ_ADMIN_TOKEN` is now ignored with a startup warning and never
+    /// `HIVE_ADMIN_TOKEN` is now ignored with a startup warning and never
     /// changes the resolved auth mode (token auth was removed).
     const SOME_ADMIN_TOKEN: &str =
         "5f0e1d2c3b4a59687786958493a2b1c0decadebeefcafe0123456789abcdef01";
@@ -2026,7 +2026,7 @@ mod tests {
     #[test]
     fn admin_token_set_is_ignored_and_warns_at_startup() {
         let _guards = env_guards();
-        // Token authentication was removed. A lingering BUZZ_ADMIN_TOKEN with a
+        // Token authentication was removed. A lingering HIVE_ADMIN_TOKEN with a
         // host is ignored (logged as a warning) and never changes the resolved
         // auth mode: unset/nip98 stay nip98, disabled stays disabled.
         for (auth, expected) in [
@@ -2035,13 +2035,13 @@ mod tests {
             (Some("disabled"), AdminAuth::Disabled),
         ] {
             let (config, logs) = config_with_admin_env_capturing_logs(&[
-                ("BUZZ_ADMIN_HOST", Some("admin.example")),
-                ("BUZZ_ADMIN_TOKEN", Some(SOME_ADMIN_TOKEN)),
-                ("BUZZ_ADMIN_AUTH", auth),
+                ("HIVE_ADMIN_HOST", Some("admin.example")),
+                ("HIVE_ADMIN_TOKEN", Some(SOME_ADMIN_TOKEN)),
+                ("HIVE_ADMIN_AUTH", auth),
             ]);
             let admin = config
                 .unwrap_or_else(|e| {
-                    panic!("BUZZ_ADMIN_TOKEN with auth={auth:?} must be ignored: {e:?}")
+                    panic!("HIVE_ADMIN_TOKEN with auth={auth:?} must be ignored: {e:?}")
                 })
                 .admin
                 .expect("admin surface is configured");
@@ -2049,7 +2049,7 @@ mod tests {
             assert_eq!(
                 std::mem::discriminant(&admin.auth),
                 std::mem::discriminant(&expected),
-                "BUZZ_ADMIN_TOKEN must not change auth mode for auth={auth:?}"
+                "HIVE_ADMIN_TOKEN must not change auth mode for auth={auth:?}"
             );
             assert_admin_token_removal_warning(&logs);
         }
@@ -2058,14 +2058,14 @@ mod tests {
     #[test]
     fn admin_surface_defaults_to_nip98_when_auth_unset() {
         let _guards = env_guards();
-        let admin = config_with_admin_env(&[("BUZZ_ADMIN_HOST", Some("admin.example"))])
-            .expect("config with an admin host and no BUZZ_ADMIN_AUTH")
+        let admin = config_with_admin_env(&[("HIVE_ADMIN_HOST", Some("admin.example"))])
+            .expect("config with an admin host and no HIVE_ADMIN_AUTH")
             .admin
             .expect("admin surface is configured");
         assert_eq!(admin.host, "admin.example");
         assert!(
             matches!(admin.auth, crate::config::AdminAuth::Nip98),
-            "unset BUZZ_ADMIN_AUTH must default to nip98 (fail-secure)"
+            "unset HIVE_ADMIN_AUTH must default to nip98 (fail-secure)"
         );
     }
 
@@ -2073,12 +2073,12 @@ mod tests {
     fn admin_host_bare_ipv6_literal_fails_closed() {
         let _guards = env_guards();
         for host in ["::1", "::1:3000", "fe80::1", "2001:db8::1"] {
-            let result = config_with_admin_env(&[("BUZZ_ADMIN_HOST", Some(host))]);
+            let result = config_with_admin_env(&[("HIVE_ADMIN_HOST", Some(host))]);
             assert!(
                 matches!(
                     result,
                     Err(ConfigError::InvalidValue(ref message))
-                        if message.contains("BUZZ_ADMIN_HOST") && message.contains("bracket")
+                        if message.contains("HIVE_ADMIN_HOST") && message.contains("bracket")
                 ),
                 "bare IPv6 host {host:?} must be rejected: {result:?}"
             );
@@ -2104,12 +2104,12 @@ mod tests {
             "[::1]?x=1",
             "[::1]#frag",
         ] {
-            let result = config_with_admin_env(&[("BUZZ_ADMIN_HOST", Some(host))]);
+            let result = config_with_admin_env(&[("HIVE_ADMIN_HOST", Some(host))]);
             assert!(
                 matches!(
                     result,
                     Err(ConfigError::InvalidValue(ref message))
-                        if message.contains("BUZZ_ADMIN_HOST") && message.contains("valid URL authority")
+                        if message.contains("HIVE_ADMIN_HOST") && message.contains("valid URL authority")
                 ),
                 "malformed authority {host:?} must be rejected: {result:?}"
             );
@@ -2120,7 +2120,7 @@ mod tests {
     fn admin_host_bracketed_ipv6_literal_is_accepted() {
         let _guards = env_guards();
         for host in ["[::1]", "[::1]:3000", "[2001:db8::1]:8443"] {
-            let admin = config_with_admin_env(&[("BUZZ_ADMIN_HOST", Some(host))])
+            let admin = config_with_admin_env(&[("HIVE_ADMIN_HOST", Some(host))])
                 .unwrap_or_else(|e| panic!("bracketed IPv6 host {host:?} must be accepted: {e:?}"))
                 .admin
                 .expect("admin surface is configured");
@@ -2131,7 +2131,7 @@ mod tests {
     #[test]
     fn admin_host_mixed_case_is_normalized_to_lowercase() {
         let _guards = env_guards();
-        // Hostnames are case-insensitive (RFC 4343). A mixed-case BUZZ_ADMIN_HOST
+        // Hostnames are case-insensitive (RFC 4343). A mixed-case HIVE_ADMIN_HOST
         // must be stored lowercase so it round-trips through desktop URL parsing
         // (url::Url always lowercases hostnames) without a mismatch.
         for (input, expected) in [
@@ -2139,7 +2139,7 @@ mod tests {
             ("Admin.Example.com:8443", "admin.example.com:8443"),
             ("LOCALHOST:3000", "localhost:3000"),
         ] {
-            let admin = config_with_admin_env(&[("BUZZ_ADMIN_HOST", Some(input))])
+            let admin = config_with_admin_env(&[("HIVE_ADMIN_HOST", Some(input))])
                 .unwrap_or_else(|e| panic!("mixed-case host {input:?} must be accepted: {e:?}"))
                 .admin
                 .expect("admin surface is configured");
@@ -2153,15 +2153,15 @@ mod tests {
     #[test]
     fn admin_token_without_a_host_is_ignored_and_warns() {
         let _guards = env_guards();
-        // Even without BUZZ_ADMIN_HOST, a lingering BUZZ_ADMIN_TOKEN is ignored
+        // Even without HIVE_ADMIN_HOST, a lingering HIVE_ADMIN_TOKEN is ignored
         // (logged as a warning) — token auth was removed and the admin surface
         // stays absent because the host is unset, not because of the token.
         let (config, logs) = config_with_admin_env_capturing_logs(&[
-            ("BUZZ_ADMIN_HOST", None),
-            ("BUZZ_ADMIN_TOKEN", Some(SOME_ADMIN_TOKEN)),
+            ("HIVE_ADMIN_HOST", None),
+            ("HIVE_ADMIN_TOKEN", Some(SOME_ADMIN_TOKEN)),
         ]);
         let admin = config
-            .expect("BUZZ_ADMIN_TOKEN without a host is ignored, not a startup error")
+            .expect("HIVE_ADMIN_TOKEN without a host is ignored, not a startup error")
             .admin;
         assert!(
             admin.is_none(),
@@ -2174,9 +2174,9 @@ mod tests {
     fn disabled_mode_activates_without_a_token() {
         let _guards = env_guards();
         let admin = config_with_admin_env(&[
-            ("BUZZ_ADMIN_HOST", Some("admin.example")),
-            ("BUZZ_ADMIN_TOKEN", None),
-            ("BUZZ_ADMIN_AUTH", Some("disabled")),
+            ("HIVE_ADMIN_HOST", Some("admin.example")),
+            ("HIVE_ADMIN_TOKEN", None),
+            ("HIVE_ADMIN_AUTH", Some("disabled")),
         ])
         .expect("disabled mode without a token is valid")
         .admin
@@ -2201,15 +2201,15 @@ mod tests {
             "token",
         ] {
             let result = config_with_admin_env(&[
-                ("BUZZ_ADMIN_HOST", Some("admin.example")),
-                ("BUZZ_ADMIN_TOKEN", None),
-                ("BUZZ_ADMIN_AUTH", Some(junk)),
+                ("HIVE_ADMIN_HOST", Some("admin.example")),
+                ("HIVE_ADMIN_TOKEN", None),
+                ("HIVE_ADMIN_AUTH", Some(junk)),
             ]);
             assert!(
                 matches!(
                     result,
                     Err(ConfigError::InvalidValue(ref message))
-                        if message.contains("BUZZ_ADMIN_AUTH")
+                        if message.contains("HIVE_ADMIN_AUTH")
                 ),
                 "{junk:?} must be rejected: {result:?}"
             );
@@ -2218,15 +2218,15 @@ mod tests {
 
     #[test]
     fn admin_auth_empty_string_defaults_to_nip98() {
-        // An empty value (e.g. `BUZZ_ADMIN_AUTH=`) is treated as unset → nip98,
+        // An empty value (e.g. `HIVE_ADMIN_AUTH=`) is treated as unset → nip98,
         // the fail-secure default.
         let _guards = env_guards();
         let admin = config_with_admin_env(&[
-            ("BUZZ_ADMIN_HOST", Some("admin.example")),
-            ("BUZZ_ADMIN_TOKEN", None),
-            ("BUZZ_ADMIN_AUTH", Some("")),
+            ("HIVE_ADMIN_HOST", Some("admin.example")),
+            ("HIVE_ADMIN_TOKEN", None),
+            ("HIVE_ADMIN_AUTH", Some("")),
         ])
-        .expect("empty BUZZ_ADMIN_AUTH defaults to nip98")
+        .expect("empty HIVE_ADMIN_AUTH defaults to nip98")
         .admin
         .expect("admin surface is configured");
         assert!(matches!(admin.auth, crate::config::AdminAuth::Nip98));
@@ -2236,11 +2236,11 @@ mod tests {
     fn nip98_mode_parses_and_succeeds_without_pubkeys_env() {
         let _guards = env_guards();
         let admin = config_with_admin_env(&[
-            ("BUZZ_ADMIN_HOST", Some("admin.example")),
-            ("BUZZ_ADMIN_AUTH", Some("nip98")),
+            ("HIVE_ADMIN_HOST", Some("admin.example")),
+            ("HIVE_ADMIN_AUTH", Some("nip98")),
         ])
         .expect(
-            "nip98 mode succeeds without BUZZ_ADMIN_PUBKEYS (role resolution is at request time)",
+            "nip98 mode succeeds without HIVE_ADMIN_PUBKEYS (role resolution is at request time)",
         )
         .admin
         .expect("admin surface is configured");
@@ -2250,12 +2250,12 @@ mod tests {
     #[test]
     fn buzz_v1_retention_is_validated_only_when_enabled() {
         let _guards = env_guards();
-        const KEYS: [&str; 2] = ["BUZZ_V1_ENABLED", "BUZZ_V1_RETENTION_SECONDS"];
+        const KEYS: [&str; 2] = ["HIVE_V1_ENABLED", "HIVE_V1_RETENTION_SECONDS"];
         let previous = KEYS.map(std::env::var_os);
-        std::env::set_var("BUZZ_V1_RETENTION_SECONDS", "0");
-        std::env::remove_var("BUZZ_V1_ENABLED");
+        std::env::set_var("HIVE_V1_RETENTION_SECONDS", "0");
+        std::env::remove_var("HIVE_V1_ENABLED");
         let disabled = Config::from_env();
-        std::env::set_var("BUZZ_V1_ENABLED", "true");
+        std::env::set_var("HIVE_V1_ENABLED", "true");
         let enabled = Config::from_env();
         for (key, value) in KEYS.into_iter().zip(previous) {
             match value {
@@ -2270,7 +2270,7 @@ mod tests {
         assert!(matches!(
             enabled,
             Err(ConfigError::InvalidValue(ref message))
-                if message.contains("BUZZ_V1_RETENTION_SECONDS")
+                if message.contains("HIVE_V1_RETENTION_SECONDS")
         ));
     }
 
@@ -2315,24 +2315,24 @@ mod tests {
     #[test]
     fn partition_manager_config_has_bounded_interval_and_create_kill_switch() {
         let _guards = env_guards();
-        let previous_interval = std::env::var_os("BUZZ_PARTITION_AUDIT_INTERVAL_SECS");
-        let previous_create = std::env::var_os("BUZZ_PARTITION_MANAGER_CREATE_ENABLED");
+        let previous_interval = std::env::var_os("HIVE_PARTITION_AUDIT_INTERVAL_SECS");
+        let previous_create = std::env::var_os("HIVE_PARTITION_MANAGER_CREATE_ENABLED");
 
-        std::env::set_var("BUZZ_PARTITION_AUDIT_INTERVAL_SECS", "1");
-        std::env::set_var("BUZZ_PARTITION_MANAGER_CREATE_ENABLED", "false");
+        std::env::set_var("HIVE_PARTITION_AUDIT_INTERVAL_SECS", "1");
+        std::env::set_var("HIVE_PARTITION_MANAGER_CREATE_ENABLED", "false");
         let minimum = Config::from_env().expect("minimum config");
-        std::env::set_var("BUZZ_PARTITION_AUDIT_INTERVAL_SECS", "999999");
+        std::env::set_var("HIVE_PARTITION_AUDIT_INTERVAL_SECS", "999999");
         let maximum = Config::from_env().expect("maximum config");
 
         if let Some(value) = previous_interval {
-            std::env::set_var("BUZZ_PARTITION_AUDIT_INTERVAL_SECS", value);
+            std::env::set_var("HIVE_PARTITION_AUDIT_INTERVAL_SECS", value);
         } else {
-            std::env::remove_var("BUZZ_PARTITION_AUDIT_INTERVAL_SECS");
+            std::env::remove_var("HIVE_PARTITION_AUDIT_INTERVAL_SECS");
         }
         if let Some(value) = previous_create {
-            std::env::set_var("BUZZ_PARTITION_MANAGER_CREATE_ENABLED", value);
+            std::env::set_var("HIVE_PARTITION_MANAGER_CREATE_ENABLED", value);
         } else {
-            std::env::remove_var("BUZZ_PARTITION_MANAGER_CREATE_ENABLED");
+            std::env::remove_var("HIVE_PARTITION_MANAGER_CREATE_ENABLED");
         }
 
         assert_eq!(minimum.partition_audit_interval, Duration::from_secs(60));
@@ -2347,48 +2347,48 @@ mod tests {
     #[test]
     fn partition_manager_create_kill_switch_parses_false_values_strictly() {
         let _guards = env_guards();
-        let previous = std::env::var_os("BUZZ_PARTITION_MANAGER_CREATE_ENABLED");
+        let previous = std::env::var_os("HIVE_PARTITION_MANAGER_CREATE_ENABLED");
 
         for value in ["FALSE", "off", "  false  "] {
-            std::env::set_var("BUZZ_PARTITION_MANAGER_CREATE_ENABLED", value);
+            std::env::set_var("HIVE_PARTITION_MANAGER_CREATE_ENABLED", value);
             let config = Config::from_env().expect("recognized false value");
             assert!(!config.partition_manager_create_enabled, "value: {value:?}");
         }
 
-        std::env::set_var("BUZZ_PARTITION_MANAGER_CREATE_ENABLED", "disable-maybe");
+        std::env::set_var("HIVE_PARTITION_MANAGER_CREATE_ENABLED", "disable-maybe");
         let invalid = Config::from_env();
 
         if let Some(value) = previous {
-            std::env::set_var("BUZZ_PARTITION_MANAGER_CREATE_ENABLED", value);
+            std::env::set_var("HIVE_PARTITION_MANAGER_CREATE_ENABLED", value);
         } else {
-            std::env::remove_var("BUZZ_PARTITION_MANAGER_CREATE_ENABLED");
+            std::env::remove_var("HIVE_PARTITION_MANAGER_CREATE_ENABLED");
         }
 
         assert!(matches!(
             invalid,
             Err(ConfigError::InvalidValue(ref message))
-                if message.contains("BUZZ_PARTITION_MANAGER_CREATE_ENABLED")
+                if message.contains("HIVE_PARTITION_MANAGER_CREATE_ENABLED")
         ));
     }
 
     #[test]
     fn partition_manager_advance_defaults_on_and_parses_strictly() {
         let _guards = env_guards();
-        let previous = std::env::var_os("BUZZ_PARTITION_MANAGER_ADVANCE_ENABLED");
+        let previous = std::env::var_os("HIVE_PARTITION_MANAGER_ADVANCE_ENABLED");
 
-        std::env::remove_var("BUZZ_PARTITION_MANAGER_ADVANCE_ENABLED");
+        std::env::remove_var("HIVE_PARTITION_MANAGER_ADVANCE_ENABLED");
         let default = Config::from_env().expect("default config");
-        std::env::set_var("BUZZ_PARTITION_MANAGER_ADVANCE_ENABLED", " TRUE ");
+        std::env::set_var("HIVE_PARTITION_MANAGER_ADVANCE_ENABLED", " TRUE ");
         let enabled = Config::from_env().expect("enabled config");
-        std::env::set_var("BUZZ_PARTITION_MANAGER_ADVANCE_ENABLED", "false");
+        std::env::set_var("HIVE_PARTITION_MANAGER_ADVANCE_ENABLED", "false");
         let disabled = Config::from_env().expect("disabled config");
-        std::env::set_var("BUZZ_PARTITION_MANAGER_ADVANCE_ENABLED", "enable-maybe");
+        std::env::set_var("HIVE_PARTITION_MANAGER_ADVANCE_ENABLED", "enable-maybe");
         let invalid = Config::from_env();
 
         if let Some(value) = previous {
-            std::env::set_var("BUZZ_PARTITION_MANAGER_ADVANCE_ENABLED", value);
+            std::env::set_var("HIVE_PARTITION_MANAGER_ADVANCE_ENABLED", value);
         } else {
-            std::env::remove_var("BUZZ_PARTITION_MANAGER_ADVANCE_ENABLED");
+            std::env::remove_var("HIVE_PARTITION_MANAGER_ADVANCE_ENABLED");
         }
 
         assert!(default.partition_manager_advance_enabled);
@@ -2397,35 +2397,35 @@ mod tests {
         assert!(matches!(
             invalid,
             Err(ConfigError::InvalidValue(ref message))
-                if message.contains("BUZZ_PARTITION_MANAGER_ADVANCE_ENABLED")
+                if message.contains("HIVE_PARTITION_MANAGER_ADVANCE_ENABLED")
         ));
     }
 
     #[test]
     fn s3_addressing_style_env_accepts_virtual_and_rejects_invalid_values() {
         let _guards = env_guards();
-        let previous = std::env::var_os("BUZZ_S3_ADDRESSING_STYLE");
+        let previous = std::env::var_os("HIVE_S3_ADDRESSING_STYLE");
 
-        std::env::set_var("BUZZ_S3_ADDRESSING_STYLE", "virtual");
+        std::env::set_var("HIVE_S3_ADDRESSING_STYLE", "virtual");
         let configured = Config::from_env()
             .expect("virtual style config")
             .media
             .s3_addressing_style;
 
-        std::env::set_var("BUZZ_S3_ADDRESSING_STYLE", "auto");
+        std::env::set_var("HIVE_S3_ADDRESSING_STYLE", "auto");
         let invalid = Config::from_env();
 
         if let Some(value) = previous {
-            std::env::set_var("BUZZ_S3_ADDRESSING_STYLE", value);
+            std::env::set_var("HIVE_S3_ADDRESSING_STYLE", value);
         } else {
-            std::env::remove_var("BUZZ_S3_ADDRESSING_STYLE");
+            std::env::remove_var("HIVE_S3_ADDRESSING_STYLE");
         }
 
         assert_eq!(configured, buzz_media::config::S3AddressingStyle::Virtual);
         assert!(matches!(
             invalid,
             Err(ConfigError::InvalidValue(ref message))
-                if message.contains("BUZZ_S3_ADDRESSING_STYLE must be 'path' or 'virtual'")
+                if message.contains("HIVE_S3_ADDRESSING_STYLE must be 'path' or 'virtual'")
         ));
     }
 
@@ -2435,18 +2435,18 @@ mod tests {
         use std::os::unix::ffi::OsStringExt;
 
         let _guards = env_guards();
-        let previous = std::env::var_os("BUZZ_S3_ADDRESSING_STYLE");
+        let previous = std::env::var_os("HIVE_S3_ADDRESSING_STYLE");
         std::env::set_var(
-            "BUZZ_S3_ADDRESSING_STYLE",
+            "HIVE_S3_ADDRESSING_STYLE",
             std::ffi::OsString::from_vec(vec![0xff]),
         );
 
         let invalid = Config::from_env();
 
         if let Some(value) = previous {
-            std::env::set_var("BUZZ_S3_ADDRESSING_STYLE", value);
+            std::env::set_var("HIVE_S3_ADDRESSING_STYLE", value);
         } else {
-            std::env::remove_var("BUZZ_S3_ADDRESSING_STYLE");
+            std::env::remove_var("HIVE_S3_ADDRESSING_STYLE");
         }
 
         assert!(matches!(
@@ -2459,21 +2459,21 @@ mod tests {
     #[test]
     fn db_pool_size_env_override_and_invalid_fallback() {
         let _guards = env_guards();
-        let previous = std::env::var_os("BUZZ_DB_POOL_SIZE");
+        let previous = std::env::var_os("HIVE_DB_POOL_SIZE");
 
-        std::env::set_var("BUZZ_DB_POOL_SIZE", "80");
+        std::env::set_var("HIVE_DB_POOL_SIZE", "80");
         let overridden = Config::from_env().expect("config").db_pool_size;
 
-        std::env::set_var("BUZZ_DB_POOL_SIZE", "0");
+        std::env::set_var("HIVE_DB_POOL_SIZE", "0");
         let zero = Config::from_env().expect("config").db_pool_size;
 
-        std::env::set_var("BUZZ_DB_POOL_SIZE", "not-a-number");
+        std::env::set_var("HIVE_DB_POOL_SIZE", "not-a-number");
         let junk = Config::from_env().expect("config").db_pool_size;
 
         if let Some(value) = previous {
-            std::env::set_var("BUZZ_DB_POOL_SIZE", value);
+            std::env::set_var("HIVE_DB_POOL_SIZE", value);
         } else {
-            std::env::remove_var("BUZZ_DB_POOL_SIZE");
+            std::env::remove_var("HIVE_DB_POOL_SIZE");
         }
 
         assert_eq!(overridden, 80);
@@ -2484,24 +2484,24 @@ mod tests {
     #[test]
     fn db_read_pool_size_env_override_and_invalid_fallback() {
         let _guards = env_guards();
-        let previous = std::env::var_os("BUZZ_DB_READ_POOL_SIZE");
+        let previous = std::env::var_os("HIVE_DB_READ_POOL_SIZE");
 
-        std::env::remove_var("BUZZ_DB_READ_POOL_SIZE");
+        std::env::remove_var("HIVE_DB_READ_POOL_SIZE");
         let unset = Config::from_env().expect("config").db_read_pool_size;
 
-        std::env::set_var("BUZZ_DB_READ_POOL_SIZE", "40");
+        std::env::set_var("HIVE_DB_READ_POOL_SIZE", "40");
         let overridden = Config::from_env().expect("config").db_read_pool_size;
 
-        std::env::set_var("BUZZ_DB_READ_POOL_SIZE", "0");
+        std::env::set_var("HIVE_DB_READ_POOL_SIZE", "0");
         let zero = Config::from_env().expect("config").db_read_pool_size;
 
-        std::env::set_var("BUZZ_DB_READ_POOL_SIZE", "not-a-number");
+        std::env::set_var("HIVE_DB_READ_POOL_SIZE", "not-a-number");
         let junk = Config::from_env().expect("config").db_read_pool_size;
 
         if let Some(value) = previous {
-            std::env::set_var("BUZZ_DB_READ_POOL_SIZE", value);
+            std::env::set_var("HIVE_DB_READ_POOL_SIZE", value);
         } else {
-            std::env::remove_var("BUZZ_DB_READ_POOL_SIZE");
+            std::env::remove_var("HIVE_DB_READ_POOL_SIZE");
         }
 
         assert_eq!(unset, None, "unset must inherit the writer pool sizing");
@@ -2541,37 +2541,37 @@ mod tests {
     #[test]
     fn replica_read_max_age_defaults_off_and_rejects_junk() {
         let _guards = env_guards();
-        let previous = std::env::var_os("BUZZ_REPLICA_READ_MAX_AGE_MS");
-        let previous_old = std::env::var_os("BUZZ_REPLICA_HEAD_MAX_AGE_SECS");
-        std::env::remove_var("BUZZ_REPLICA_HEAD_MAX_AGE_SECS");
+        let previous = std::env::var_os("HIVE_REPLICA_READ_MAX_AGE_MS");
+        let previous_old = std::env::var_os("HIVE_REPLICA_HEAD_MAX_AGE_SECS");
+        std::env::remove_var("HIVE_REPLICA_HEAD_MAX_AGE_SECS");
 
-        std::env::remove_var("BUZZ_REPLICA_READ_MAX_AGE_MS");
+        std::env::remove_var("HIVE_REPLICA_READ_MAX_AGE_MS");
         let unset = Config::from_env().expect("config").replica_read_max_age_ms;
 
-        std::env::set_var("BUZZ_REPLICA_READ_MAX_AGE_MS", "1000");
+        std::env::set_var("HIVE_REPLICA_READ_MAX_AGE_MS", "1000");
         let set = Config::from_env().expect("config").replica_read_max_age_ms;
 
-        std::env::set_var("BUZZ_REPLICA_READ_MAX_AGE_MS", "0");
+        std::env::set_var("HIVE_REPLICA_READ_MAX_AGE_MS", "0");
         let zero = Config::from_env().expect("config").replica_read_max_age_ms;
 
-        std::env::set_var("BUZZ_REPLICA_READ_MAX_AGE_MS", "soon");
+        std::env::set_var("HIVE_REPLICA_READ_MAX_AGE_MS", "soon");
         let junk = Config::from_env();
 
         // The retired seconds-denominated name must be a hard startup
         // error even alongside a valid new-name value: silently ignoring
         // it (or honouring it) would mean 1000x the intended budget.
-        std::env::set_var("BUZZ_REPLICA_READ_MAX_AGE_MS", "1000");
-        std::env::set_var("BUZZ_REPLICA_HEAD_MAX_AGE_SECS", "5");
+        std::env::set_var("HIVE_REPLICA_READ_MAX_AGE_MS", "1000");
+        std::env::set_var("HIVE_REPLICA_HEAD_MAX_AGE_SECS", "5");
         let old_name = Config::from_env();
 
-        std::env::remove_var("BUZZ_REPLICA_HEAD_MAX_AGE_SECS");
+        std::env::remove_var("HIVE_REPLICA_HEAD_MAX_AGE_SECS");
         if let Some(value) = previous {
-            std::env::set_var("BUZZ_REPLICA_READ_MAX_AGE_MS", value);
+            std::env::set_var("HIVE_REPLICA_READ_MAX_AGE_MS", value);
         } else {
-            std::env::remove_var("BUZZ_REPLICA_READ_MAX_AGE_MS");
+            std::env::remove_var("HIVE_REPLICA_READ_MAX_AGE_MS");
         }
         if let Some(value) = previous_old {
-            std::env::set_var("BUZZ_REPLICA_HEAD_MAX_AGE_SECS", value);
+            std::env::set_var("HIVE_REPLICA_HEAD_MAX_AGE_SECS", value);
         }
 
         assert_eq!(unset, 0, "replica read routing must default off");
@@ -2583,7 +2583,7 @@ mod tests {
         );
         match old_name {
             Err(ConfigError::InvalidValue(message)) => assert!(
-                message.contains("BUZZ_REPLICA_READ_MAX_AGE_MS"),
+                message.contains("HIVE_REPLICA_READ_MAX_AGE_MS"),
                 "the error must name the replacement env var, got: {message}"
             ),
             other => panic!("old env name must hard-fail startup, got {other:?}"),
@@ -2593,11 +2593,11 @@ mod tests {
     #[test]
     fn replica_fence_probe_interval_defaults_and_rejects_out_of_range() {
         let _guards = env_guards();
-        let previous = std::env::var_os("BUZZ_REPLICA_FENCE_PROBE_INTERVAL_MS");
+        let previous = std::env::var_os("HIVE_REPLICA_FENCE_PROBE_INTERVAL_MS");
         let read = |value: Option<&str>| {
             match value {
-                Some(value) => std::env::set_var("BUZZ_REPLICA_FENCE_PROBE_INTERVAL_MS", value),
-                None => std::env::remove_var("BUZZ_REPLICA_FENCE_PROBE_INTERVAL_MS"),
+                Some(value) => std::env::set_var("HIVE_REPLICA_FENCE_PROBE_INTERVAL_MS", value),
+                None => std::env::remove_var("HIVE_REPLICA_FENCE_PROBE_INTERVAL_MS"),
             }
             Config::from_env().map(|config| config.replica_fence_probe_interval_ms)
         };
@@ -2609,9 +2609,9 @@ mod tests {
             ["soon", "0", "299", "10001", "-400"].map(|value| (value, read(Some(value))));
 
         if let Some(value) = previous {
-            std::env::set_var("BUZZ_REPLICA_FENCE_PROBE_INTERVAL_MS", value);
+            std::env::set_var("HIVE_REPLICA_FENCE_PROBE_INTERVAL_MS", value);
         } else {
-            std::env::remove_var("BUZZ_REPLICA_FENCE_PROBE_INTERVAL_MS");
+            std::env::remove_var("HIVE_REPLICA_FENCE_PROBE_INTERVAL_MS");
         }
 
         assert_eq!(unset.expect("unset"), 0, "unset selects the default");
@@ -2620,7 +2620,7 @@ mod tests {
         for (value, result) in rejected {
             match result {
                 Err(ConfigError::InvalidValue(message)) => assert!(
-                    message.contains("BUZZ_REPLICA_FENCE_PROBE_INTERVAL_MS"),
+                    message.contains("HIVE_REPLICA_FENCE_PROBE_INTERVAL_MS"),
                     "{value}: {message}"
                 ),
                 other => panic!("{value} must fail startup, got {other:?}"),
@@ -2631,37 +2631,37 @@ mod tests {
     #[test]
     fn drain_jitter_defaults_off_and_rejects_junk() {
         let _guards = env_guards();
-        let previous = std::env::var_os("BUZZ_DRAIN_JITTER_MS");
+        let previous = std::env::var_os("HIVE_DRAIN_JITTER_MS");
 
-        std::env::remove_var("BUZZ_DRAIN_JITTER_MS");
+        std::env::remove_var("HIVE_DRAIN_JITTER_MS");
         let unset = Config::from_env().expect("config").drain_jitter_ms;
 
-        std::env::set_var("BUZZ_DRAIN_JITTER_MS", "20000");
+        std::env::set_var("HIVE_DRAIN_JITTER_MS", "20000");
         let set = Config::from_env().expect("config").drain_jitter_ms;
 
-        std::env::set_var("BUZZ_DRAIN_JITTER_MS", "60000");
+        std::env::set_var("HIVE_DRAIN_JITTER_MS", "60000");
         let capped = Config::from_env().expect("config").drain_jitter_ms;
 
-        std::env::set_var("BUZZ_DRAIN_JITTER_MS", "0");
+        std::env::set_var("HIVE_DRAIN_JITTER_MS", "0");
         let zero = Config::from_env().expect("config").drain_jitter_ms;
 
-        std::env::set_var("BUZZ_DRAIN_JITTER_MS", "soon");
+        std::env::set_var("HIVE_DRAIN_JITTER_MS", "soon");
         let junk = Config::from_env();
 
-        std::env::set_var("BUZZ_DRAIN_JITTER_MS", "");
+        std::env::set_var("HIVE_DRAIN_JITTER_MS", "");
         let empty = Config::from_env()
             .expect("empty is a valid kill switch")
             .drain_jitter_ms;
 
-        std::env::set_var("BUZZ_DRAIN_JITTER_MS", "   ");
+        std::env::set_var("HIVE_DRAIN_JITTER_MS", "   ");
         let blank = Config::from_env()
             .expect("whitespace-only is a valid kill switch")
             .drain_jitter_ms;
 
         if let Some(value) = previous {
-            std::env::set_var("BUZZ_DRAIN_JITTER_MS", value);
+            std::env::set_var("HIVE_DRAIN_JITTER_MS", value);
         } else {
-            std::env::remove_var("BUZZ_DRAIN_JITTER_MS");
+            std::env::remove_var("HIVE_DRAIN_JITTER_MS");
         }
 
         assert_eq!(unset, 0, "drain jitter must default off");
@@ -2685,22 +2685,22 @@ mod tests {
     #[test]
     fn audit_logging_defaults_on_and_accepts_explicit_off() {
         let _guards = env_guards();
-        let previous = std::env::var_os("BUZZ_AUDIT_ENABLED");
-        std::env::remove_var("BUZZ_AUDIT_ENABLED");
-        assert!(parse_bool("BUZZ_AUDIT_ENABLED", true).unwrap());
-        std::env::set_var("BUZZ_AUDIT_ENABLED", "false");
-        assert!(!parse_bool("BUZZ_AUDIT_ENABLED", true).unwrap());
+        let previous = std::env::var_os("HIVE_AUDIT_ENABLED");
+        std::env::remove_var("HIVE_AUDIT_ENABLED");
+        assert!(parse_bool("HIVE_AUDIT_ENABLED", true).unwrap());
+        std::env::set_var("HIVE_AUDIT_ENABLED", "false");
+        assert!(!parse_bool("HIVE_AUDIT_ENABLED", true).unwrap());
         if let Some(value) = previous {
-            std::env::set_var("BUZZ_AUDIT_ENABLED", value);
+            std::env::set_var("HIVE_AUDIT_ENABLED", value);
         } else {
-            std::env::remove_var("BUZZ_AUDIT_ENABLED");
+            std::env::remove_var("HIVE_AUDIT_ENABLED");
         }
     }
 
     #[test]
     fn workflow_agent_mentions_defaults_to_any_and_rejects_other_values() {
         use buzz_workflow::AgentMentions;
-        const NAME: &str = "BUZZ_WORKFLOW_AGENT_MENTIONS";
+        const NAME: &str = "HIVE_WORKFLOW_AGENT_MENTIONS";
         let _guards = env_guards();
         let previous = std::env::var_os(NAME);
         std::env::remove_var(NAME);
@@ -2726,53 +2726,53 @@ mod tests {
     #[test]
     fn audit_logging_rejects_invalid_boolean() {
         let _guards = env_guards();
-        let previous = std::env::var_os("BUZZ_AUDIT_ENABLED");
-        std::env::set_var("BUZZ_AUDIT_ENABLED", "sometimes");
-        let result = parse_bool("BUZZ_AUDIT_ENABLED", true);
+        let previous = std::env::var_os("HIVE_AUDIT_ENABLED");
+        std::env::set_var("HIVE_AUDIT_ENABLED", "sometimes");
+        let result = parse_bool("HIVE_AUDIT_ENABLED", true);
         if let Some(value) = previous {
-            std::env::set_var("BUZZ_AUDIT_ENABLED", value);
+            std::env::set_var("HIVE_AUDIT_ENABLED", value);
         } else {
-            std::env::remove_var("BUZZ_AUDIT_ENABLED");
+            std::env::remove_var("HIVE_AUDIT_ENABLED");
         }
         assert!(matches!(
             result,
             Err(ConfigError::InvalidValue(ref message))
-                if message.contains("BUZZ_AUDIT_ENABLED")
+                if message.contains("HIVE_AUDIT_ENABLED")
         ));
     }
 
     #[test]
     fn join_policy_age_attestation_rejects_invalid_boolean() {
         let _guards = env_guards();
-        let previous = std::env::var_os("BUZZ_AGE_ATTESTATION_REQUIRED");
-        std::env::set_var("BUZZ_AGE_ATTESTATION_REQUIRED", "sometimes");
-        let result = parse_optional_bool("BUZZ_AGE_ATTESTATION_REQUIRED");
+        let previous = std::env::var_os("HIVE_AGE_ATTESTATION_REQUIRED");
+        std::env::set_var("HIVE_AGE_ATTESTATION_REQUIRED", "sometimes");
+        let result = parse_optional_bool("HIVE_AGE_ATTESTATION_REQUIRED");
         if let Some(value) = previous {
-            std::env::set_var("BUZZ_AGE_ATTESTATION_REQUIRED", value);
+            std::env::set_var("HIVE_AGE_ATTESTATION_REQUIRED", value);
         } else {
-            std::env::remove_var("BUZZ_AGE_ATTESTATION_REQUIRED");
+            std::env::remove_var("HIVE_AGE_ATTESTATION_REQUIRED");
         }
         assert!(matches!(
             result,
             Err(ConfigError::InvalidValue(ref message))
-                if message.contains("BUZZ_AGE_ATTESTATION_REQUIRED")
+                if message.contains("HIVE_AGE_ATTESTATION_REQUIRED")
         ));
     }
 
     #[test]
     fn rate_limits_can_be_overridden() {
         let _guards = env_guards();
-        std::env::set_var("BUZZ_RATE_LIMIT_HUMAN_MESSAGES_PER_MIN", "1001");
-        std::env::set_var("BUZZ_RATE_LIMIT_GIF_SEARCHES_PER_MIN", "1004");
-        std::env::set_var("BUZZ_RATE_LIMIT_HUMAN_API_CALLS_PER_MIN", "1002");
-        std::env::set_var("BUZZ_RATE_LIMIT_HUMAN_WS_EVENTS_PER_SEC", "1003");
+        std::env::set_var("HIVE_RATE_LIMIT_HUMAN_MESSAGES_PER_MIN", "1001");
+        std::env::set_var("HIVE_RATE_LIMIT_GIF_SEARCHES_PER_MIN", "1004");
+        std::env::set_var("HIVE_RATE_LIMIT_HUMAN_API_CALLS_PER_MIN", "1002");
+        std::env::set_var("HIVE_RATE_LIMIT_HUMAN_WS_EVENTS_PER_SEC", "1003");
 
         let config = Config::from_env().expect("config");
 
-        std::env::remove_var("BUZZ_RATE_LIMIT_HUMAN_MESSAGES_PER_MIN");
-        std::env::remove_var("BUZZ_RATE_LIMIT_GIF_SEARCHES_PER_MIN");
-        std::env::remove_var("BUZZ_RATE_LIMIT_HUMAN_API_CALLS_PER_MIN");
-        std::env::remove_var("BUZZ_RATE_LIMIT_HUMAN_WS_EVENTS_PER_SEC");
+        std::env::remove_var("HIVE_RATE_LIMIT_HUMAN_MESSAGES_PER_MIN");
+        std::env::remove_var("HIVE_RATE_LIMIT_GIF_SEARCHES_PER_MIN");
+        std::env::remove_var("HIVE_RATE_LIMIT_HUMAN_API_CALLS_PER_MIN");
+        std::env::remove_var("HIVE_RATE_LIMIT_HUMAN_WS_EVENTS_PER_SEC");
         assert_eq!(config.auth.rate_limits.human_messages_per_min, 1001);
         assert_eq!(config.auth.rate_limits.gif_searches_per_min, 1004);
         assert_eq!(config.auth.rate_limits.human_api_calls_per_min, 1002);
@@ -2782,14 +2782,14 @@ mod tests {
     #[test]
     fn rate_limit_overrides_reject_zero() {
         let _guards = env_guards();
-        std::env::set_var("BUZZ_RATE_LIMIT_HUMAN_WS_EVENTS_PER_SEC", "0");
+        std::env::set_var("HIVE_RATE_LIMIT_HUMAN_WS_EVENTS_PER_SEC", "0");
         let result = Config::from_env();
-        std::env::remove_var("BUZZ_RATE_LIMIT_HUMAN_WS_EVENTS_PER_SEC");
+        std::env::remove_var("HIVE_RATE_LIMIT_HUMAN_WS_EVENTS_PER_SEC");
 
         assert!(matches!(
             result,
             Err(ConfigError::InvalidValue(ref message))
-                if message.contains("BUZZ_RATE_LIMIT_HUMAN_WS_EVENTS_PER_SEC")
+                if message.contains("HIVE_RATE_LIMIT_HUMAN_WS_EVENTS_PER_SEC")
         ));
     }
 
@@ -2872,15 +2872,15 @@ mod tests {
     #[test]
     fn push_is_opt_in_and_gateway_is_required_when_enabled() {
         let _guards = env_guards();
-        let previous_enabled = std::env::var_os("BUZZ_PUSH_ENABLED");
-        let previous = std::env::var_os("BUZZ_PUSH_GATEWAY_DELIVERY_URL");
-        std::env::remove_var("BUZZ_PUSH_ENABLED");
-        std::env::remove_var("BUZZ_PUSH_GATEWAY_DELIVERY_URL");
+        let previous_enabled = std::env::var_os("HIVE_PUSH_ENABLED");
+        let previous = std::env::var_os("HIVE_PUSH_GATEWAY_DELIVERY_URL");
+        std::env::remove_var("HIVE_PUSH_ENABLED");
+        std::env::remove_var("HIVE_PUSH_GATEWAY_DELIVERY_URL");
         let config = Config::from_env().expect("default config");
         assert!(!config.push_enabled);
         assert!(config.push_gateway_delivery_url.is_none());
 
-        std::env::set_var("BUZZ_PUSH_ENABLED", "true");
+        std::env::set_var("HIVE_PUSH_ENABLED", "true");
         let result = Config::from_env();
         assert!(matches!(
             result,
@@ -2889,7 +2889,7 @@ mod tests {
         ));
 
         std::env::set_var(
-            "BUZZ_PUSH_GATEWAY_DELIVERY_URL",
+            "HIVE_PUSH_GATEWAY_DELIVERY_URL",
             "https://push.example/v1/deliveries",
         );
         let config = Config::from_env().expect("enabled push config");
@@ -2902,7 +2902,7 @@ mod tests {
             Some("https://push.example/v1/deliveries")
         );
 
-        std::env::set_var("BUZZ_PUSH_GATEWAY_DELIVERY_URL", "");
+        std::env::set_var("HIVE_PUSH_GATEWAY_DELIVERY_URL", "");
         let result = Config::from_env();
         assert!(matches!(
             result,
@@ -2910,37 +2910,37 @@ mod tests {
                 if message.contains("must not be empty")
         ));
 
-        std::env::set_var("BUZZ_PUSH_ENABLED", "false");
+        std::env::set_var("HIVE_PUSH_ENABLED", "false");
         let config = Config::from_env().expect("disabled push config");
         assert!(config.push_gateway_delivery_url.is_none());
 
         if let Some(value) = previous_enabled {
-            std::env::set_var("BUZZ_PUSH_ENABLED", value);
+            std::env::set_var("HIVE_PUSH_ENABLED", value);
         } else {
-            std::env::remove_var("BUZZ_PUSH_ENABLED");
+            std::env::remove_var("HIVE_PUSH_ENABLED");
         }
         if let Some(value) = previous {
-            std::env::set_var("BUZZ_PUSH_GATEWAY_DELIVERY_URL", value);
+            std::env::set_var("HIVE_PUSH_GATEWAY_DELIVERY_URL", value);
         } else {
-            std::env::remove_var("BUZZ_PUSH_GATEWAY_DELIVERY_URL");
+            std::env::remove_var("HIVE_PUSH_GATEWAY_DELIVERY_URL");
         }
     }
 
     #[test]
     fn invalid_push_enabled_value_is_rejected() {
         let _guards = env_guards();
-        let previous = std::env::var_os("BUZZ_PUSH_ENABLED");
-        std::env::set_var("BUZZ_PUSH_ENABLED", "sometimes");
+        let previous = std::env::var_os("HIVE_PUSH_ENABLED");
+        std::env::set_var("HIVE_PUSH_ENABLED", "sometimes");
         let result = Config::from_env();
         if let Some(value) = previous {
-            std::env::set_var("BUZZ_PUSH_ENABLED", value);
+            std::env::set_var("HIVE_PUSH_ENABLED", value);
         } else {
-            std::env::remove_var("BUZZ_PUSH_ENABLED");
+            std::env::remove_var("HIVE_PUSH_ENABLED");
         }
         assert!(matches!(
             result,
             Err(ConfigError::InvalidValue(ref message))
-                if message.contains("BUZZ_PUSH_ENABLED")
+                if message.contains("HIVE_PUSH_ENABLED")
         ));
     }
 
@@ -3030,7 +3030,7 @@ mod tests {
         assert!(matches!(
             result,
             Err(ConfigError::InvalidValue(ref message))
-                if message.contains("BUZZ_OPERATOR_LISTENERS")
+                if message.contains("HIVE_OPERATOR_LISTENERS")
         ));
     }
 
@@ -3040,23 +3040,23 @@ mod tests {
         use std::os::unix::ffi::OsStringExt;
 
         let _guards = env_guards();
-        let previous = std::env::var_os("BUZZ_OPERATOR_LISTENERS");
+        let previous = std::env::var_os("HIVE_OPERATOR_LISTENERS");
         std::env::set_var(
-            "BUZZ_OPERATOR_LISTENERS",
+            "HIVE_OPERATOR_LISTENERS",
             std::ffi::OsString::from_vec(vec![0xff]),
         );
 
         let result = Config::from_env();
 
         match previous {
-            Some(value) => std::env::set_var("BUZZ_OPERATOR_LISTENERS", value),
-            None => std::env::remove_var("BUZZ_OPERATOR_LISTENERS"),
+            Some(value) => std::env::set_var("HIVE_OPERATOR_LISTENERS", value),
+            None => std::env::remove_var("HIVE_OPERATOR_LISTENERS"),
         }
 
         assert!(matches!(
             result,
             Err(ConfigError::InvalidValue(ref message))
-                if message.contains("BUZZ_OPERATOR_LISTENERS must be valid UTF-8")
+                if message.contains("HIVE_OPERATOR_LISTENERS must be valid UTF-8")
         ));
     }
 
@@ -3089,38 +3089,38 @@ mod tests {
     #[test]
     fn invalid_push_gateway_timeout_is_not_silently_defaulted() {
         let _guards = env_guards();
-        std::env::set_var("BUZZ_PUSH_GATEWAY_TIMEOUT_MS", "99");
+        std::env::set_var("HIVE_PUSH_GATEWAY_TIMEOUT_MS", "99");
         let result = Config::from_env();
-        std::env::remove_var("BUZZ_PUSH_GATEWAY_TIMEOUT_MS");
+        std::env::remove_var("HIVE_PUSH_GATEWAY_TIMEOUT_MS");
         assert!(matches!(
             result,
             Err(ConfigError::InvalidValue(ref message))
-                if message.contains("BUZZ_PUSH_GATEWAY_TIMEOUT_MS")
+                if message.contains("HIVE_PUSH_GATEWAY_TIMEOUT_MS")
         ));
     }
 
     #[test]
     fn invalid_push_executor_key_id_is_rejected() {
         let _guards = env_guards();
-        std::env::set_var("BUZZ_PUSH_EXECUTOR_KEY_ID", "");
+        std::env::set_var("HIVE_PUSH_EXECUTOR_KEY_ID", "");
         let result = Config::from_env();
-        std::env::remove_var("BUZZ_PUSH_EXECUTOR_KEY_ID");
+        std::env::remove_var("HIVE_PUSH_EXECUTOR_KEY_ID");
         assert!(matches!(
             result,
             Err(ConfigError::InvalidValue(ref message))
-                if message.contains("BUZZ_PUSH_EXECUTOR_KEY_ID")
+                if message.contains("HIVE_PUSH_EXECUTOR_KEY_ID")
         ));
     }
 
     #[test]
     fn huddle_audio_available_can_be_disabled_for_horizontal_scaling() {
         let _guards = env_guards();
-        std::env::set_var("BUZZ_HUDDLE_AUDIO_AVAILABLE", "false");
+        std::env::set_var("HIVE_HUDDLE_AUDIO_AVAILABLE", "false");
         let config = Config::from_env().expect("config");
-        std::env::remove_var("BUZZ_HUDDLE_AUDIO_AVAILABLE");
+        std::env::remove_var("HIVE_HUDDLE_AUDIO_AVAILABLE");
         assert!(
             !config.huddle_audio_available,
-            "BUZZ_HUDDLE_AUDIO_AVAILABLE=false must disable huddle audio (multi-pod deployments)"
+            "HIVE_HUDDLE_AUDIO_AVAILABLE=false must disable huddle audio (multi-pod deployments)"
         );
     }
 
@@ -3146,28 +3146,28 @@ mod tests {
     #[test]
     fn pairing_relay_url_accepts_websocket_urls_and_rejects_http() {
         let _guards = env_guards();
-        std::env::set_var("BUZZ_PAIRING_RELAY_URL", "wss://pairing.buzz.xyz");
+        std::env::set_var("HIVE_PAIRING_RELAY_URL", "wss://pairing.buzz.xyz");
         let config = Config::from_env().expect("config");
         assert_eq!(
             config.pairing_relay_url.as_deref(),
             Some("wss://pairing.buzz.xyz")
         );
 
-        std::env::set_var("BUZZ_PAIRING_RELAY_URL", "https://pairing.buzz.xyz");
+        std::env::set_var("HIVE_PAIRING_RELAY_URL", "https://pairing.buzz.xyz");
         let result = Config::from_env();
-        std::env::remove_var("BUZZ_PAIRING_RELAY_URL");
+        std::env::remove_var("HIVE_PAIRING_RELAY_URL");
         assert!(matches!(
             result,
-            Err(ConfigError::InvalidValue(ref msg)) if msg.contains("BUZZ_PAIRING_RELAY_URL")
+            Err(ConfigError::InvalidValue(ref msg)) if msg.contains("HIVE_PAIRING_RELAY_URL")
         ));
     }
 
     #[test]
     fn max_frame_bytes_can_be_configured() {
         let _guards = env_guards();
-        std::env::set_var("BUZZ_MAX_FRAME_BYTES", "262144");
+        std::env::set_var("HIVE_MAX_FRAME_BYTES", "262144");
         let config = Config::from_env().expect("config");
-        std::env::remove_var("BUZZ_MAX_FRAME_BYTES");
+        std::env::remove_var("HIVE_MAX_FRAME_BYTES");
         assert_eq!(config.max_frame_bytes, 262_144);
     }
 
@@ -3186,9 +3186,9 @@ mod tests {
         let nested = base.join("nested").join("repos");
         assert!(!nested.exists(), "test precondition: path must not exist");
 
-        std::env::set_var("BUZZ_GIT_REPO_PATH", &nested);
+        std::env::set_var("HIVE_GIT_REPO_PATH", &nested);
         let result = Config::from_env();
-        std::env::remove_var("BUZZ_GIT_REPO_PATH");
+        std::env::remove_var("HIVE_GIT_REPO_PATH");
 
         let config = result.expect("config should self-bootstrap missing git_repo_path");
         assert_eq!(config.git_repo_path, nested);
@@ -3209,8 +3209,8 @@ mod tests {
         let bogus = std::path::PathBuf::from("/dev/null/cannot-create-here");
         let result = ensure_git_repo_path(&bogus);
         assert!(
-            matches!(result, Err(ConfigError::InvalidValue(ref msg)) if msg.contains("BUZZ_GIT_REPO_PATH")),
-            "expected InvalidValue mentioning BUZZ_GIT_REPO_PATH, got {result:?}"
+            matches!(result, Err(ConfigError::InvalidValue(ref msg)) if msg.contains("HIVE_GIT_REPO_PATH")),
+            "expected InvalidValue mentioning HIVE_GIT_REPO_PATH, got {result:?}"
         );
     }
 }

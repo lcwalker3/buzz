@@ -13,7 +13,7 @@ use tokio::sync::mpsc;
 use crate::connection::tests::{authenticated_state, read_frame, test_conn_with_auth};
 
 async fn state_with_limits(messages: u64, agent_messages: u64, ws: u64) -> AppState {
-    let url = std::env::var("BUZZ_TEST_REDIS_URL").expect("explicit isolated BUZZ_TEST_REDIS_URL");
+    let url = std::env::var("HIVE_TEST_REDIS_URL").expect("explicit isolated HIVE_TEST_REDIS_URL");
     let mut state = (*crate::state::tests::test_state().await).clone();
     let mut auth = state.auth.config().clone();
     auth.rate_limits = RateLimitConfig {
@@ -116,7 +116,7 @@ fn assert_quota_frame(frame: &serde_json::Value, msg: &ClientMessage, max_retry:
 }
 
 #[tokio::test]
-#[ignore = "requires explicit isolated BUZZ_TEST_REDIS_URL"]
+#[ignore = "requires explicit isolated HIVE_TEST_REDIS_URL"]
 async fn ephemeral_events_leave_human_and_agent_message_budgets_untouched() {
     let state = state_with_limits(2, 3, 100).await;
     let recorder = DebuggingRecorder::new();
@@ -164,7 +164,7 @@ async fn ephemeral_events_leave_human_and_agent_message_budgets_untouched() {
 }
 
 #[tokio::test]
-#[ignore = "requires explicit isolated BUZZ_TEST_REDIS_URL"]
+#[ignore = "requires explicit isolated HIVE_TEST_REDIS_URL"]
 async fn ws_flood_budget_is_shared_by_ephemeral_stored_req_and_count() {
     let state = state_with_limits(10, 20, 1).await; // Five operations per window.
     let recorder = DebuggingRecorder::new();
@@ -191,7 +191,7 @@ async fn ws_flood_budget_is_shared_by_ephemeral_stored_req_and_count() {
 }
 
 #[tokio::test]
-#[ignore = "requires explicit isolated BUZZ_TEST_REDIS_URL"]
+#[ignore = "requires explicit isolated HIVE_TEST_REDIS_URL"]
 async fn http_quota_preserves_wire_error_and_reports_api_bucket() {
     let state = state_with_limits(0, 0, 0).await;
     let recorder = DebuggingRecorder::new();

@@ -57,7 +57,7 @@ GUI_BUNDLE_IDENTIFIER = "xyz.block.buzz.app.benchmark"
 
 DEFAULT_DATASET = "terminal-bench/terminal-bench-2-1"
 DEFAULT_ATTEMPTS = 5
-BUZZ_DATASET_ROOT = REPO_ROOT / "benchmarks" / "buzz-dataset"
+HIVE_DATASET_ROOT = REPO_ROOT / "benchmarks" / "buzz-dataset"
 EVALUATION_LAYERS = ("regression", "workflow")
 LAYER_DEFAULT_ATTEMPTS = {"regression": 1, "workflow": 3}
 DEFAULT_MANIFEST = PACKAGE_ROOT / "manifests" / "tb-cobol-sonnet-haiku.yaml"
@@ -206,7 +206,7 @@ def buzz_tasks_for_path(path: Path | None) -> tuple[BuzzTask, ...] | None:
     """Return validated Buzz tasks, or ``None`` for an unrelated problem set."""
     if path is None:
         return None
-    root = BUZZ_DATASET_ROOT.resolve()
+    root = HIVE_DATASET_ROOT.resolve()
     selected_path = path.resolve()
     if not selected_path.is_relative_to(root):
         return None
@@ -383,31 +383,31 @@ def write_env_file(state: dict[str, str]) -> Path:
     """Compose interpolation env — regenerated from state on every run."""
     env_path = STATE_DIR / ".env"
     lines = {
-        "BUZZ_IMAGE": os.environ.get("BUZZ_IMAGE", "ghcr.io/block/buzz:main"),
-        "BUZZ_DOMAIN": "localhost",
+        "HIVE_IMAGE": os.environ.get("HIVE_IMAGE", "ghcr.io/block/buzz:main"),
+        "HIVE_DOMAIN": "localhost",
         "RELAY_URL": f"ws://localhost:{RELAY_HTTP_PORT}",
-        "BUZZ_MEDIA_BASE_URL": f"http://localhost:{RELAY_HTTP_PORT}/media",
-        "BUZZ_MEDIA_SERVER_DOMAIN": "localhost",
-        "BUZZ_CORS_ORIGINS": f"http://localhost:{RELAY_HTTP_PORT}",
-        "BUZZ_REQUIRE_AUTH_TOKEN": "true",
-        "BUZZ_REQUIRE_RELAY_MEMBERSHIP": "true",
-        "BUZZ_ALLOW_NIP_OA_AUTH": "true",
-        "BUZZ_AUTO_MIGRATE": "true",
-        "BUZZ_GIT_CONFORMANCE_PROBE": "true",
+        "HIVE_MEDIA_BASE_URL": f"http://localhost:{RELAY_HTTP_PORT}/media",
+        "HIVE_MEDIA_SERVER_DOMAIN": "localhost",
+        "HIVE_CORS_ORIGINS": f"http://localhost:{RELAY_HTTP_PORT}",
+        "HIVE_REQUIRE_AUTH_TOKEN": "true",
+        "HIVE_REQUIRE_RELAY_MEMBERSHIP": "true",
+        "HIVE_ALLOW_NIP_OA_AUTH": "true",
+        "HIVE_AUTO_MIGRATE": "true",
+        "HIVE_GIT_CONFORMANCE_PROBE": "true",
         "RUST_LOG": "buzz_relay=info,buzz_db=info,buzz_auth=info",
         "RELAY_OWNER_PUBKEY": state["owner_pubkey"],
-        "BUZZ_RELAY_PRIVATE_KEY": state["relay_private_key"],
-        "BUZZ_GIT_HOOK_HMAC_SECRET": state["git_hook_hmac_secret"],
+        "HIVE_RELAY_PRIVATE_KEY": state["relay_private_key"],
+        "HIVE_GIT_HOOK_HMAC_SECRET": state["git_hook_hmac_secret"],
         "POSTGRES_DB": "buzz",
         "POSTGRES_USER": "buzz",
         "POSTGRES_PASSWORD": state["postgres_password"],
         "REDIS_PASSWORD": state["redis_password"],
-        "BUZZ_S3_ACCESS_KEY": state["s3_access_key"],
-        "BUZZ_S3_SECRET_KEY": state["s3_secret_key"],
-        "BUZZ_S3_BUCKET": "buzz-media",
-        "BUZZ_HTTP_PORT": str(RELAY_HTTP_PORT),
-        "BUZZ_PG_HOST_PORT": str(PG_HOST_PORT),
-        "BUZZ_METRICS_HOST_PORT": str(METRICS_HOST_PORT),
+        "HIVE_S3_ACCESS_KEY": state["s3_access_key"],
+        "HIVE_S3_SECRET_KEY": state["s3_secret_key"],
+        "HIVE_S3_BUCKET": "buzz-media",
+        "HIVE_HTTP_PORT": str(RELAY_HTTP_PORT),
+        "HIVE_PG_HOST_PORT": str(PG_HOST_PORT),
+        "HIVE_METRICS_HOST_PORT": str(METRICS_HOST_PORT),
     }
     env_path.touch(mode=0o600)
     env_path.write_text("".join(f"{k}={v}\n" for k, v in lines.items()))
@@ -689,7 +689,7 @@ def launch_gui(state: dict[str, str]) -> subprocess.Popen:
     )
     # Distinct bundle identifier: the desktop app persists workspaces (incl.
     # their relay URLs) in per-identifier WebKit localStorage, and a stored
-    # workspace's relay URL overrides BUZZ_RELAY_URL by design. Reusing the
+    # workspace's relay URL overrides HIVE_RELAY_URL by design. Reusing the
     # default identifier means any past local-dev session's ws://localhost:3000
     # workspace silently shadows the benchmark relay. An identifier of our own
     # keeps that state isolated both ways.
@@ -701,8 +701,8 @@ def launch_gui(state: dict[str, str]) -> subprocess.Popen:
         cwd=desktop_dir,
         env={
             **os.environ,
-            "BUZZ_RELAY_URL": f"ws://localhost:{RELAY_HTTP_PORT}",
-            "BUZZ_PRIVATE_KEY": state["user_secret_key"],
+            "HIVE_RELAY_URL": f"ws://localhost:{RELAY_HTTP_PORT}",
+            "HIVE_PRIVATE_KEY": state["user_secret_key"],
         },
     )
 
@@ -736,11 +736,11 @@ def leaderboard_argv(
         # The relay as reachable from inside a task container: Docker's
         # host alias, bridged to the canonical localhost address by the
         # uploaded forwarder. Override the alias with
-        # BUZZ_BENCHMARK_DOCKER_HOST if your engine exposes the host
+        # HIVE_BENCHMARK_DOCKER_HOST if your engine exposes the host
         # differently.
         "--relay-gateway",
         (
-            f"{os.environ.get('BUZZ_BENCHMARK_DOCKER_HOST', 'host.docker.internal')}"
+            f"{os.environ.get('HIVE_BENCHMARK_DOCKER_HOST', 'host.docker.internal')}"
             f":{RELAY_HTTP_PORT}"
         ),
         "--n-concurrent",

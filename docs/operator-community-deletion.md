@@ -47,10 +47,10 @@ operatorJobs:
 
 Set `s3.endpoint`, `s3.bucket`, `s3.region`, and `s3.addressingStyle` in chart
 values. The selected Secret must contain `DATABASE_URL` and `REDIS_URL`; it may
-contain `BUZZ_S3_ACCESS_KEY` and `BUZZ_S3_SECRET_KEY` when the object store uses
+contain `HIVE_S3_ACCESS_KEY` and `HIVE_S3_SECRET_KEY` when the object store uses
 static credentials. The pod receives only those connection values and the four
-non-secret S3 settings. It does not receive `BUZZ_RELAY_PRIVATE_KEY`,
-`BUZZ_GIT_HOOK_HMAC_SECRET`, `RELAY_URL`, or the full Secret through `envFrom`.
+non-secret S3 settings. It does not receive `HIVE_RELAY_PRIVATE_KEY`,
+`HIVE_GIT_HOOK_HMAC_SECRET`, `RELAY_URL`, or the full Secret through `envFrom`.
 The pod also disables service-account token automounting and Kubernetes service
 link environment injection because the executor does not call the Kubernetes
 API or discover cluster Services. This disables the ordinary Kubernetes API
@@ -191,12 +191,12 @@ rejects with `409` and `code: "limit_reached"` (the `error` message keeps its
 `limit_reached:` prefix for older clients):
 
 - **Active:** live ownership plus incomplete owner deletions
-  (`BUZZ_MAX_COMMUNITIES_PER_OWNER`, default 50). A deletion keeps its slot
+  (`HIVE_MAX_COMMUNITIES_PER_OWNER`, default 50). A deletion keeps its slot
   until logical completion records `completed_at`.
 - **Lifetime:** live ownership plus every non-aborted owner deletion, including
   completed ones, capped at an absolute 50 regardless of the active limit.
   Lifetime usage includes live ownership, so no owner can hold more than 50
-  live communities; a `BUZZ_MAX_COMMUNITIES_PER_OWNER` above 50 is
+  live communities; a `HIVE_MAX_COMMUNITIES_PER_OWNER` above 50 is
   unreachable, and owner lists would report a `quota_limit` the owner can
   never reach.
   Deleted communities keep their hosts as permanent tombstones, so this bounds

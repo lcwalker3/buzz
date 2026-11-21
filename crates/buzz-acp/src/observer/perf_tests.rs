@@ -95,15 +95,15 @@ fn concurrent_emitters_keep_live_and_replay_sequence_order() {
 #[test]
 #[ignore = "manual observer fitting measurement"]
 fn publish_queue_probe() {
-    let count: usize = std::env::var("BUZZ_OBSERVER_PROBE_EVENTS")
+    let count: usize = std::env::var("HIVE_OBSERVER_PROBE_EVENTS")
         .unwrap_or_else(|_| "200".into())
         .parse()
         .unwrap();
-    let payload_bytes: usize = std::env::var("BUZZ_OBSERVER_PROBE_BYTES")
+    let payload_bytes: usize = std::env::var("HIVE_OBSERVER_PROBE_BYTES")
         .unwrap_or_else(|_| "1048576".into())
         .parse()
         .unwrap();
-    let fields: usize = std::env::var("BUZZ_OBSERVER_PROBE_FIELDS")
+    let fields: usize = std::env::var("HIVE_OBSERVER_PROBE_FIELDS")
         .unwrap_or_else(|_| "64".into())
         .parse()
         .unwrap();

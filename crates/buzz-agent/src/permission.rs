@@ -1,7 +1,7 @@
 //! `session/request_permission` broker.
 //!
 //! buzz-agent asks the client to authorize every LLM-issued MCP tool call
-//! *before* executing it; the client applies `BUZZ_ACP_PERMISSION_POLICY` and
+//! *before* executing it; the client applies `HIVE_ACP_PERMISSION_POLICY` and
 //! answers. The agent never reads the policy — it always asks, matching the
 //! layering of every other ACP harness. This module owns the whole request
 //! correlation lifecycle so the rest of the agent only sees a single
@@ -10,7 +10,7 @@
 //! ## Invariants
 //!
 //! - **Process-wide admission.** The broker owns a global [`Semaphore`]
-//!   (`BUZZ_AGENT_MAX_PENDING_PERMISSIONS`) acquired *before* any correlation
+//!   (`HIVE_AGENT_MAX_PENDING_PERMISSIONS`) acquired *before* any correlation
 //!   entry is inserted. The per-turn `execute_parallel` semaphore is fresh per
 //!   turn and sessions are unbounded by default, so only this global cap bounds
 //!   simultaneously outstanding asks process-wide.

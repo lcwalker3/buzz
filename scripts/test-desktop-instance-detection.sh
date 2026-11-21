@@ -35,19 +35,19 @@ check_instance() {
     local cwd="$1" identifier="$2" label="$3"
     clean_env bash -euo pipefail -c '
         cd "$1"
-        export BUZZ_RELAY_URL=wss://relay.example.test
+        export HIVE_RELAY_URL=wss://relay.example.test
         source "$2" >/dev/null
         python3 - "$3" "$4" <<'"'"'PY'"'"'
 import json
 import os
 import sys
 
-config = json.loads(os.environ["BUZZ_TAURI_CONFIG"])
+config = json.loads(os.environ["HIVE_TAURI_CONFIG"])
 assert config["identifier"] == sys.argv[1], config
 assert os.environ.get("VITE_DEV_BRANCH", "") == sys.argv[2]
-assert os.environ["BUZZ_RELAY_URL"] == "wss://relay.example.test"
-assert "BUZZ_PRIVATE_KEY" not in os.environ
-assert config["build"]["devUrl"] == "http://localhost:" + os.environ["BUZZ_VITE_PORT"]
+assert os.environ["HIVE_RELAY_URL"] == "wss://relay.example.test"
+assert "HIVE_PRIVATE_KEY" not in os.environ
+assert config["build"]["devUrl"] == "http://localhost:" + os.environ["HIVE_VITE_PORT"]
 PY
     ' bash "$cwd" "$script" "$identifier" "$label"
     printf 'ok: %s -> %s\n' "$cwd" "$identifier"

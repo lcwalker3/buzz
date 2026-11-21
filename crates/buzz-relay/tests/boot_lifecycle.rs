@@ -42,8 +42,8 @@ impl RelayProcess {
             .env_clear()
             .env("RUST_BACKTRACE", "0")
             .env("RUST_LOG", "buzz_relay=info")
-            .env("BUZZ_GIT_REPO_PATH", scratch_dir.join("repos"))
-            .env("BUZZ_GIT_PACK_CACHE_PATH", scratch_dir.join("pack-cache"))
+            .env("HIVE_GIT_REPO_PATH", scratch_dir.join("repos"))
+            .env("HIVE_GIT_PACK_CACHE_PATH", scratch_dir.join("pack-cache"))
             .stdout(Stdio::piped())
             .stderr(Stdio::piped());
         for (name, value) in environment {
@@ -365,7 +365,7 @@ fn phases(events: &[Value]) -> Vec<&str> {
 fn invalid_config_terminalizes_at_main_even_with_logs_disabled() {
     let output = run_relay(&[
         ("RUST_LOG", "off"),
-        ("BUZZ_BIND_ADDR", "not-a-socket-address"),
+        ("HIVE_BIND_ADDR", "not-a-socket-address"),
     ]);
     assert!(!output.status.success());
     let events = lifecycle_events(&output);
@@ -395,7 +395,7 @@ fn invalid_config_terminalizes_at_main_even_with_logs_disabled() {
 fn config_filesystem_failure_has_a_bounded_terminal() {
     let output = run_relay(&[
         ("RUST_LOG", "off"),
-        ("BUZZ_GIT_REPO_PATH", "/dev/null/not-a-directory"),
+        ("HIVE_GIT_REPO_PATH", "/dev/null/not-a-directory"),
     ]);
     assert!(!output.status.success());
     let events = lifecycle_events(&output);
@@ -411,7 +411,7 @@ fn config_filesystem_failure_has_a_bounded_terminal() {
 
 #[test]
 fn invalid_config_value_has_the_same_bounded_terminal() {
-    let output = run_relay(&[("RUST_LOG", "off"), ("BUZZ_DRAIN_JITTER_MS", "bogus")]);
+    let output = run_relay(&[("RUST_LOG", "off"), ("HIVE_DRAIN_JITTER_MS", "bogus")]);
     assert!(!output.status.success());
     let events = lifecycle_events(&output);
     assert_accounting(&events);
@@ -429,7 +429,7 @@ fn configured_otlp_terminalizes_tracing_before_a_later_failure() {
     let output = run_relay(&[
         ("RUST_LOG", "off"),
         ("OTEL_EXPORTER_OTLP_ENDPOINT", "http://127.0.0.1:4317"),
-        ("BUZZ_BIND_ADDR", "not-a-socket-address"),
+        ("HIVE_BIND_ADDR", "not-a-socket-address"),
     ]);
     assert!(!output.status.success());
     let events = lifecycle_events(&output);
@@ -461,7 +461,7 @@ fn missing_key_stops_before_metrics_bind() {
 #[test]
 fn invalid_key_uses_a_bounded_reason_without_leaking_the_value() {
     let secret = "private-key-material-that-must-not-appear";
-    let output = run_relay(&[("BUZZ_RELAY_PRIVATE_KEY", secret)]);
+    let output = run_relay(&[("HIVE_RELAY_PRIVATE_KEY", secret)]);
     assert!(!output.status.success());
     let events = lifecycle_events(&output);
     assert_accounting(&events);
@@ -476,8 +476,8 @@ fn occupied_metrics_port_has_a_typed_bind_terminal() {
     let port = occupied.local_addr().expect("occupied address").port();
     let port = port.to_string();
     let output = run_relay(&[
-        ("BUZZ_RELAY_PRIVATE_KEY", VALID_RELAY_PRIVATE_KEY),
-        ("BUZZ_METRICS_PORT", &port),
+        ("HIVE_RELAY_PRIVATE_KEY", VALID_RELAY_PRIVATE_KEY),
+        ("HIVE_METRICS_PORT", &port),
     ]);
     assert!(!output.status.success());
     let events = lifecycle_events(&output);
@@ -502,8 +502,8 @@ fn otlp_build_failure_is_degraded_without_leaking_endpoint_credentials() {
     let mut process = RelayProcess::spawn(&[
         ("OTEL_EXPORTER_OTLP_ENDPOINT", &endpoint),
         ("RUST_LOG", "buzz_relay=warn"),
-        ("BUZZ_RELAY_PRIVATE_KEY", VALID_RELAY_PRIVATE_KEY),
-        ("BUZZ_METRICS_PORT", &port_value),
+        ("HIVE_RELAY_PRIVATE_KEY", VALID_RELAY_PRIVATE_KEY),
+        ("HIVE_METRICS_PORT", &port_value),
         ("DATABASE_URL", &database_url),
     ]);
     let scrape = wait_for_relay_metrics(&mut process, port);
@@ -535,8 +535,8 @@ fn successful_main_emits_complete_lifecycle_and_reports_current_startup_step() {
     let port_value = port.to_string();
     let mut process = RelayProcess::spawn(&[
         ("RUST_LOG", "off"),
-        ("BUZZ_RELAY_PRIVATE_KEY", VALID_RELAY_PRIVATE_KEY),
-        ("BUZZ_METRICS_PORT", &port_value),
+        ("HIVE_RELAY_PRIVATE_KEY", VALID_RELAY_PRIVATE_KEY),
+        ("HIVE_METRICS_PORT", &port_value),
         ("DATABASE_URL", &database_url),
     ]);
     let scrape = wait_for_relay_metrics(&mut process, port);
@@ -740,12 +740,12 @@ mod postgres_tests {
 
         let (exited, output) = run_until_exit(
             &[
-                ("BUZZ_RELAY_PRIVATE_KEY", VALID_RELAY_PRIVATE_KEY),
-                ("BUZZ_METRICS_PORT", &metrics_port),
-                ("BUZZ_HEALTH_PORT", &health_port_value),
+                ("HIVE_RELAY_PRIVATE_KEY", VALID_RELAY_PRIVATE_KEY),
+                ("HIVE_METRICS_PORT", &metrics_port),
+                ("HIVE_HEALTH_PORT", &health_port_value),
                 ("DATABASE_URL", &database_url),
                 ("REDIS_URL", &redis_url),
-                ("BUZZ_GIT_CONFORMANCE_PROBE", "false"),
+                ("HIVE_GIT_CONFORMANCE_PROBE", "false"),
             ],
             CHILD_TIMEOUT,
         );
@@ -791,12 +791,12 @@ mod postgres_tests {
 
         let (exited, output) = run_until_exit(
             &[
-                ("BUZZ_RELAY_PRIVATE_KEY", VALID_RELAY_PRIVATE_KEY),
-                ("BUZZ_METRICS_PORT", &metrics_port),
-                ("BUZZ_HEALTH_PORT", &health_port_value),
+                ("HIVE_RELAY_PRIVATE_KEY", VALID_RELAY_PRIVATE_KEY),
+                ("HIVE_METRICS_PORT", &metrics_port),
+                ("HIVE_HEALTH_PORT", &health_port_value),
                 ("DATABASE_URL", &database_url),
                 ("REDIS_URL", redis_peer.redis_url()),
-                ("BUZZ_GIT_CONFORMANCE_PROBE", "false"),
+                ("HIVE_GIT_CONFORMANCE_PROBE", "false"),
             ],
             timeout,
         );
@@ -861,13 +861,13 @@ mod postgres_tests {
         let bind_addr = format!("127.0.0.1:{}", reserve_closed_port());
 
         let mut process = RelayProcess::spawn(&[
-            ("BUZZ_RELAY_PRIVATE_KEY", VALID_RELAY_PRIVATE_KEY),
-            ("BUZZ_METRICS_PORT", &metrics_port_value),
-            ("BUZZ_HEALTH_PORT", &health_port_value),
-            ("BUZZ_BIND_ADDR", &bind_addr),
+            ("HIVE_RELAY_PRIVATE_KEY", VALID_RELAY_PRIVATE_KEY),
+            ("HIVE_METRICS_PORT", &metrics_port_value),
+            ("HIVE_HEALTH_PORT", &health_port_value),
+            ("HIVE_BIND_ADDR", &bind_addr),
             ("DATABASE_URL", &database_url),
             ("REDIS_URL", &redis_url),
-            ("BUZZ_GIT_CONFORMANCE_PROBE", "false"),
+            ("HIVE_GIT_CONFORMANCE_PROBE", "false"),
         ]);
         let scrape = wait_for_scraped_metrics(
             &mut process,
@@ -917,14 +917,14 @@ mod postgres_tests {
         let bind_addr = format!("127.0.0.1:{}", reserve_closed_port());
 
         let mut process = RelayProcess::spawn(&[
-            ("BUZZ_RELAY_PRIVATE_KEY", VALID_RELAY_PRIVATE_KEY),
-            ("BUZZ_METRICS_PORT", &metrics_port_value),
-            ("BUZZ_HEALTH_PORT", &health_port_value),
-            ("BUZZ_BIND_ADDR", &bind_addr),
+            ("HIVE_RELAY_PRIVATE_KEY", VALID_RELAY_PRIVATE_KEY),
+            ("HIVE_METRICS_PORT", &metrics_port_value),
+            ("HIVE_HEALTH_PORT", &health_port_value),
+            ("HIVE_BIND_ADDR", &bind_addr),
             ("DATABASE_URL", &database_url),
             ("READ_DATABASE_URL", &read_database_url),
             ("REDIS_URL", &redis_url),
-            ("BUZZ_GIT_CONFORMANCE_PROBE", "false"),
+            ("HIVE_GIT_CONFORMANCE_PROBE", "false"),
         ]);
         let ready = wait_for_readiness(&mut process, health_port);
         let output = process.terminate();
@@ -998,19 +998,19 @@ mod postgres_tests {
         let health_port_value = health_port.to_string();
         let bind_addr = format!("127.0.0.1:{}", reserve_closed_port());
         let mut environment = vec![
-            ("BUZZ_RELAY_PRIVATE_KEY", VALID_RELAY_PRIVATE_KEY),
-            ("BUZZ_METRICS_PORT", metrics_port.as_str()),
-            ("BUZZ_HEALTH_PORT", health_port_value.as_str()),
-            ("BUZZ_BIND_ADDR", bind_addr.as_str()),
+            ("HIVE_RELAY_PRIVATE_KEY", VALID_RELAY_PRIVATE_KEY),
+            ("HIVE_METRICS_PORT", metrics_port.as_str()),
+            ("HIVE_HEALTH_PORT", health_port_value.as_str()),
+            ("HIVE_BIND_ADDR", bind_addr.as_str()),
             ("DATABASE_URL", database_url.as_str()),
             ("REDIS_URL", redis_url.as_str()),
-            ("BUZZ_GIT_CONFORMANCE_PROBE", "false"),
+            ("HIVE_GIT_CONFORMANCE_PROBE", "false"),
             // Shadow: off builds no resolver, so it loads no snapshot.
-            ("BUZZ_NIP_FI_MODE", "shadow"),
-            ("BUZZ_NIP_FI_COMMUNITY_SOURCE", "database"),
-            ("BUZZ_NIP_FI_ISSUERS", NIP_FI_ISSUERS),
-            ("BUZZ_NIP_FI_PROVISION_BINDING", NIP_FI_PROVISION_BINDING),
-            ("BUZZ_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600"),
+            ("HIVE_NIP_FI_MODE", "shadow"),
+            ("HIVE_NIP_FI_COMMUNITY_SOURCE", "database"),
+            ("HIVE_NIP_FI_ISSUERS", NIP_FI_ISSUERS),
+            ("HIVE_NIP_FI_PROVISION_BINDING", NIP_FI_PROVISION_BINDING),
+            ("HIVE_NIP_FI_MAX_CONNECTION_LIFETIME_SECS", "3600"),
         ];
         environment.extend_from_slice(extra);
         (RelayProcess::spawn(&environment), health_port)
@@ -1087,7 +1087,7 @@ mod postgres_tests {
     fn database_source_failed_snapshot_stops_boot_before_listeners_bind() {
         seed_bindings(2);
         let (process, health_port) =
-            spawn_database_source(&[("BUZZ_NIP_FI_SNAPSHOT_MAX_ROWS", "1")]);
+            spawn_database_source(&[("HIVE_NIP_FI_SNAPSHOT_MAX_ROWS", "1")]);
         let (exited, output) = wait_for_exit(process, CHILD_TIMEOUT);
         assert_failed_before_listeners(exited, &output, health_port, "OverCap");
     }
@@ -1100,7 +1100,7 @@ mod postgres_tests {
     fn database_source_slow_snapshot_times_out_before_listeners_bind() {
         seed_bindings(20_000);
         let (process, health_port) =
-            spawn_database_source(&[("BUZZ_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS", "1")]);
+            spawn_database_source(&[("HIVE_NIP_FI_SNAPSHOT_REFRESH_TIMEOUT_MS", "1")]);
         let (exited, output) = wait_for_exit(process, CHILD_TIMEOUT);
         assert_failed_before_listeners(exited, &output, health_port, "Timeout");
     }

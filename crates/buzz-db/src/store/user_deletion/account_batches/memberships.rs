@@ -30,7 +30,7 @@ impl UserDeletionStore {
         }
         let signer = self.account_snapshot_signer.as_ref().ok_or_else(|| {
             invalid(
-            "membership cleanup requires the existing relay signing key (BUZZ_RELAY_PRIVATE_KEY)",
+            "membership cleanup requires the existing relay signing key (HIVE_RELAY_PRIVATE_KEY)",
         )
         })?;
         let mismatch: bool = sqlx::query_scalar(

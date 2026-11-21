@@ -21,7 +21,7 @@ void main() {
         }
       }
     },
-    skip: !const bool.fromEnvironment('BUZZ_RUN_BENCHMARKS'),
+    skip: !const bool.fromEnvironment('HIVE_RUN_BENCHMARKS'),
     timeout: const Timeout(Duration(minutes: 3)),
   );
 }

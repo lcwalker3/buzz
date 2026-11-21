@@ -198,7 +198,7 @@ its result may repeat that handler.
 
 ## Run against disposable test resources
 
-Build `buzz-admin`, configure `DATABASE_URL` and the `BUZZ_S3_*` variables, and
+Build `buzz-admin`, configure `DATABASE_URL` and the `HIVE_S3_*` variables, and
 apply the schema using the operator procedure in [database.md](database.md).
 Use a real test public key and versioned test bucket. Stop every writer before
 running with `--delete`; neither the dummy gate nor a database lease prevents

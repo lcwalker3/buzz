@@ -686,5 +686,5 @@ void stackJourneyTests() {
     await tester.pumpAndSettle();
     expect(sheet, findsNothing);
     expect(tester.takeException(), isNull);
-  }, skip: !const bool.fromEnvironment('BUZZ_PHOTO_STACK_TUNING'));
+  }, skip: !const bool.fromEnvironment('HIVE_PHOTO_STACK_TUNING'));
 }

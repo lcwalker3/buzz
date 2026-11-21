@@ -145,22 +145,22 @@ fn emit_runtime_lifecycle(
 /// Resolve the agent's owner pubkey at startup.
 ///
 /// Priority:
-/// 1. `BUZZ_AUTH_TAG` env var — NIP-OA attestation signed by the owner.
+/// 1. `HIVE_AUTH_TAG` env var — NIP-OA attestation signed by the owner.
 ///    Verified against the agent's own pubkey to extract the owner pubkey.
-/// 2. `--agent-owner` CLI flag / `BUZZ_ACP_AGENT_OWNER` env var.
+/// 2. `--agent-owner` CLI flag / `HIVE_ACP_AGENT_OWNER` env var.
 fn resolve_agent_owner(config: &Config) -> Option<String> {
-    // Try BUZZ_AUTH_TAG first (NIP-OA attestation).
-    if let Ok(auth_tag) = std::env::var("BUZZ_AUTH_TAG") {
+    // Try HIVE_AUTH_TAG first (NIP-OA attestation).
+    if let Ok(auth_tag) = std::env::var("HIVE_AUTH_TAG") {
         if !auth_tag.is_empty() {
             let agent_pk = config.keys.public_key();
             match buzz_sdk::nip_oa::verify_auth_tag(&auth_tag, &agent_pk) {
                 Ok(owner_pk) => {
                     let owner_hex = owner_pk.to_hex().to_ascii_lowercase();
-                    tracing::info!("owner resolved from BUZZ_AUTH_TAG: {owner_hex}");
+                    tracing::info!("owner resolved from HIVE_AUTH_TAG: {owner_hex}");
                     return Some(owner_hex);
                 }
                 Err(e) => {
-                    tracing::warn!("BUZZ_AUTH_TAG verification failed: {e} — falling back");
+                    tracing::warn!("HIVE_AUTH_TAG verification failed: {e} — falling back");
                 }
             }
         }
@@ -2703,7 +2703,7 @@ mod idle_pool_sleep_tests {
 const REPLAY_FLOOR_MAX_AGE_SECS: u64 = 15 * 60;
 
 /// Resolve the startup watermark from process-start time and an optional
-/// replay floor (`--replay-floor` / `BUZZ_ACP_REPLAY_FLOOR`).
+/// replay floor (`--replay-floor` / `HIVE_ACP_REPLAY_FLOOR`).
 ///
 /// A publish-first mention send publishes the triggering message BEFORE this
 /// harness spawns, so the watermark must reach back to the send timestamp for
@@ -2829,7 +2829,7 @@ async fn tokio_main() -> Result<()> {
     // ── Setup-mode early branch ───────────────────────────────────────────────
     //
     // When the desktop determines an agent is not ready (missing credentials,
-    // model, or provider), it spawns buzz-acp with BUZZ_ACP_SETUP_PAYLOAD set.
+    // model, or provider), it spawns buzz-acp with HIVE_ACP_SETUP_PAYLOAD set.
     // We enter the minimal setup-listener path and never start the agent pool.
     if let Some(payload) = setup_mode::SetupPayload::from_env()
         .map_err(|e| anyhow::anyhow!("setup payload error: {e}"))?
@@ -2918,7 +2918,7 @@ async fn run_harness(
     // blind spot between "agents ready" and "first REQ sent".
     //
     // A publish-first mention send passes the triggering message's send
-    // timestamp as a replay floor (`--replay-floor` / `BUZZ_ACP_REPLAY_FLOOR`):
+    // timestamp as a replay floor (`--replay-floor` / `HIVE_ACP_REPLAY_FLOOR`):
     // the message is already on the relay when this process spawns, so the
     // watermark must reach back to it for the first REQ to replay it — however
     // long the spawn took.
@@ -2937,8 +2937,8 @@ async fn run_harness(
 
     let pubkey_hex = config.keys.public_key().to_hex();
 
-    // Parse BUZZ_AUTH_TAG into a nostr::Tag for NIP-OA relay membership delegation.
-    let relay_auth_tag: Option<nostr::Tag> = std::env::var("BUZZ_AUTH_TAG")
+    // Parse HIVE_AUTH_TAG into a nostr::Tag for NIP-OA relay membership delegation.
+    let relay_auth_tag: Option<nostr::Tag> = std::env::var("HIVE_AUTH_TAG")
         .ok()
         .filter(|s| !s.is_empty())
         .and_then(|s| buzz_sdk::nip_oa::parse_auth_tag(&s).ok());
@@ -2971,7 +2971,7 @@ async fn run_harness(
     let presence_publisher = relay.event_publisher();
     let presence_keys = config.keys.clone();
 
-    // Priority: BUZZ_AUTH_TAG (NIP-OA attestation) → --agent-owner flag.
+    // Priority: HIVE_AUTH_TAG (NIP-OA attestation) → --agent-owner flag.
     let startup_owner: Option<String> = resolve_agent_owner(config);
     if let Some(ref owner) = startup_owner {
         tracing::info!("agent owner: {owner}");
@@ -2984,7 +2984,7 @@ async fn run_harness(
             RespondTo::OwnerOnly => {
                 tracing::warn!(
                     "respond-to=owner-only but no owner is set — all events will be \
-                     dropped. Set BUZZ_AUTH_TAG or --agent-owner, or use --respond-to=anyone."
+                     dropped. Set HIVE_AUTH_TAG or --agent-owner, or use --respond-to=anyone."
                 );
             }
             RespondTo::Allowlist => {
@@ -3072,7 +3072,7 @@ async fn run_harness(
         ));
     }
 
-    let runtime_start_nonce = std::env::var("BUZZ_MANAGED_AGENT_START_NONCE").unwrap_or_default();
+    let runtime_start_nonce = std::env::var("HIVE_MANAGED_AGENT_START_NONCE").unwrap_or_default();
     let dedup_mode = config.dedup_mode;
     let mut queue =
         EventQueue::new(dedup_mode).with_in_flight_deadline(config.max_turn_duration_secs);
@@ -3107,7 +3107,7 @@ async fn run_harness(
     if !config.memory_enabled {
         tracing::info!(
             target: "engram::core",
-            "NIP-AE core memory injection disabled (re-enable by removing --no-memory / BUZZ_ACP_NO_MEMORY)"
+            "NIP-AE core memory injection disabled (re-enable by removing --no-memory / HIVE_ACP_NO_MEMORY)"
         );
     }
 
@@ -6504,15 +6504,15 @@ fn build_mcp_servers(config: &Config) -> Vec<McpServer> {
         env: {
             let mut env = vec![
                 EnvVar {
-                    name: "BUZZ_OUTPUT_FORMAT".into(),
+                    name: "HIVE_OUTPUT_FORMAT".into(),
                     value: config::agent_output_format(&config.persona_env_vars),
                 },
                 EnvVar {
-                    name: "BUZZ_RELAY_URL".into(),
+                    name: "HIVE_RELAY_URL".into(),
                     value: config.relay_url.clone(),
                 },
                 EnvVar {
-                    name: "BUZZ_PRIVATE_KEY".into(),
+                    name: "HIVE_PRIVATE_KEY".into(),
                     // bech32 encoding of a valid secret key is infallible.
                     // Panic here is correct: injecting a bogus secret would cause
                     // delayed, hard-to-diagnose agent failures downstream.
@@ -6523,22 +6523,22 @@ fn build_mcp_servers(config: &Config) -> Vec<McpServer> {
                         .expect("secret key bech32 encoding should never fail"),
                 },
             ];
-            // Forward BUZZ_AUTH_TAG (NIP-OA owner attestation credential)
+            // Forward HIVE_AUTH_TAG (NIP-OA owner attestation credential)
             // so the MCP server can attach it to every signed event.
-            if let Ok(auth_tag) = std::env::var("BUZZ_AUTH_TAG") {
+            if let Ok(auth_tag) = std::env::var("HIVE_AUTH_TAG") {
                 if !auth_tag.is_empty() {
                     env.push(EnvVar {
-                        name: "BUZZ_AUTH_TAG".into(),
+                        name: "HIVE_AUTH_TAG".into(),
                         value: auth_tag,
                     });
                 }
             }
             // Preserve the display-name contract for tools. Git authorship is
             // already normalized by the harness bootstrap.
-            if let Ok(display_name) = std::env::var("BUZZ_ACP_DISPLAY_NAME") {
+            if let Ok(display_name) = std::env::var("HIVE_ACP_DISPLAY_NAME") {
                 if !display_name.is_empty() {
                     env.push(EnvVar {
-                        name: "BUZZ_ACP_DISPLAY_NAME".into(),
+                        name: "HIVE_ACP_DISPLAY_NAME".into(),
                         value: display_name,
                     });
                 }
@@ -9591,7 +9591,7 @@ mod build_mcp_servers_tests {
     }
 
     /// Run `GitEnvironment::install` with `vars` set and the runner's own
-    /// `GIT_CONFIG*` / `BUZZ_GIT_IDENTITY` hidden, so an agent session's
+    /// `GIT_CONFIG*` / `HIVE_GIT_IDENTITY` hidden, so an agent session's
     /// inherited identity cannot leak into the result. Caller holds `ENV_LOCK`.
     fn install_git_with_env(
         config: &Config,
@@ -9601,7 +9601,7 @@ mod build_mcp_servers_tests {
             saved: std::env::vars_os()
                 .filter(|(name, _)| {
                     name.to_str().is_some_and(|name| {
-                        name.starts_with("GIT_CONFIG") || name == "BUZZ_GIT_IDENTITY"
+                        name.starts_with("GIT_CONFIG") || name == "HIVE_GIT_IDENTITY"
                     })
                 })
                 .collect(),
@@ -9625,12 +9625,12 @@ mod build_mcp_servers_tests {
         let _guard = ENV_LOCK.lock().unwrap();
         let err = install_git_with_env(
             &test_config(),
-            &[("BUZZ_GIT_IDENTITY".into(), "human".into())],
+            &[("HIVE_GIT_IDENTITY".into(), "human".into())],
         )
         .err()
         .unwrap()
         .to_string();
-        assert!(err.contains("BUZZ_GIT_IDENTITY"), "{err}");
+        assert!(err.contains("HIVE_GIT_IDENTITY"), "{err}");
     }
 
     #[test]
@@ -9654,7 +9654,7 @@ mod build_mcp_servers_tests {
             ("core.abbrev", "12"),
         ];
         let mut vars = vec![
-            ("BUZZ_GIT_IDENTITY".into(), "user".into()),
+            ("HIVE_GIT_IDENTITY".into(), "user".into()),
             ("GIT_CONFIG_COUNT".into(), inherited.len().to_string()),
         ];
         for (i, (key, value)) in inherited.iter().enumerate() {
@@ -9707,7 +9707,7 @@ mod build_mcp_servers_tests {
             entries.iter().any(|(key, _)| key == "nostr.keyfile"),
             "{entries:?}"
         );
-        assert_eq!(value_of("BUZZ_GIT_IDENTITY").as_deref(), Some("user"));
+        assert_eq!(value_of("HIVE_GIT_IDENTITY").as_deref(), Some("user"));
     }
 
     #[test]
@@ -9716,20 +9716,20 @@ mod build_mcp_servers_tests {
         let mut config = test_config();
         config
             .persona_env_vars
-            .push(("BUZZ_GIT_IDENTITY".into(), "stale".into()));
+            .push(("HIVE_GIT_IDENTITY".into(), "stale".into()));
         let restore = EnvRestore {
             saved: std::env::vars_os()
-                .filter(|(name, _)| name == "BUZZ_GIT_IDENTITY")
+                .filter(|(name, _)| name == "HIVE_GIT_IDENTITY")
                 .collect(),
-            fixture: vec!["BUZZ_GIT_IDENTITY".into()],
+            fixture: vec!["HIVE_GIT_IDENTITY".into()],
         };
-        std::env::set_var("BUZZ_GIT_IDENTITY", "user");
+        std::env::set_var("HIVE_GIT_IDENTITY", "user");
         let _git = git::GitEnvironment::for_config(&mut config).unwrap();
         drop(restore);
         let modes: Vec<_> = config
             .persona_env_vars
             .iter()
-            .filter(|(name, _)| name == "BUZZ_GIT_IDENTITY")
+            .filter(|(name, _)| name == "HIVE_GIT_IDENTITY")
             .map(|(_, value)| value.as_str())
             .collect();
         assert_eq!(modes, ["user"]);
@@ -9737,7 +9737,7 @@ mod build_mcp_servers_tests {
         let forwarded: Vec<_> = servers[0]
             .env
             .iter()
-            .filter(|entry| entry.name == "BUZZ_GIT_IDENTITY")
+            .filter(|entry| entry.name == "HIVE_GIT_IDENTITY")
             .map(|entry| entry.value.as_str())
             .collect();
         assert_eq!(forwarded, ["user"]);
@@ -9787,19 +9787,19 @@ mod build_mcp_servers_tests {
 
         let names: Vec<&str> = server.env.iter().map(|e| e.name.as_str()).collect();
         assert!(
-            names.contains(&"BUZZ_RELAY_URL"),
-            "missing BUZZ_RELAY_URL; got {names:?}"
+            names.contains(&"HIVE_RELAY_URL"),
+            "missing HIVE_RELAY_URL; got {names:?}"
         );
         assert!(
-            names.contains(&"BUZZ_PRIVATE_KEY"),
-            "missing BUZZ_PRIVATE_KEY; got {names:?}"
+            names.contains(&"HIVE_PRIVATE_KEY"),
+            "missing HIVE_PRIVATE_KEY; got {names:?}"
         );
     }
 
     #[test]
     fn session_new_mcp_server_uses_effective_output_format() {
         let _guard = ENV_LOCK.lock().unwrap();
-        let inherited = std::env::var_os("BUZZ_OUTPUT_FORMAT");
+        let inherited = std::env::var_os("HIVE_OUTPUT_FORMAT");
         for (operator, persona, expected) in [
             (None, vec![], "agent"),
             (None, vec!["json"], "json"),
@@ -9809,23 +9809,23 @@ mod build_mcp_servers_tests {
             (Some(""), vec!["json"], ""),
         ] {
             match operator {
-                Some(value) => std::env::set_var("BUZZ_OUTPUT_FORMAT", value),
-                None => std::env::remove_var("BUZZ_OUTPUT_FORMAT"),
+                Some(value) => std::env::set_var("HIVE_OUTPUT_FORMAT", value),
+                None => std::env::remove_var("HIVE_OUTPUT_FORMAT"),
             }
             let mut config = test_config();
             config.persona_env_vars = persona
                 .iter()
-                .map(|value| ("BUZZ_OUTPUT_FORMAT".into(), (*value).into()))
+                .map(|value| ("HIVE_OUTPUT_FORMAT".into(), (*value).into()))
                 .collect();
             let servers = build_mcp_servers(&config);
             match &inherited {
-                Some(value) => std::env::set_var("BUZZ_OUTPUT_FORMAT", value),
-                None => std::env::remove_var("BUZZ_OUTPUT_FORMAT"),
+                Some(value) => std::env::set_var("HIVE_OUTPUT_FORMAT", value),
+                None => std::env::remove_var("HIVE_OUTPUT_FORMAT"),
             }
             let formats: Vec<_> = servers[0]
                 .env
                 .iter()
-                .filter(|entry| entry.name == "BUZZ_OUTPUT_FORMAT")
+                .filter(|entry| entry.name == "HIVE_OUTPUT_FORMAT")
                 .map(|entry| entry.value.as_str())
                 .collect();
             assert_eq!(
@@ -9839,16 +9839,16 @@ mod build_mcp_servers_tests {
     #[test]
     fn session_new_mcp_server_forwards_buzz_auth_tag() {
         let _guard = ENV_LOCK.lock().unwrap();
-        std::env::set_var("BUZZ_AUTH_TAG", "test-attestation-tag");
+        std::env::set_var("HIVE_AUTH_TAG", "test-attestation-tag");
         let config = test_config();
         let servers = build_mcp_servers(&config);
-        std::env::remove_var("BUZZ_AUTH_TAG");
+        std::env::remove_var("HIVE_AUTH_TAG");
 
         let server = &servers[0];
-        let auth_tag_env = server.env.iter().find(|e| e.name == "BUZZ_AUTH_TAG");
+        let auth_tag_env = server.env.iter().find(|e| e.name == "HIVE_AUTH_TAG");
         assert!(
             auth_tag_env.is_some(),
-            "BUZZ_AUTH_TAG should be forwarded when set"
+            "HIVE_AUTH_TAG should be forwarded when set"
         );
         assert_eq!(auth_tag_env.unwrap().value, "test-attestation-tag");
     }
@@ -9856,28 +9856,28 @@ mod build_mcp_servers_tests {
     #[test]
     fn session_new_mcp_server_skips_empty_buzz_auth_tag() {
         let _guard = ENV_LOCK.lock().unwrap();
-        std::env::set_var("BUZZ_AUTH_TAG", "");
+        std::env::set_var("HIVE_AUTH_TAG", "");
         let config = test_config();
         let servers = build_mcp_servers(&config);
-        std::env::remove_var("BUZZ_AUTH_TAG");
+        std::env::remove_var("HIVE_AUTH_TAG");
 
         let server = &servers[0];
-        let has_auth_tag = server.env.iter().any(|e| e.name == "BUZZ_AUTH_TAG");
-        assert!(!has_auth_tag, "empty BUZZ_AUTH_TAG should not be forwarded");
+        let has_auth_tag = server.env.iter().any(|e| e.name == "HIVE_AUTH_TAG");
+        assert!(!has_auth_tag, "empty HIVE_AUTH_TAG should not be forwarded");
     }
 
     #[test]
     fn test_display_name_set_is_forwarded_to_mcp_server() {
         let _guard = ENV_LOCK.lock().unwrap();
-        std::env::set_var("BUZZ_ACP_DISPLAY_NAME", "Duncan");
+        std::env::set_var("HIVE_ACP_DISPLAY_NAME", "Duncan");
         let config = test_config();
         let servers = build_mcp_servers(&config);
-        std::env::remove_var("BUZZ_ACP_DISPLAY_NAME");
+        std::env::remove_var("HIVE_ACP_DISPLAY_NAME");
 
         let entry = servers[0]
             .env
             .iter()
-            .find(|e| e.name == "BUZZ_ACP_DISPLAY_NAME");
+            .find(|e| e.name == "HIVE_ACP_DISPLAY_NAME");
         assert_eq!(
             entry.map(|e| e.value.as_str()),
             Some("Duncan"),
@@ -9888,7 +9888,7 @@ mod build_mcp_servers_tests {
     #[test]
     fn test_display_name_unset_omits_the_key_entirely() {
         let _guard = ENV_LOCK.lock().unwrap();
-        std::env::remove_var("BUZZ_ACP_DISPLAY_NAME");
+        std::env::remove_var("HIVE_ACP_DISPLAY_NAME");
         let config = test_config();
         let servers = build_mcp_servers(&config);
 
@@ -9898,7 +9898,7 @@ mod build_mcp_servers_tests {
             !servers[0]
                 .env
                 .iter()
-                .any(|e| e.name == "BUZZ_ACP_DISPLAY_NAME"),
+                .any(|e| e.name == "HIVE_ACP_DISPLAY_NAME"),
             "unset display name should not add the key"
         );
     }
@@ -9906,16 +9906,16 @@ mod build_mcp_servers_tests {
     #[test]
     fn test_display_name_empty_omits_the_key_entirely() {
         let _guard = ENV_LOCK.lock().unwrap();
-        std::env::set_var("BUZZ_ACP_DISPLAY_NAME", "");
+        std::env::set_var("HIVE_ACP_DISPLAY_NAME", "");
         let config = test_config();
         let servers = build_mcp_servers(&config);
-        std::env::remove_var("BUZZ_ACP_DISPLAY_NAME");
+        std::env::remove_var("HIVE_ACP_DISPLAY_NAME");
 
         assert!(
             !servers[0]
                 .env
                 .iter()
-                .any(|e| e.name == "BUZZ_ACP_DISPLAY_NAME"),
+                .any(|e| e.name == "HIVE_ACP_DISPLAY_NAME"),
             "empty display name should not be forwarded"
         );
     }

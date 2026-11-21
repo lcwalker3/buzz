@@ -32,11 +32,11 @@ async fn native_harness(url: &str) -> Harness {
     Harness::spawn_with_env(
         url,
         &[
-            ("BUZZ_AGENT_PROVIDER", "anthropic"),
+            ("HIVE_AGENT_PROVIDER", "anthropic"),
             ("ANTHROPIC_API_KEY", "test"),
             ("ANTHROPIC_BASE_URL", url),
-            ("BUZZ_AGENT_MODEL", "claude-opus-5-5"),
-            ("BUZZ_AGENT_THINKING_EFFORT", "high"),
+            ("HIVE_AGENT_MODEL", "claude-opus-5-5"),
+            ("HIVE_AGENT_THINKING_EFFORT", "high"),
         ],
     )
     .await

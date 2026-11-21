@@ -130,7 +130,7 @@ pub const REPLICA_FLOOR_LOCK_KEY: i64 = 0x62757a7a666c6f72;
 pub const FENCE_CLOCK_MARGIN_SECS: i64 = 5;
 
 /// Default interval at which the probe samples the writer and commits a
-/// heartbeat token (env `BUZZ_REPLICA_FENCE_PROBE_INTERVAL_MS`).
+/// heartbeat token (env `HIVE_REPLICA_FENCE_PROBE_INTERVAL_MS`).
 ///
 /// Every beat takes the deployment-wide exclusive floor lock, and channel
 /// writes queue behind it while it is held, so beating faster costs more
@@ -162,7 +162,7 @@ pub fn probe_interval_from_ms(ms: u64) -> Duration {
 /// top of one lock-timed-out beat.
 const READ_BUDGET_LATENCY_MARGIN: Duration = Duration::from_millis(200);
 
-/// Smallest bounded-read budget (`BUZZ_REPLICA_READ_MAX_AGE_MS`) that
+/// Smallest bounded-read budget (`HIVE_REPLICA_READ_MAX_AGE_MS`) that
 /// survives one beat failing on [`PROBE_LOCK_TIMEOUT`] at `probe_interval`:
 /// the newest entry is one interval old when that beat starts, ages by the
 /// lock wait, and the next beat (fired at once, since missed ticks are

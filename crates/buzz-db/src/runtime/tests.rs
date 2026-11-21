@@ -71,7 +71,7 @@ async fn setup_db() -> Db {
     let pool = PgPool::connect(&database_url)
         .await
         .expect("connect to test DB");
-    if std::env::var("BUZZ_TEST_SCHEMA_MODE").as_deref() == Ok("migration") {
+    if std::env::var("HIVE_TEST_SCHEMA_MODE").as_deref() == Ok("migration") {
         crate::migration::run_migrations(&pool)
             .await
             .expect("apply migration schema");
@@ -817,7 +817,7 @@ fn read_budget_zero_disables_and_large_values_clamp_to_staleness() {
 
 /// Truth table for [`RoutePredicate::for_query`]: the strongest sound
 /// predicate per query shape, and — the deploy-day default row — that
-/// `routing_enabled = false` (BUZZ_REPLICA_READ_MAX_AGE_MS unset)
+/// `routing_enabled = false` (HIVE_REPLICA_READ_MAX_AGE_MS unset)
 /// forces `Bounded` even for covered-eligible shapes, so the zero
 /// budget fails the new seams closed (Dawn's covered-at-zero-budget
 /// catch, design doc rev 5).
@@ -2897,9 +2897,9 @@ fn session_timeout_env_overlay_zero_passthrough_and_invalid_fallback() {
     static ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
     let _guard = ENV_LOCK.lock().unwrap();
     let keys = [
-        "BUZZ_DB_LOCK_TIMEOUT_MS",
-        "BUZZ_DB_IDLE_TXN_TIMEOUT_MS",
-        "BUZZ_DB_STATEMENT_TIMEOUT_MS",
+        "HIVE_DB_LOCK_TIMEOUT_MS",
+        "HIVE_DB_IDLE_TXN_TIMEOUT_MS",
+        "HIVE_DB_STATEMENT_TIMEOUT_MS",
     ];
     let previous: Vec<_> = keys.iter().map(std::env::var_os).collect();
     let read = |config: DbConfig| {
@@ -2915,9 +2915,9 @@ fn session_timeout_env_overlay_zero_passthrough_and_invalid_fallback() {
     }
     let unset = read(DbConfig::default().with_session_timeouts_from_env());
 
-    std::env::set_var("BUZZ_DB_LOCK_TIMEOUT_MS", "2000");
-    std::env::set_var("BUZZ_DB_IDLE_TXN_TIMEOUT_MS", "30000");
-    std::env::set_var("BUZZ_DB_STATEMENT_TIMEOUT_MS", "10000");
+    std::env::set_var("HIVE_DB_LOCK_TIMEOUT_MS", "2000");
+    std::env::set_var("HIVE_DB_IDLE_TXN_TIMEOUT_MS", "30000");
+    std::env::set_var("HIVE_DB_STATEMENT_TIMEOUT_MS", "10000");
     let overridden = read(DbConfig::default().with_session_timeouts_from_env());
 
     for key in keys {

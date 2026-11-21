@@ -26,6 +26,7 @@ import '../relay/relay_provider.dart';
 import '../relay/relay_session.dart';
 import '../relay/signed_event_relay.dart';
 import '../storage/secure_storage.dart';
+import '../brand.dart';
 
 /// Last authoritative runtime availability, scoped to the Buzz owner rather
 /// than the Builderlab login so signing out cannot revive a deleted runtime.
@@ -317,7 +318,7 @@ class RemoteAgentController extends ChangeNotifier {
           'Builderlab rejected ${account.lastRejectedRequest!.path.split('/').last} '
               '(HTTP ${account.lastRejectedRequest!.status}). Retry this setup.',
         AccountFailure() => 'Builderlab: ${error.name}. Try again.',
-        AccountIdentityFailure() => 'Buzz identity: ${error.name}.',
+        AccountIdentityFailure() => '$appName identity: ${error.name}.',
         StateError() => error.message,
         _ => 'Operation failed (${error.runtimeType}). Try again.',
       };

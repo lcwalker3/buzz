@@ -140,7 +140,7 @@ released waiting request cannot be claimed repeatedly in a hot loop.
 ## Test this slice
 
 Configure a disposable local PostgreSQL administrator connection as described
-in `crates/buzz-db/TESTING.md` (`BUZZ_POSTGRES_ADMIN_URL`, `PGHOST`, `PGPORT`,
+in `crates/buzz-db/TESTING.md` (`HIVE_POSTGRES_ADMIN_URL`, `PGHOST`, `PGPORT`,
 `PGUSER`, `PGPASSWORD`; optionally `PG_BIN_DIR`), then run:
 
 ```bash

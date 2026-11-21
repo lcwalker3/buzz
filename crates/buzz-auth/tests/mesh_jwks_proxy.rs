@@ -6,8 +6,8 @@ use std::time::Duration;
 
 use buzz_auth::nip_fi::{HttpJwksFetcher, JwksFetcher, JwksSourceContract};
 
-const CHILD_MARKER: &str = "BUZZ_AUTH_JWKS_PROXY_TEST_CHILD";
-const CHILD_TARGET: &str = "BUZZ_AUTH_JWKS_PROXY_TEST_TARGET";
+const CHILD_MARKER: &str = "HIVE_AUTH_JWKS_PROXY_TEST_CHILD";
+const CHILD_TARGET: &str = "HIVE_AUTH_JWKS_PROXY_TEST_TARGET";
 const JWKS_BODY: &str = r#"{"keys":[{"kty":"EC","crv":"P-256","x":"f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU","y":"x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0","use":"sig","alg":"ES256","kid":"proxy-test"}]}"#;
 const SHUTDOWN_PATH: &str = "/__mesh_jwks_proxy_test_shutdown__";
 

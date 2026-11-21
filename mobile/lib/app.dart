@@ -57,6 +57,7 @@ import 'shared/theme/theme.dart';
 import 'shared/widgets/buzz_loading_indicator.dart';
 import 'shared/widgets/buzz_toast_host.dart';
 import 'shared/widgets/covered_route_keyboard_insets.dart';
+import 'shared/brand.dart';
 
 const _starterChannelNamespace = '3ce33bea-8f09-5f1b-9c85-8a7d2659e6b0';
 
@@ -473,7 +474,7 @@ class App extends HookConsumerWidget {
     return MaterialApp(
       navigatorKey: _mobileRootNavigatorKey,
       navigatorObservers: [appRouteObserver],
-      title: 'Buzz',
+      title: appName,
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
       darkTheme: darkTheme,
@@ -555,7 +556,10 @@ class _SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
-        child: BuzzLoadingIndicator(size: 56, semanticLabel: 'Starting Buzz'),
+        child: BuzzLoadingIndicator(
+          size: 56,
+          semanticLabel: 'Starting $appName',
+        ),
       ),
     );
   }

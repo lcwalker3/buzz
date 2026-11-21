@@ -1035,7 +1035,7 @@ pub struct CommunityNipFiBindingQuery {
 /// Read a community's NIP-FI issuer binding from the database. Only issuers
 /// that could authorize are reported: none unless the host is bindable under
 /// the provisioning policy (one label under the suffix, not reserved), and
-/// only issuers configured in `BUZZ_NIP_FI_ISSUERS`.
+/// only issuers configured in `HIVE_NIP_FI_ISSUERS`.
 ///
 /// Contract relied on by kgoose:
 /// - `host` is the host stored on the community row, not the queried text.

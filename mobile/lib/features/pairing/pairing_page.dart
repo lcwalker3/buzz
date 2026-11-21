@@ -43,6 +43,7 @@ import 'pairing_provider.dart';
 import 'add_community_page.dart';
 import '../../shared/widgets/onboarding_step_page.dart';
 import 'pairing_qr_scanner.dart';
+import '../../shared/brand.dart';
 
 part 'pairing_page/onboarding_background.dart';
 part 'pairing_page/website_welcome_background.dart';
