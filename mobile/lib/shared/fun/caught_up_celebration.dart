@@ -12,9 +12,9 @@ import '../theme/theme.dart';
 
 /// Friendly empty state for an inbox with nothing unread.
 ///
-/// With [celebrate] (the user *just* cleared their last unread item) the bee
+/// With [celebrate] (the user *just* cleared their last unread item) the honey
 /// flies in with a little wobble and a light haptic plays, once. With Reduce
-/// Motion on, or when not celebrating, the bee simply fades in. The headline is
+/// Motion on, or when not celebrating, the honey simply fades in. The headline is
 /// a live region so screen readers announce the moment too.
 class CaughtUpCelebration extends HookWidget {
   final bool celebrate;
@@ -66,7 +66,7 @@ class CaughtUpCelebration extends HookWidget {
                 );
               },
               child: const ExcludeSemantics(
-                child: Text('🐝', style: TextStyle(fontSize: 48)),
+                child: Text('🍯', style: TextStyle(fontSize: 48)),
               ),
             ),
             const SizedBox(height: Grid.xs),

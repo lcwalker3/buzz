@@ -15,10 +15,12 @@ const chatColorChoices = [
     dark: Color(0xFFC7C7C7),
     wireValue: 'neutral',
   ),
+  // Honey is The Hive's default. It keeps Chartreuse's wire value so a
+  // preference saved before the rename still selects this slot.
   AccentColor(
-    name: 'Chartreuse',
-    light: Color(0xFFD7D72E),
-    dark: Color(0xFFD7D72E),
+    name: 'Honey',
+    light: Color(0xFFE9A824),
+    dark: Color(0xFFF0B640),
     wireValue: '#d7d72e',
   ),
   AccentColor(
@@ -55,7 +57,7 @@ const chatColorChoices = [
 
 /// Resolves a v1 accent: each choice's own value, desktop's remaining legacy
 /// values via their closest family, and family names written by earlier
-/// preview builds. Anything else falls back to Chartreuse.
+/// preview builds. Anything else falls back to Honey.
 int chatColorIndex(String wireValue) {
   final normalized = switch (wireValue) {
     '#06b6d4' => '#22c55e',
@@ -87,7 +89,7 @@ Color chatColorForScheme(ColorScheme scheme, int index) {
 }
 
 /// Bubble text is white unless white falls below 4.5:1 on the fill, as on
-/// Chartreuse and dark-mode Gray; those light fills take black instead.
+/// Honey and dark-mode Gray; those light fills take black instead.
 Color chatForegroundForScheme(ColorScheme scheme, int index) {
   final fill = chatColorForScheme(scheme, index).computeLuminance();
   return 1.05 / (fill + .05) >= 4.5 ? Colors.white : Colors.black;
@@ -103,5 +105,5 @@ Color chatCodeTint(Color ink, double opacity) =>
 /// Received messages use their own surface rather than a control fill.
 Color receivedMessageSurface(Brightness brightness) =>
     brightness == Brightness.dark
-    ? const Color(0xFF292929)
-    : const Color(0xFFF3F3F4);
+    ? const Color(0xFF2A2621)
+    : const Color(0xFFF4F1EC);

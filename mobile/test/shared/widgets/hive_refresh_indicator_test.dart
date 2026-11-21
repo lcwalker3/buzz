@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
-import 'package:buzz/shared/widgets/bee_refresh_indicator.dart';
-import 'package:buzz/shared/widgets/flapping_bee.dart';
+import 'package:buzz/shared/widgets/hive_refresh_indicator.dart';
+import 'package:buzz/shared/widgets/honeycomb_mark.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -11,19 +11,19 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../helpers/widget_helpers.dart';
 
 void main() {
-  testWidgets('full eye progress fills each eye cutout to its edge', (
+  testWidgets('full honey progress fills the centre cell to its wall', (
     tester,
   ) async {
-    const beeKey = ValueKey('full-eye-bee');
+    const markKey = ValueKey('full-honey-mark');
     await tester.pumpWidget(
       const MaterialApp(
         home: Center(
-          child: FlappingBee(
-            key: beeKey,
+          child: HoneycombMark(
+            key: markKey,
             width: 466,
             color: Colors.black,
-            flapAmount: 0,
-            eyeProgress: 1,
+            pulseAmount: 0,
+            honeyProgress: 1,
           ),
         ),
       ),
@@ -31,7 +31,7 @@ void main() {
 
     final boundary = tester.renderObject<RenderRepaintBoundary>(
       find.descendant(
-        of: find.byKey(beeKey),
+        of: find.byKey(markKey),
         matching: find.byType(RepaintBoundary),
       ),
     );
@@ -45,20 +45,20 @@ void main() {
 
     int alphaAt(int x, int y) => bytes!.getUint8(((y * 466) + x) * 4 + 3);
 
-    // These points sit inside the 27px eye cutouts but outside the old 20px
-    // pupil radius, directly covering the light rings seen behind the emoji.
-    expect(alphaAt(217, 84), 255);
-    expect(alphaAt(300, 84), 255);
+    // The centre and a point just inside the cell wall (radius 68) are both
+    // covered, so no light ring shows behind the honey emoji.
+    expect(alphaAt(233, 154), 255);
+    expect(alphaAt(233, 94), 255);
   });
 
-  testWidgets('shows the bee while pulling to refresh', (tester) async {
+  testWidgets('shows the mark while pulling to refresh', (tester) async {
     const contentKey = ValueKey('loading-content');
     var refreshes = 0;
     final refreshCompleter = Completer<void>();
 
     await tester.pumpWidget(
       WidgetHelpers.testable(
-        child: BeeRefreshIndicator(
+        child: HiveRefreshIndicator(
           onRefresh: () {
             refreshes++;
             return refreshCompleter.future;
@@ -81,24 +81,24 @@ void main() {
     await tester.pump(const Duration(milliseconds: 16));
     await tester.pump(const Duration(milliseconds: 300));
 
-    final beeFinder = find.byType(FlappingBee);
+    final markFinder = find.byType(HoneycombMark);
     final loadingTop = tester.getTopLeft(listFinder).dy;
     final loadingContentTop = tester.getTopLeft(find.byKey(contentKey)).dy;
     final gapTransform = tester.widget<Transform>(
-      find.byKey(const ValueKey('bee-refresh-retained-gap')),
+      find.byKey(const ValueKey('hive-refresh-retained-gap')),
     );
-    expect(beeFinder, findsOneWidget);
+    expect(markFinder, findsOneWidget);
     expect(refreshes, 1);
     expect(gapTransform.transform.getTranslation().y, closeTo(72, 1));
     expect(loadingTop - restingTop, closeTo(72, 1));
-    final loadingBeeRect = tester.getRect(beeFinder);
+    final loadingMarkRect = tester.getRect(markFinder);
     final loadingGap = loadingContentTop - restingContentTop;
     expect(
-      loadingBeeRect.center.dy,
+      loadingMarkRect.center.dy,
       closeTo(
         restingContentTop +
-            (loadingGap - loadingBeeRect.height) * 0.75 +
-            loadingBeeRect.height / 2,
+            (loadingGap - loadingMarkRect.height) * 0.75 +
+            loadingMarkRect.height / 2,
         1,
       ),
     );
@@ -113,7 +113,7 @@ void main() {
 
     await tester.pumpAndSettle();
     expect(tester.getTopLeft(listFinder).dy, closeTo(restingTop, 1));
-    expect(beeFinder, findsNothing);
+    expect(markFinder, findsNothing);
   });
 
   testWidgets('tracks each stage of an active pull', (tester) async {
@@ -136,7 +136,7 @@ void main() {
     final refreshCompleter = Completer<void>();
     await tester.pumpWidget(
       WidgetHelpers.testable(
-        child: BeeRefreshIndicator(
+        child: HiveRefreshIndicator(
           onRefresh: () => refreshCompleter.future,
           child: ListView(
             children: const [SizedBox(key: contentKey, height: 800)],
@@ -153,8 +153,8 @@ void main() {
     await gesture.moveBy(const Offset(0, 12));
     await tester.pump();
 
-    final beeFinder = find.byType(FlappingBee);
-    expect(beeFinder, findsNothing);
+    final markFinder = find.byType(HoneycombMark);
+    expect(markFinder, findsNothing);
     expect(
       tester.getTopLeft(find.byKey(contentKey)).dy,
       greaterThan(restingContentTop),
@@ -163,29 +163,32 @@ void main() {
     await gesture.moveBy(const Offset(0, 44));
     await tester.pump();
 
-    final earlyTop = tester.getTopLeft(beeFinder).dy;
+    final earlyTop = tester.getTopLeft(markFinder).dy;
     final partialOpacity = tester.widget<Opacity>(
-      find.byKey(const ValueKey('bee-refresh-opacity')),
+      find.byKey(const ValueKey('hive-refresh-opacity')),
     );
     expect(partialOpacity.opacity, greaterThan(0));
     expect(partialOpacity.opacity, lessThan(1));
     final partialScale = tester
-        .widget<Transform>(find.byKey(const ValueKey('bee-refresh-scale')))
+        .widget<Transform>(find.byKey(const ValueKey('hive-refresh-scale')))
         .transform
         .storage[0];
     expect(partialScale, greaterThan(0.6));
     expect(partialScale, lessThan(1));
-    expect(tester.widget<FlappingBee>(beeFinder).eyeProgress, isNull);
+    expect(tester.widget<HoneycombMark>(markFinder).honeyProgress, isNull);
     expect(hapticCalls, isEmpty);
 
     await gesture.moveBy(const Offset(0, 120));
     await tester.pump();
 
     final pulledContentTop = tester.getTopLeft(find.byKey(contentKey)).dy;
-    expect(tester.getTopLeft(beeFinder).dy, greaterThan(earlyTop));
-    expect(tester.widget<FlappingBee>(beeFinder).eyeProgress, isNull);
-    expect(find.byKey(const ValueKey('bee-refresh-eyes-emoji')), findsNothing);
-    final pulledBeeRect = tester.getRect(beeFinder);
+    expect(tester.getTopLeft(markFinder).dy, greaterThan(earlyTop));
+    expect(tester.widget<HoneycombMark>(markFinder).honeyProgress, isNull);
+    expect(
+      find.byKey(const ValueKey('hive-refresh-honey-emoji')),
+      findsNothing,
+    );
+    final pulledBeeRect = tester.getRect(markFinder);
     final pulledGap = pulledContentTop - restingContentTop;
     expect(
       pulledBeeRect.center.dy,
@@ -202,15 +205,18 @@ void main() {
 
     expect(
       tester
-          .widget<Transform>(find.byKey(const ValueKey('bee-refresh-scale')))
+          .widget<Transform>(find.byKey(const ValueKey('hive-refresh-scale')))
           .transform
           .storage[0],
       closeTo(1, 0.001),
     );
     expect(hapticCalls, hasLength(1));
     expect(hapticCalls.single.arguments, 'HapticFeedbackType.mediumImpact');
-    expect(tester.widget<FlappingBee>(beeFinder).eyeProgress, isNull);
-    expect(find.byKey(const ValueKey('bee-refresh-eyes-emoji')), findsNothing);
+    expect(tester.widget<HoneycombMark>(markFinder).honeyProgress, isNull);
+    expect(
+      find.byKey(const ValueKey('hive-refresh-honey-emoji')),
+      findsNothing,
+    );
 
     await tester.pump(const Duration(milliseconds: 350));
     await gesture.moveBy(
@@ -219,10 +225,13 @@ void main() {
     );
     await tester.pump();
 
-    final pupilProgress = tester.widget<FlappingBee>(beeFinder).eyeProgress;
-    expect(pupilProgress, greaterThan(0));
-    expect(pupilProgress, lessThan(0.5));
-    expect(find.byKey(const ValueKey('bee-refresh-eyes-emoji')), findsNothing);
+    final fillProgress = tester.widget<HoneycombMark>(markFinder).honeyProgress;
+    expect(fillProgress, greaterThan(0));
+    expect(fillProgress, lessThan(0.5));
+    expect(
+      find.byKey(const ValueKey('hive-refresh-honey-emoji')),
+      findsNothing,
+    );
     expect(hapticCalls, hasLength(1));
 
     await tester.pump(const Duration(milliseconds: 400));
@@ -232,9 +241,9 @@ void main() {
     );
     await tester.pump();
 
-    expect(tester.widget<FlappingBee>(beeFinder).eyeProgress, 1);
+    expect(tester.widget<HoneycombMark>(markFinder).honeyProgress, 1);
     expect(
-      find.byKey(const ValueKey('bee-refresh-eyes-emoji')),
+      find.byKey(const ValueKey('hive-refresh-honey-emoji')),
       findsOneWidget,
     );
     expect(hapticCalls, hasLength(2));
@@ -242,22 +251,22 @@ void main() {
     expect(
       tester
           .widget<Transform>(
-            find.byKey(const ValueKey('bee-refresh-eyes-emoji-offset')),
+            find.byKey(const ValueKey('hive-refresh-honey-emoji-offset')),
           )
           .transform
           .storage[12],
-      2,
+      0,
     );
     final initialShake = tester
         .widget<Transform>(
-          find.byKey(const ValueKey('bee-refresh-eyes-emoji-shake')),
+          find.byKey(const ValueKey('hive-refresh-honey-emoji-shake')),
         )
         .transform
         .storage[12];
     await tester.pump(const Duration(milliseconds: 35));
     final movedShake = tester
         .widget<Transform>(
-          find.byKey(const ValueKey('bee-refresh-eyes-emoji-shake')),
+          find.byKey(const ValueKey('hive-refresh-honey-emoji-shake')),
         )
         .transform
         .storage[12];
@@ -278,10 +287,10 @@ void main() {
     await gesture.up();
     await tester.pump();
     expect(
-      find.byKey(const ValueKey('bee-refresh-eyes-emoji')),
+      find.byKey(const ValueKey('hive-refresh-honey-emoji')),
       findsOneWidget,
     );
-    expect(tester.widget<FlappingBee>(beeFinder).eyeProgress, 1);
+    expect(tester.widget<HoneycombMark>(markFinder).honeyProgress, 1);
     expect(hapticCalls, hasLength(3));
 
     await secondGesture.moveBy(
@@ -290,10 +299,10 @@ void main() {
     );
     await tester.pump();
     expect(
-      find.byKey(const ValueKey('bee-refresh-eyes-emoji')),
+      find.byKey(const ValueKey('hive-refresh-honey-emoji')),
       findsOneWidget,
     );
-    expect(tester.widget<FlappingBee>(beeFinder).eyeProgress, 1);
+    expect(tester.widget<HoneycombMark>(markFinder).honeyProgress, 1);
     expect(hapticCalls, hasLength(3));
 
     await secondGesture.up();
@@ -301,15 +310,18 @@ void main() {
     final hapticsAfterRelease = hapticCalls.length;
     await tester.pump(const Duration(milliseconds: 300));
 
-    expect(tester.widget<FlappingBee>(beeFinder).eyeProgress, isNull);
-    expect(find.byKey(const ValueKey('bee-refresh-eyes-emoji')), findsNothing);
+    expect(tester.widget<HoneycombMark>(markFinder).honeyProgress, isNull);
+    expect(
+      find.byKey(const ValueKey('hive-refresh-honey-emoji')),
+      findsNothing,
+    );
     expect(hapticCalls, hasLength(hapticsAfterRelease));
 
     refreshCompleter.complete();
     await tester.pumpAndSettle();
   });
 
-  testWidgets('keeps expressive eyes hidden for a quick refresh flick', (
+  testWidgets('keeps the honey emoji hidden for a quick refresh flick', (
     tester,
   ) async {
     final hapticCalls = <MethodCall>[];
@@ -326,7 +338,7 @@ void main() {
     var refreshes = 0;
     await tester.pumpWidget(
       WidgetHelpers.testable(
-        child: BeeRefreshIndicator(
+        child: HiveRefreshIndicator(
           onRefresh: () {
             refreshes++;
             return refreshCompleter.future;
@@ -339,17 +351,17 @@ void main() {
     final gesture = await tester.startGesture(
       tester.getCenter(find.byType(ListView)),
     );
-    final beeFinder = find.byType(FlappingBee);
+    final markFinder = find.byType(HoneycombMark);
     for (var step = 0; step < 10; step++) {
       await gesture.moveBy(
         const Offset(0, 50),
         timeStamp: Duration(milliseconds: (step + 1) * 10),
       );
       await tester.pump(const Duration(milliseconds: 10));
-      if (beeFinder.evaluate().isNotEmpty) {
-        expect(tester.widget<FlappingBee>(beeFinder).eyeProgress, isNull);
+      if (markFinder.evaluate().isNotEmpty) {
+        expect(tester.widget<HoneycombMark>(markFinder).honeyProgress, isNull);
         expect(
-          find.byKey(const ValueKey('bee-refresh-eyes-emoji')),
+          find.byKey(const ValueKey('hive-refresh-honey-emoji')),
           findsNothing,
         );
       }
@@ -362,14 +374,17 @@ void main() {
     expect(refreshes, 1);
     expect(hapticCalls, hasLength(1));
     expect(hapticCalls.single.arguments, 'HapticFeedbackType.mediumImpact');
-    expect(tester.widget<FlappingBee>(beeFinder).eyeProgress, isNull);
-    expect(find.byKey(const ValueKey('bee-refresh-eyes-emoji')), findsNothing);
+    expect(tester.widget<HoneycombMark>(markFinder).honeyProgress, isNull);
+    expect(
+      find.byKey(const ValueKey('hive-refresh-honey-emoji')),
+      findsNothing,
+    );
 
     refreshCompleter.complete();
     await tester.pumpAndSettle();
   });
 
-  testWidgets('keeps the bee static when motion is disabled', (tester) async {
+  testWidgets('keeps the mark static when motion is disabled', (tester) async {
     await tester.pumpWidget(
       MediaQuery(
         data: const MediaQueryData(disableAnimations: true),
@@ -377,7 +392,7 @@ void main() {
           child: Builder(
             builder: (context) => MediaQuery(
               data: MediaQuery.of(context).copyWith(disableAnimations: true),
-              child: BeeRefreshIndicator(
+              child: HiveRefreshIndicator(
                 onRefresh: () async {},
                 child: ListView(children: const [SizedBox(height: 800)]),
               ),
@@ -394,8 +409,8 @@ void main() {
     );
     await tester.pump();
 
-    final bee = tester.widget<FlappingBee>(find.byType(FlappingBee));
-    expect(bee.flapAmount, 0);
+    final mark = tester.widget<HoneycombMark>(find.byType(HoneycombMark));
+    expect(mark.pulseAmount, 0);
   });
 
   testWidgets('provides elastic always-scrollable physics', (tester) async {
@@ -403,7 +418,7 @@ void main() {
 
     await tester.pumpWidget(
       WidgetHelpers.testable(
-        child: BeeRefreshIndicator(
+        child: HiveRefreshIndicator(
           onRefresh: () async {},
           child: Builder(
             builder: (context) {

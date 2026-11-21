@@ -11,8 +11,9 @@ import 'theme_provider.dart' show effectiveTheme, schemeForAppearanceMode;
 const communityThemeDTag = 'community-theme';
 const defaultCommunityTheme = CommunityThemePreference(
   theme: 'buzz',
-  // Seeded without a picker action, so it must stay readable by older clients.
-  accent: '#3b82f6', // Cobalt
+  // Seeded without a picker action, so it must stay readable by every client
+  // that reads this community. The Hive's clients all know Honey.
+  accent: '#d7d72e', // Honey
   followSystem: true,
 );
 

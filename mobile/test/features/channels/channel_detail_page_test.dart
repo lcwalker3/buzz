@@ -105,7 +105,7 @@ import 'package:buzz/shared/widgets/app_list_card.dart';
 import 'package:buzz/shared/widgets/avatar_image.dart';
 import 'package:buzz/shared/widgets/frosted_app_bar.dart';
 import 'package:buzz/shared/widgets/frosted_scaffold.dart';
-import 'package:buzz/shared/widgets/flapping_bee.dart';
+import 'package:buzz/shared/widgets/honeycomb_mark.dart';
 import 'package:buzz/shared/widgets/keyboard_dismiss_on_drag.dart';
 import 'package:buzz/shared/widgets/tabler_star_icon.dart';
 import 'package:buzz/shared/widgets/skeleton.dart';
@@ -870,7 +870,9 @@ void main() {
         'BuzzTabler',
       )..addFont(rootBundle.load('assets/fonts/TablerIcons.ttf'))).load();
     }
-    final avatarBytes = await rootBundle.load('assets/images/the-hive-mark.png');
+    final avatarBytes = await rootBundle.load(
+      'assets/images/the-hive-mark.png',
+    );
     final avatarUrl =
         'data:image/png;base64,${base64Encode(avatarBytes.buffer.asUint8List())}';
     await tester.pumpWidget(
@@ -9211,64 +9213,67 @@ void main() {
       expect(relaySession.publishedKinds, isEmpty);
     });
 
-    testWidgets('shows the flapping bee instead of an avatar while joining', (
-      tester,
-    ) async {
-      final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      final connectGate = Completer<void>();
-      final transport = _HuddleTestTransport(connectGate: connectGate.future);
+    testWidgets(
+      'shows the pulsing honeycomb instead of an avatar while joining',
+      (tester) async {
+        final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+        final connectGate = Completer<void>();
+        final transport = _HuddleTestTransport(connectGate: connectGate.future);
 
-      await tester.pumpWidget(
-        _buildTestable(
-          messages: [
-            _huddleMsg(
-              id: 'loading-call-layout',
-              kind: EventKind.huddleStarted,
-              pubkey: 'desktop',
-              createdAt: now,
-            ),
-          ],
-          users: const {
-            'desktop': UserProfile(pubkey: 'desktop'),
-            'self': UserProfile(pubkey: 'self'),
-          },
-          relayConfigNotifier: _HuddleRelayConfigNotifier(),
-          huddleCurrentPubkey: 'self',
-          huddleMediaFactory: _HuddleTestMedia.new,
-          huddleTransportFactory: (_) => transport,
-        ),
-      );
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          _buildTestable(
+            messages: [
+              _huddleMsg(
+                id: 'loading-call-layout',
+                kind: EventKind.huddleStarted,
+                pubkey: 'desktop',
+                createdAt: now,
+              ),
+            ],
+            users: const {
+              'desktop': UserProfile(pubkey: 'desktop'),
+              'self': UserProfile(pubkey: 'self'),
+            },
+            relayConfigNotifier: _HuddleRelayConfigNotifier(),
+            huddleCurrentPubkey: 'self',
+            huddleMediaFactory: _HuddleTestMedia.new,
+            huddleTransportFactory: (_) => transport,
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.widgetWithText(FilledButton, 'Join'));
-      await tester.pump();
-      await tester.pump();
+        await tester.tap(find.widgetWithText(FilledButton, 'Join'));
+        await tester.pump();
+        await tester.pump();
 
-      final loadingBee = find.byKey(const ValueKey('huddle-loading-bee'));
-      expect(loadingBee, findsOneWidget);
-      expect(find.byType(FlappingBee), findsOneWidget);
-      expect(tester.widget<FlappingBee>(loadingBee).width, 60);
-      expect(find.bySemanticsLabel('Joining Huddle'), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('huddle-participant-avatar-self')),
-        findsNothing,
-      );
-      final initialFlap = tester.widget<FlappingBee>(loadingBee).flapAmount;
-      await tester.pump(const Duration(milliseconds: 120));
-      expect(
-        tester.widget<FlappingBee>(loadingBee).flapAmount,
-        isNot(initialFlap),
-      );
+        final loadingMark = find.byKey(const ValueKey('huddle-loading-mark'));
+        expect(loadingMark, findsOneWidget);
+        expect(find.byType(HoneycombMark), findsOneWidget);
+        expect(tester.widget<HoneycombMark>(loadingMark).width, 60);
+        expect(find.bySemanticsLabel('Joining Huddle'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('huddle-participant-avatar-self')),
+          findsNothing,
+        );
+        final initialPulse = tester
+            .widget<HoneycombMark>(loadingMark)
+            .pulseAmount;
+        await tester.pump(const Duration(milliseconds: 120));
+        expect(
+          tester.widget<HoneycombMark>(loadingMark).pulseAmount,
+          isNot(initialPulse),
+        );
 
-      connectGate.complete();
-      await tester.pumpAndSettle();
+        connectGate.complete();
+        await tester.pumpAndSettle();
 
-      expect(loadingBee, findsNothing);
-      expect(
-        find.byKey(const ValueKey('huddle-participant-avatar-self')),
-        findsOneWidget,
-      );
-    });
+        expect(loadingMark, findsNothing);
+        expect(
+          find.byKey(const ValueKey('huddle-participant-avatar-self')),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets('shows response dots only until the agent starts speaking', (
       tester,

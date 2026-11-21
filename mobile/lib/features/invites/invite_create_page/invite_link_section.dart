@@ -6,7 +6,7 @@ class _InviteLinkSection extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ttlSeconds = useState(defaultCommunityInviteTtlSeconds);
-    final maxUses = useState<int?>(null);
+    final maxUses = useState<int?>(defaultCommunityInviteMaxUses);
     final generationId = useRef(0);
     final invite = useState<MintedCommunityInvite?>(null);
     final isGenerating = useState(true);

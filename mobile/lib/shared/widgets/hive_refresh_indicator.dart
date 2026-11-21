@@ -7,51 +7,51 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../theme/theme.dart';
-import 'flapping_bee.dart';
+import 'honeycomb_mark.dart';
 
-/// Replaces the standard pull-to-refresh spinner with Buzz's loading bee.
+/// Replaces the standard pull-to-refresh spinner with The Hive's honeycomb mark.
 ///
 /// Flutter continues to own the gesture, refresh lifecycle, and accessibility
 /// semantics. This widget maps those states into the elastic pull, retained
-/// loading gap, and bee animation.
-class BeeRefreshIndicator extends HookConsumerWidget {
+/// loading gap, and mark animation.
+class HiveRefreshIndicator extends HookConsumerWidget {
   /// Called when the user completes a pull, to load fresh data.
   ///
-  /// The bee keeps flapping until this future settles, so it should complete
+  /// The mark keeps pulsing until this future settles, so it should complete
   /// only once the refresh is done.
   final Future<void> Function() onRefresh;
 
   /// The scrollable this indicator wraps.
   ///
   /// It must scroll vertically; the indicator reads its scroll notifications
-  /// to couple the bee to the user's finger.
+  /// to couple the mark to the user's finger.
   final Widget child;
 
   /// The vertical offset of the scrollable's top edge, such as a pinned header.
   final double edgeOffset;
 
-  const BeeRefreshIndicator({
+  const HiveRefreshIndicator({
     required this.onRefresh,
     required this.child,
     this.edgeOffset = 0,
     super.key,
   });
 
-  static const _beeWidth = 60.0;
-  static const _beeHeight = _beeWidth * 309 / 466;
+  static const _markWidth = 60.0;
+  static const _markHeight = _markWidth * 309 / 466;
   static const _triggerDistance = 100.0;
   static const _loadingGap = 72.0;
-  static const _beeVerticalAlignment = 0.75;
-  static const _beeInitialScale = 0.6;
-  static const _beeRevealStartProgress = 0.18;
-  static const _pupilStartBeyondArmDistance = 96.0;
-  static const _pupilFullBeforeEmojiDistance = 8.0;
-  static const _eyeEmojiSwapViewportFraction = 0.26;
-  static const _eyeEmojiMinSwapBeyondArmDistance = 220.0;
-  static const _eyeEmojiMaxSwapBeyondArmDistance = 280.0;
-  static const _pupilMinBeyondArmDuration = Duration(milliseconds: 300);
-  static const _eyeEmojiMinBeyondArmDuration = Duration(milliseconds: 700);
-  static const _eyeShakePeriod = Duration(milliseconds: 140);
+  static const _markVerticalAlignment = 0.75;
+  static const _markInitialScale = 0.6;
+  static const _markRevealStartProgress = 0.18;
+  static const _fillStartBeyondArmDistance = 96.0;
+  static const _fillFullBeforeEmojiDistance = 8.0;
+  static const _honeyEmojiSwapViewportFraction = 0.26;
+  static const _honeyEmojiMinSwapBeyondArmDistance = 220.0;
+  static const _honeyEmojiMaxSwapBeyondArmDistance = 280.0;
+  static const _fillMinBeyondArmDuration = Duration(milliseconds: 300);
+  static const _honeyEmojiMinBeyondArmDuration = Duration(milliseconds: 700);
+  static const _honeyShakePeriod = Duration(milliseconds: 140);
   static const _settleDuration = Duration(milliseconds: 180);
 
   @override
@@ -66,7 +66,7 @@ class BeeRefreshIndicator extends HookConsumerWidget {
     final armedAt = useRef<Duration?>(null);
     final didTriggerArmHaptic = useRef(false);
     final didTriggerEmojiHaptic = useRef(false);
-    final eyeShakeHapticTimer = useRef<Timer?>(null);
+    final honeyShakeHapticTimer = useRef<Timer?>(null);
     final completionController = useAnimationController(
       duration: _settleDuration,
     );
@@ -74,45 +74,45 @@ class BeeRefreshIndicator extends HookConsumerWidget {
       duration: _settleDuration,
       reverseDuration: _settleDuration,
     );
-    final flapController = useAnimationController(
+    final pulseController = useAnimationController(
       duration: const Duration(milliseconds: 480),
     );
-    final eyeShakeController = useAnimationController(
-      duration: _eyeShakePeriod,
+    final honeyShakeController = useAnimationController(
+      duration: _honeyShakePeriod,
     );
     final completionProgress = useAnimation(completionController);
     final gapProgress = useAnimation(gapController);
-    final flapProgress = useAnimation(flapController);
-    final eyeShakeProgress = useAnimation(eyeShakeController);
+    final pulseProgress = useAnimation(pulseController);
+    final honeyShakeProgress = useAnimation(honeyShakeController);
     final reducedMotion = MediaQuery.disableAnimationsOf(context);
     useEffect(
       () =>
-          () => eyeShakeHapticTimer.value?.cancel(),
+          () => honeyShakeHapticTimer.value?.cancel(),
       const [],
     );
-    final eyeEmojiSwapDistance =
-        (MediaQuery.sizeOf(context).height * _eyeEmojiSwapViewportFraction)
+    final honeyEmojiSwapDistance =
+        (MediaQuery.sizeOf(context).height * _honeyEmojiSwapViewportFraction)
             .clamp(
-              _eyeEmojiMinSwapBeyondArmDistance,
-              _eyeEmojiMaxSwapBeyondArmDistance,
+              _honeyEmojiMinSwapBeyondArmDistance,
+              _honeyEmojiMaxSwapBeyondArmDistance,
             )
             .toDouble();
 
-    void stopEyeShake() {
-      eyeShakeController
+    void stopHoneyShake() {
+      honeyShakeController
         ..stop()
         ..reset();
-      eyeShakeHapticTimer.value?.cancel();
-      eyeShakeHapticTimer.value = null;
+      honeyShakeHapticTimer.value?.cancel();
+      honeyShakeHapticTimer.value = null;
     }
 
-    void startEyeShake() {
-      stopEyeShake();
+    void startHoneyShake() {
+      stopHoneyShake();
       if (reducedMotion) return;
 
-      eyeShakeController.repeat();
-      eyeShakeHapticTimer.value = Timer.periodic(
-        _eyeShakePeriod,
+      honeyShakeController.repeat();
+      honeyShakeHapticTimer.value = Timer.periodic(
+        _honeyShakePeriod,
         (_) => unawaited(HapticFeedback.selectionClick()),
       );
     }
@@ -134,7 +134,7 @@ class BeeRefreshIndicator extends HookConsumerWidget {
       if (nextStatus == RefreshIndicatorStatus.drag) {
         completionController.reset();
         gapController.reset();
-        flapController.stop();
+        pulseController.stop();
         if (!didTriggerArmHaptic.value) {
           pullBeyondArmDistance.value = 0;
           pullBeyondArmDuration.value = Duration.zero;
@@ -145,7 +145,7 @@ class BeeRefreshIndicator extends HookConsumerWidget {
         beginExpressionTracking();
       } else if (nextStatus == RefreshIndicatorStatus.snap ||
           nextStatus == RefreshIndicatorStatus.refresh) {
-        stopEyeShake();
+        stopHoneyShake();
         pullProgress.value = 1;
         pullBeyondArmDistance.value = 0;
         pullBeyondArmDuration.value = Duration.zero;
@@ -155,9 +155,9 @@ class BeeRefreshIndicator extends HookConsumerWidget {
         } else {
           gapController.animateTo(1, curve: Curves.easeOutCubic);
         }
-        if (!reducedMotion) flapController.repeat();
+        if (!reducedMotion) pulseController.repeat();
       } else if (nextStatus == RefreshIndicatorStatus.done) {
-        stopEyeShake();
+        stopHoneyShake();
         if (reducedMotion) {
           gapController.value = 0;
           pullProgress.value = 0;
@@ -166,7 +166,7 @@ class BeeRefreshIndicator extends HookConsumerWidget {
           pullBeyondArmDuration.value = Duration.zero;
           status.value = null;
         } else {
-          flapController.repeat();
+          pulseController.repeat();
           gapController
               .animateTo(1, curve: Curves.easeOutCubic)
               .whenCompleteOrCancel(() {
@@ -174,7 +174,7 @@ class BeeRefreshIndicator extends HookConsumerWidget {
                 gapController.animateBack(0, curve: Curves.easeInOutCubic);
                 completionController.forward(from: 0).whenCompleteOrCancel(() {
                   if (!completionController.isCompleted) return;
-                  flapController.stop();
+                  pulseController.stop();
                   pullProgress.value = 0;
                   pullDistance.value = 0;
                   pullBeyondArmDistance.value = 0;
@@ -185,14 +185,14 @@ class BeeRefreshIndicator extends HookConsumerWidget {
         }
       } else if (nextStatus == RefreshIndicatorStatus.canceled ||
           nextStatus == null) {
-        stopEyeShake();
+        stopHoneyShake();
         pullProgress.value = 0;
         pullDistance.value = 0;
         pullBeyondArmDistance.value = 0;
         pullBeyondArmDuration.value = Duration.zero;
         armedAt.value = null;
         if (!gapController.isAnimating) gapController.reset();
-        flapController.stop();
+        pulseController.stop();
       }
     }
 
@@ -202,7 +202,7 @@ class BeeRefreshIndicator extends HookConsumerWidget {
       if (notification is! ScrollStartNotification &&
           notification.metrics.extentBefore == 0) {
         // BouncingScrollPhysics reports a live negative scroll position while
-        // the user is pulling. Reading it keeps the bee coupled to the finger.
+        // the user is pulling. Reading it keeps the mark coupled to the finger.
         final elasticPull =
             (notification.metrics.minScrollExtent - notification.metrics.pixels)
                 .clamp(0.0, double.infinity)
@@ -237,7 +237,7 @@ class BeeRefreshIndicator extends HookConsumerWidget {
       armedAt.value = null;
       didTriggerArmHaptic.value = false;
       didTriggerEmojiHaptic.value = false;
-      stopEyeShake();
+      stopHoneyShake();
       pullProgress.value = 0;
       pullDistance.value = 0;
       pullBeyondArmDistance.value = 0;
@@ -257,11 +257,11 @@ class BeeRefreshIndicator extends HookConsumerWidget {
         pullBeyondArmDuration.value = event.timeStamp - armedTime;
       }
       if (!didTriggerEmojiHaptic.value &&
-          pullBeyondArmDuration.value >= _eyeEmojiMinBeyondArmDuration &&
-          pullBeyondArmDistance.value >= eyeEmojiSwapDistance) {
+          pullBeyondArmDuration.value >= _honeyEmojiMinBeyondArmDuration &&
+          pullBeyondArmDistance.value >= honeyEmojiSwapDistance) {
         didTriggerEmojiHaptic.value = true;
         unawaited(HapticFeedback.heavyImpact());
-        startEyeShake();
+        startHoneyShake();
       }
     }
 
@@ -269,7 +269,7 @@ class BeeRefreshIndicator extends HookConsumerWidget {
       if (!activePointers.value.remove(event.pointer)) return;
       if (activePointers.value.isNotEmpty) return;
 
-      stopEyeShake();
+      stopHoneyShake();
       armedAt.value = null;
       pullBeyondArmDistance.value = 0;
       pullBeyondArmDuration.value = Duration.zero;
@@ -282,45 +282,46 @@ class BeeRefreshIndicator extends HookConsumerWidget {
       _ => false,
     };
     final dragRevealProgress =
-        ((pullProgress.value - _beeRevealStartProgress) /
-                (1 - _beeRevealStartProgress))
+        ((pullProgress.value - _markRevealStartProgress) /
+                (1 - _markRevealStartProgress))
             .clamp(0.0, 1.0);
     final isVisible =
         status.value != null &&
         (isLoading || dragRevealProgress > 0 || completionProgress > 0);
     final retainedGap = _loadingGap * gapProgress;
     final visibleGap = pullDistance.value + retainedGap;
-    final top = edgeOffset + (visibleGap - _beeHeight) * _beeVerticalAlignment;
+    final top =
+        edgeOffset + (visibleGap - _markHeight) * _markVerticalAlignment;
     final opacity = isLoading ? 1 - completionProgress : dragRevealProgress;
-    final beeScale = isLoading
+    final markScale = isLoading
         ? 1.0
-        : _beeInitialScale + (1 - _beeInitialScale) * dragRevealProgress;
-    final flapAmount = reducedMotion
+        : _markInitialScale + (1 - _markInitialScale) * dragRevealProgress;
+    final pulseAmount = reducedMotion
         ? 0.0
         : isLoading
-        ? 0.5 - (0.5 * cos(flapProgress * 4 * pi))
+        ? 0.5 - (0.5 * cos(pulseProgress * 4 * pi))
         : pullProgress.value * 0.18;
-    final pupilFullDistance =
-        eyeEmojiSwapDistance - _pupilFullBeforeEmojiDistance;
-    final pupilDistanceProgress =
-        ((pullBeyondArmDistance.value - _pupilStartBeyondArmDistance) /
-                (pupilFullDistance - _pupilStartBeyondArmDistance))
+    final fillFullDistance =
+        honeyEmojiSwapDistance - _fillFullBeforeEmojiDistance;
+    final fillDistanceProgress =
+        ((pullBeyondArmDistance.value - _fillStartBeyondArmDistance) /
+                (fillFullDistance - _fillStartBeyondArmDistance))
             .clamp(0.0, 1.0);
-    final pupilGrowthDuration =
-        _eyeEmojiMinBeyondArmDuration - _pupilMinBeyondArmDuration;
-    final pupilProgress =
-        pullBeyondArmDuration.value >= _pupilMinBeyondArmDuration
+    final fillGrowthDuration =
+        _honeyEmojiMinBeyondArmDuration - _fillMinBeyondArmDuration;
+    final fillProgress =
+        pullBeyondArmDuration.value >= _fillMinBeyondArmDuration
         ? min(
-            pupilDistanceProgress,
-            ((pullBeyondArmDuration.value - _pupilMinBeyondArmDuration)
+            fillDistanceProgress,
+            ((pullBeyondArmDuration.value - _fillMinBeyondArmDuration)
                         .inMicroseconds /
-                    pupilGrowthDuration.inMicroseconds)
+                    fillGrowthDuration.inMicroseconds)
                 .clamp(0.0, 1.0),
           ).toDouble()
         : 0.0;
-    final showEyeEmoji = !isLoading && didTriggerEmojiHaptic.value;
-    final eyeShakeOffset = showEyeEmoji && !reducedMotion
-        ? sin(eyeShakeProgress * 2 * pi) * 0.75
+    final showHoneyEmoji = !isLoading && didTriggerEmojiHaptic.value;
+    final honeyShakeOffset = showHoneyEmoji && !reducedMotion
+        ? sin(honeyShakeProgress * 2 * pi) * 0.75
         : 0.0;
     final scrollBehavior = ScrollConfiguration.of(context).copyWith(
       overscroll: false,
@@ -347,7 +348,7 @@ class BeeRefreshIndicator extends HookConsumerWidget {
               child: ScrollConfiguration(
                 behavior: scrollBehavior,
                 child: Transform.translate(
-                  key: const ValueKey('bee-refresh-retained-gap'),
+                  key: const ValueKey('hive-refresh-retained-gap'),
                   offset: Offset(0, retainedGap),
                   child: child,
                 ),
@@ -368,50 +369,50 @@ class BeeRefreshIndicator extends HookConsumerWidget {
                   offset: Offset(0, top - edgeOffset),
                   child: IgnorePointer(
                     child: Opacity(
-                      key: const ValueKey('bee-refresh-opacity'),
+                      key: const ValueKey('hive-refresh-opacity'),
                       opacity: opacity.clamp(0.0, 1.0),
                       child: Transform.scale(
-                        key: const ValueKey('bee-refresh-scale'),
-                        scale: beeScale,
+                        key: const ValueKey('hive-refresh-scale'),
+                        scale: markScale,
                         child: SizedBox(
-                          width: _beeWidth,
-                          height: _beeHeight,
+                          width: _markWidth,
+                          height: _markHeight,
                           child: Stack(
                             clipBehavior: Clip.none,
                             alignment: Alignment.topCenter,
                             children: [
                               Positioned.fill(
-                                child: FlappingBee(
-                                  width: _beeWidth,
+                                child: HoneycombMark(
+                                  width: _markWidth,
                                   color: context.colors.primary,
-                                  flapAmount: flapAmount,
-                                  eyeProgress: showEyeEmoji
+                                  pulseAmount: pulseAmount,
+                                  honeyProgress: showHoneyEmoji
                                       ? 1
-                                      : !isLoading && pupilProgress > 0
-                                      ? pupilProgress
+                                      : !isLoading && fillProgress > 0
+                                      ? fillProgress
                                       : null,
                                 ),
                               ),
-                              if (showEyeEmoji)
+                              if (showHoneyEmoji)
                                 Positioned(
-                                  top: 2,
+                                  top: 11,
                                   left: 0,
                                   right: 0,
                                   child: ExcludeSemantics(
                                     child: Transform.translate(
                                       key: const ValueKey(
-                                        'bee-refresh-eyes-emoji-offset',
+                                        'hive-refresh-honey-emoji-offset',
                                       ),
-                                      offset: const Offset(2, 0),
+                                      offset: Offset.zero,
                                       child: Transform.translate(
                                         key: const ValueKey(
-                                          'bee-refresh-eyes-emoji-shake',
+                                          'hive-refresh-honey-emoji-shake',
                                         ),
-                                        offset: Offset(eyeShakeOffset, 0),
+                                        offset: Offset(honeyShakeOffset, 0),
                                         child: const Text(
-                                          '👀',
+                                          '🍯',
                                           key: ValueKey(
-                                            'bee-refresh-eyes-emoji',
+                                            'hive-refresh-honey-emoji',
                                           ),
                                           textAlign: TextAlign.center,
                                           style: TextStyle(

@@ -298,7 +298,7 @@ void main() {
           .color;
       final surface = surfaceColor();
       final fills = <Color>[];
-      for (final name in ['Cobalt', 'Jade', 'Chartreuse', 'Gray']) {
+      for (final name in ['Cobalt', 'Jade', 'Honey', 'Gray']) {
         await tester.tap(
           find.byKey(const ValueKey('theme-preview-accent-action-button')),
         );

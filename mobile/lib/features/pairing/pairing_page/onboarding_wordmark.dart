@@ -53,7 +53,9 @@ class _OnboardingWordmarkState extends State<OnboardingWordmark>
       final program = await ui.FragmentProgram.fromAsset(
         'shaders/onboarding_wordmark.frag',
       );
-      final bytes = await rootBundle.load('assets/images/the-hive-wordmark.png');
+      final bytes = await rootBundle.load(
+        'assets/images/the-hive-wordmark.png',
+      );
       final codec = await ui.instantiateImageCodec(
         bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
       );

@@ -89,14 +89,14 @@ void main() {
     ];
 
     final cases = <String, (List<NostrEvent>, HiveBadge, bool)>{
-      'first message earns First buzz': (
+      'first message earns First message': (
         [_ev(daysAgo(3))],
-        HiveBadge.firstBuzz,
+        HiveBadge.firstMessage,
         true,
       ),
-      'reactions alone do not earn First buzz': (
+      'reactions alone do not earn First message': (
         [_ev(daysAgo(3), kind: EventKind.reaction)],
-        HiveBadge.firstBuzz,
+        HiveBadge.firstMessage,
         false,
       ),
       '49 messages is not Chatterbox': (
@@ -172,13 +172,13 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       final store = HiveBadgeStore(prefs, relay: 'https://r', pubkey: _me);
 
-      await store.add({HiveBadge.firstBuzz}, at: 100);
+      await store.add({HiveBadge.firstMessage}, at: 100);
       final after = await store.add({
-        HiveBadge.firstBuzz,
+        HiveBadge.firstMessage,
         HiveBadge.helpful,
       }, at: 200);
 
-      expect(after, {HiveBadge.firstBuzz: 100, HiveBadge.helpful: 200});
+      expect(after, {HiveBadge.firstMessage: 100, HiveBadge.helpful: 200});
       expect(store.read(), after);
     });
 
@@ -188,7 +188,7 @@ void main() {
         prefs,
         relay: 'https://r',
         pubkey: _me,
-      ).add({HiveBadge.firstBuzz}, at: 1);
+      ).add({HiveBadge.firstMessage}, at: 1);
 
       expect(
         HiveBadgeStore(prefs, relay: 'https://other', pubkey: _me).read(),
@@ -209,7 +209,7 @@ void main() {
       });
       final prefs = await SharedPreferences.getInstance();
       expect(HiveBadgeStore(prefs, relay: 'https://r', pubkey: _me).read(), {
-        HiveBadge.firstBuzz: 5,
+        HiveBadge.firstMessage: 5,
       });
       expect(
         HiveBadgeStore(prefs, relay: 'https://bad', pubkey: _me).read(),

@@ -1,5 +1,6 @@
 import 'package:buzz/shared/community/community_grid_option.dart';
 import 'package:buzz/shared/hosted/hosted_environment.dart';
+
 import 'dart:async';
 import 'dart:convert';
 
@@ -22,7 +23,7 @@ import 'package:buzz/shared/hosted/self_hosted_entry.dart';
 import 'package:buzz/shared/hosted/account_identity_store.dart';
 import 'package:buzz/shared/widgets/buzz_sheet_header.dart';
 import 'package:flutter/material.dart';
-import 'package:buzz/shared/widgets/bee_loading_mark.dart';
+import 'package:buzz/shared/widgets/hive_loading_mark.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -177,7 +178,7 @@ void main() {
       expect(f.flow.accountOnly, isFalse);
       expect(f.flow.stage, HostedFlowStage.working);
       expect(find.byTooltip('Back').hitTestable(), findsNothing);
-      expect(find.byType(BeeLoadingMark).hitTestable(), findsOneWidget);
+      expect(find.byType(HiveLoadingMark).hitTestable(), findsOneWidget);
       expect(find.byType(BuzzSheetHeader), findsNothing);
       expect(
         find.byType(HostedConnectPage, skipOffstage: false),

@@ -34,7 +34,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     final store = HiveBadgeStore(prefs, relay: 'https://r', pubkey: _me);
-    await store.add({HiveBadge.firstBuzz}, at: 1700000000);
+    await store.add({HiveBadge.firstMessage}, at: 1700000000);
 
     var online = false;
     var queries = 0;
@@ -63,7 +63,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Couldn’t load your week'), findsOneWidget);
     expect(find.text('Relay unreachable'), findsOneWidget);
-    expect(find.bySemanticsLabel(RegExp(r'^First buzz, earned')), findsOne);
+    expect(find.bySemanticsLabel(RegExp(r'^First message, earned')), findsOne);
     expect(
       find.bySemanticsLabel('Helpful, locked. Reply in 10 threads'),
       findsOne,
@@ -78,7 +78,7 @@ void main() {
     expect(find.bySemanticsLabel(RegExp(r'\b10 Thread replies\b')), findsOne);
     expect(find.text('Helpful · New!'), findsOneWidget);
     expect(store.read().keys, containsAll([HiveBadge.helpful]));
-    expect(store.read()[HiveBadge.firstBuzz], 1700000000);
+    expect(store.read()[HiveBadge.firstMessage], 1700000000);
 
     // 3. Coming back later: still earned, no longer "new".
     await tester.pumpWidget(const SizedBox());

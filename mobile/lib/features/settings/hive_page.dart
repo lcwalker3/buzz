@@ -11,7 +11,7 @@ import '../../shared/fun/hive_provider.dart';
 import '../../shared/fun/hive_stats.dart';
 import '../../shared/theme/theme.dart';
 import '../../shared/widgets/app_list_card.dart';
-import '../../shared/widgets/bee_refresh_indicator.dart';
+import '../../shared/widgets/hive_refresh_indicator.dart';
 import '../../shared/widgets/frosted_app_bar.dart';
 import '../../shared/widgets/frosted_scaffold.dart';
 
@@ -43,7 +43,7 @@ class HivePage extends HookConsumerWidget {
         nativeTitle: 'Your Hive',
         title: Text('Your Hive'),
       ),
-      body: BeeRefreshIndicator(
+      body: HiveRefreshIndicator(
         onRefresh: () async {
           try {
             await refresh();
@@ -140,10 +140,10 @@ class _WeekCard extends StatelessWidget {
               const SizedBox(height: Grid.twelve),
               Text(
                 week.isEmpty
-                    ? 'A quiet week. Say hi to someone 🐝'
+                    ? 'A quiet week. Say hi to someone.'
                     : week.streakDays >= 2
                     ? '🔥 ${week.streakDays}-day streak'
-                    : 'Nice to see you this week 🐝',
+                    : 'Nice to see you this week.',
                 style: context.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),

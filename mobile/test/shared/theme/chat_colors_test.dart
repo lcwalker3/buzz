@@ -9,7 +9,7 @@ void main() {
   test('matches all seven desktop accent fills and readable inks', () {
     expect(chatColorChoices.map((color) => color.name), [
       'Gray',
-      'Chartreuse',
+      'Honey',
       'Flame',
       'Magenta',
       'Iris',
@@ -18,7 +18,7 @@ void main() {
     ]);
     expect(chatColorChoices.map((color) => color.light.toARGB32()), [
       0xFF525252,
-      0xFFD7D72E,
+      0xFFE9A824,
       0xFFD93A0C,
       0xFFCC1F7A,
       0xFF6C4EF0,
@@ -27,7 +27,7 @@ void main() {
     ]);
     expect(chatColorChoices.map((color) => color.dark.toARGB32()), [
       0xFFC7C7C7,
-      0xFFD7D72E,
+      0xFFF0B640,
       0xFFD93A0C,
       0xFFCC1F7A,
       0xFF6C4EF0,
@@ -48,7 +48,7 @@ void main() {
           greaterThanOrEqualTo(4.5),
           reason: '${chatColorChoices[index].name} $brightness',
         );
-        // Only the light fills fall back to black: Chartreuse and dark Gray.
+        // Only the light fills fall back to black: Honey and dark Gray.
         final black = index == 1 || (index == 0 && scheme == darkColorScheme);
         expect(ink, black ? Colors.black : Colors.white);
       }

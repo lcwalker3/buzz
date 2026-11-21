@@ -9,11 +9,11 @@ void main() {
     expect(light.colorScheme.surface, const Color(0xFFFFFFFF));
     expect(light.colorScheme.onSurface, const Color(0xFF0A0A0A));
     expect(light.colorScheme.onSurfaceVariant, const Color(0xFF646464));
-    expect(light.colorScheme.outline, const Color(0xFFE8E8E8));
+    expect(light.colorScheme.outline, const Color(0xFFE9E5DE));
     expect(dark.colorScheme.surface, const Color(0xFF000000));
     expect(dark.colorScheme.onSurface, const Color(0xFFFFFFFF));
     expect(dark.colorScheme.onSurfaceVariant, const Color(0xFFC7C7C7));
-    expect(dark.colorScheme.outline, const Color(0xFF1A1A1A));
+    expect(dark.colorScheme.outline, const Color(0xFF221E19));
   });
 
   for (final brightness in Brightness.values) {

@@ -27,7 +27,7 @@ import '../../shared/utils/string_utils.dart';
 import '../../shared/widgets/sheet_action_section.dart';
 import '../../shared/widgets/avatar_image.dart';
 import '../../shared/widgets/anchored_popover_menu.dart';
-import '../../shared/widgets/bee_refresh_indicator.dart';
+import '../../shared/widgets/hive_refresh_indicator.dart';
 import '../../shared/widgets/buzz_loading_indicator.dart';
 import '../../shared/widgets/message_author_meta.dart';
 import '../../shared/widgets/modal_presentation.dart';
@@ -119,7 +119,7 @@ class ActivityPage extends HookConsumerWidget {
         // On the unread view the empty state celebrates; elsewhere, say it.
         if (caughtUp && !unreadOnly.value) {
           ScaffoldMessenger.maybeOf(context)?.showFeedbackSnackBar(
-            const SnackBar(content: Text('🐝  All caught up!')),
+            const SnackBar(content: Text('All caught up')),
             kind: ToastKind.success,
           );
         }
@@ -510,7 +510,7 @@ class ActivityPage extends HookConsumerWidget {
         celebrate: justCaughtUp.value,
       );
     } else {
-      body = BeeRefreshIndicator(
+      body = HiveRefreshIndicator(
         onRefresh: refresh,
         child: CustomScrollView(
           controller: scrollController,

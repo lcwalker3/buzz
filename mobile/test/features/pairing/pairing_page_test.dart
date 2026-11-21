@@ -399,11 +399,8 @@ void main() {
                     )
                     .decoration
                 as BoxDecoration;
-        expect(
-          (decoration.image!.image as AssetImage).assetName,
-          'assets/images/shell-gradient.png',
-        );
-        expect(decoration.image!.fit, BoxFit.fill);
+        expect(decoration.image, isNull);
+        expect(decoration.color, const Color(0xFFFBF6EC));
         await _expandPairingCode(tester);
         await tester.enterText(find.byType(TextField), 'pairing-code-draft');
 
@@ -416,7 +413,7 @@ void main() {
                     .decoration
                 as BoxDecoration;
         expect(decoration.image, isNull);
-        expect(decoration.color, const Color(0xFF11181D));
+        expect(decoration.color, const Color(0xFF16130F));
         expect(
           tester
               .widget<OnboardingWordmark>(
@@ -483,7 +480,7 @@ void main() {
         find.byKey(const Key('pairing-onboarding-background')),
       );
       final backgroundDecoration = background.decoration as BoxDecoration;
-      expect(backgroundDecoration.color, const Color(0xFF11181D));
+      expect(backgroundDecoration.color, const Color(0xFF16130F));
       expect(backgroundDecoration.image, isNull);
       expect(
         tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
@@ -981,22 +978,9 @@ void main() {
         final decoration = background.decoration as BoxDecoration;
         expect(
           decoration.color,
-          isDark ? const Color(0xFF11181D) : const Color(0xFFE7F0EF),
+          isDark ? const Color(0xFF16130F) : const Color(0xFFFBF6EC),
         );
-        if (isDark) {
-          expect(decoration.image, isNull);
-        } else {
-          expect(
-            (decoration.image!.image as AssetImage).assetName,
-            'assets/images/shell-gradient.png',
-          );
-          await tester.runAsync(
-            () => precacheImage(
-              decoration.image!.image,
-              tester.element(backgroundFinder),
-            ),
-          );
-        }
+        expect(decoration.image, isNull);
         final size = tester.getSize(backgroundFinder);
         final errorRect = tester
             .getRect(errorFinder)

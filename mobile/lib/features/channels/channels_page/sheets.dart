@@ -26,7 +26,9 @@ class _CreateChannelSheet extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final nameController = useTextEditingController();
     final descriptionController = useTextEditingController();
-    final visibility = useState('open');
+    // The Hive is private by default: new channels are invite-only unless
+    // the creator chooses otherwise.
+    final visibility = useState('private');
     final temporary = useState(false);
     final ttlSeconds = useState(_defaultCreateChannelTtlSeconds);
     final isSubmitting = useState(false);

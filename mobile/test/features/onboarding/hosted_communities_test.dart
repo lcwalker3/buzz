@@ -1,4 +1,5 @@
 import 'package:buzz/shared/community/community_grid_option.dart';
+
 import 'dart:ui' as ui;
 
 import 'package:buzz/shared/hosted/hosted_community_creation.dart';
@@ -387,7 +388,7 @@ Future<void> revealOptionsWithSemantics(WidgetTester tester) async {
   }
 }
 
-// The welcome bees intentionally never settle. Wait for the requested control
+// The welcome cells intentionally never settle. Wait for the requested control
 // and its ancestor fades to finish instead of waiting for every app animation.
 Future<void> pumpUntilVisible(WidgetTester tester, Finder target) async {
   bool visible() {

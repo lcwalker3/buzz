@@ -20,20 +20,17 @@ class _OnboardingBackground extends StatelessWidget {
       );
     }
     final isDark = context._onboardingIsDark;
+    // The same calm look as the welcome screen: cream with a faint still
+    // honeycomb in light mode, warm charcoal with soft honey glows in dark.
     return DecoratedBox(
       key: const Key('pairing-onboarding-background'),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF11181D) : const Color(0xFFE7F0EF),
-        image: isDark
-            ? null
-            : const DecorationImage(
-                // Same supplied artwork and full-image stretch as Buzz 2.0.
-                image: AssetImage('assets/images/shell-gradient.png'),
-                fit: BoxFit.fill,
-              ),
+        color: isDark ? const Color(0xFF16130F) : _welcomeCream,
       ),
       child: CustomPaint(
-        painter: _OnboardingShellPainter(isDark: isDark),
+        painter: isDark
+            ? const _OnboardingShellPainter(isDark: true)
+            : const _HoneycombLatticePainter(),
         child: child,
       ),
     );
@@ -49,20 +46,20 @@ class _OnboardingShellPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (size.isEmpty) return;
     if (isDark) {
-      // Match the desktop's layered CSS farthest-corner ellipses.
+      // Two soft honey glows in opposite corners.
       _paintGlow(
         canvas,
         size,
         const Offset(0.9, 1),
         0.7,
-        const Color(0xFF39304B),
+        const Color(0xFF3A2A12),
       );
       _paintGlow(
         canvas,
         size,
         const Offset(0.15, 0),
         0.65,
-        const Color(0xFF203D53),
+        const Color(0xFF2B2318),
       );
     }
   }

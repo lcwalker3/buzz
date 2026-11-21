@@ -3300,8 +3300,8 @@ void main() {
       expect(find.text('Ongoing'), findsOneWidget);
       expect(find.text('Temporary'), findsNothing);
       expect(find.text('Visibility'), findsOneWidget);
-      expect(find.text('Public'), findsOneWidget);
-      expect(find.text('Private'), findsNothing);
+      expect(find.text('Private'), findsOneWidget);
+      expect(find.text('Public'), findsNothing);
       final submit = find.byKey(const Key('create-channel-submit'));
       expect(tester.widget<TextButton>(submit).onPressed, isNull);
       await tester.enterText(
@@ -3315,7 +3315,7 @@ void main() {
       expect(actions.creations.single, {
         'name': 'release-notes',
         'type': 'stream',
-        'visibility': 'open',
+        'visibility': 'private',
         'description': '',
         'ttl': null,
       });
@@ -3355,15 +3355,15 @@ void main() {
 
       await tester.tap(find.byKey(const Key('create-channel-visibility')));
       await tester.pumpAndSettle();
-      final privateVisibility = find.byKey(
-        const Key('create-channel-visibility-private'),
+      final publicVisibility = find.byKey(
+        const Key('create-channel-visibility-public'),
       );
-      await tester.ensureVisible(privateVisibility);
+      await tester.ensureVisible(publicVisibility);
       await tester.pumpAndSettle();
-      await tester.tap(privateVisibility);
+      await tester.tap(publicVisibility);
       await tester.pumpAndSettle();
-      expect(find.text('Private'), findsOneWidget);
-      expect(find.text('Public'), findsNothing);
+      expect(find.text('Public'), findsOneWidget);
+      expect(find.text('Private'), findsNothing);
       await tester.enterText(
         find.byKey(const Key('create-channel-description')),
         'Release updates',
@@ -3373,7 +3373,7 @@ void main() {
       expect(actions.creations.last, {
         'name': 'release-notes',
         'type': 'stream',
-        'visibility': 'private',
+        'visibility': 'open',
         'description': 'Release updates',
         'ttl': 7 * 24 * 60 * 60,
       });
